@@ -1,0 +1,699 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sasin EMBA 2026 | Program Overview</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:wght@600;700;800&display=swap" rel="stylesheet" />
+    <style>
+        :root {
+            --sasin-gold: #C9A84C;
+            --sasin-gold-light: #E8D48B;
+            --sasin-gold-dark: #A68B2E;
+            --sasin-cream: #FDF8F0;
+            --sasin-dark: #1A1A2E;
+            --sasin-mid: #2D2D44;
+            --sasin-text: #3D3D5C;
+            --sasin-text-light: #6B6B8A;
+            --sasin-accent: #E85D3A;
+            --sasin-white: #FFFFFF;
+            --shadow-sm: 0 1px 3px rgba(0,0,0,0.08);
+            --shadow-md: 0 4px 16px rgba(0,0,0,0.10);
+            --shadow-lg: 0 8px 32px rgba(0,0,0,0.12);
+            --radius: 16px;
+            --radius-sm: 10px;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--sasin-cream);
+            color: var(--sasin-text);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        /* ===== HERO ===== */
+        .hero {
+            background: linear-gradient(135deg, var(--sasin-dark) 0%, var(--sasin-mid) 50%, #3A3A5C 100%);
+            color: var(--sasin-white);
+            padding: 80px 24px 60px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle at 30% 50%, rgba(201,168,76,0.08) 0%, transparent 50%),
+                        radial-gradient(circle at 70% 50%, rgba(201,168,76,0.05) 0%, transparent 50%);
+            animation: heroGlow 20s ease-in-out infinite;
+        }
+        @keyframes heroGlow {
+            0%, 100% { transform: translate(0, 0); }
+            50% { transform: translate(-5%, 5%); }
+        }
+        .hero-content {
+            position: relative;
+            z-index: 1;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .hero-label {
+            display: inline-block;
+            background: rgba(201,168,76,0.15);
+            color: var(--sasin-gold-light);
+            padding: 6px 18px;
+            border-radius: 100px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            margin-bottom: 24px;
+            border: 1px solid rgba(201,168,76,0.25);
+        }
+        .hero h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: clamp(2.5rem, 6vw, 4rem);
+            font-weight: 700;
+            line-height: 1.15;
+            margin-bottom: 16px;
+        }
+        .hero h1 span { color: var(--sasin-gold); }
+        .hero p {
+            font-size: 1.15rem;
+            color: rgba(255,255,255,0.7);
+            max-width: 600px;
+            margin: 0 auto 32px;
+            font-weight: 300;
+        }
+        .hero-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 32px;
+            justify-content: center;
+        }
+        .hero-meta-item {
+            text-align: center;
+        }
+        .hero-meta-item .value {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--sasin-gold);
+        }
+        .hero-meta-item .label {
+            font-size: 0.8rem;
+            color: rgba(255,255,255,0.5);
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        /* ===== CONTAINER ===== */
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 0 24px;
+        }
+
+        /* ===== SECTION ===== */
+        .section {
+            padding: 60px 0;
+        }
+        .section-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 2rem;
+            color: var(--sasin-dark);
+            margin-bottom: 8px;
+        }
+        .section-subtitle {
+            font-size: 1rem;
+            color: var(--sasin-text-light);
+            margin-bottom: 36px;
+        }
+        .divider {
+            width: 60px;
+            height: 3px;
+            background: var(--sasin-gold);
+            border-radius: 2px;
+            margin-bottom: 32px;
+        }
+
+        /* ===== TIMELINE CALENDAR ===== */
+        .calendar {
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        .calendar-card {
+            background: var(--sasin-white);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow-sm);
+            overflow: hidden;
+            transition: box-shadow 0.3s ease, transform 0.3s ease;
+            border-left: 4px solid var(--sasin-gold);
+        }
+        .calendar-card:hover {
+            box-shadow: var(--shadow-md);
+            transform: translateY(-2px);
+        }
+        .calendar-card.holiday {
+            border-left-color: #718096;
+            background: #F7FAFC;
+        }
+        .calendar-card.holiday .card-date-badge {
+            background: #718096;
+        }
+        .calendar-card.orientation {
+            border-left-color: var(--sasin-accent);
+        }
+        .calendar-card.bootcamp {
+            border-left-color: #4A90D9;
+        }
+
+        .card-header {
+            display: flex;
+            align-items: stretch;
+            cursor: pointer;
+        }
+        .card-date-badge {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-width: 100px;
+            padding: 16px 20px;
+            background: var(--sasin-dark);
+            color: var(--sasin-white);
+            flex-shrink: 0;
+        }
+        .card-date-badge .day {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.6rem;
+            font-weight: 700;
+            line-height: 1;
+        }
+        .card-date-badge .month {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: var(--sasin-gold-light);
+            margin-top: 2px;
+        }
+        .card-date-badge .dow {
+            font-size: 0.65rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: rgba(255,255,255,0.5);
+            margin-top: 2px;
+        }
+        .calendar-card.holiday .card-date-badge {
+            background: #4A5568;
+        }
+        .calendar-card.orientation .card-date-badge {
+            background: var(--sasin-accent);
+        }
+        .calendar-card.bootcamp .card-date-badge {
+            background: #2B6CB0;
+        }
+
+        .card-info {
+            flex: 1;
+            padding: 16px 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        .card-info h3 {
+            font-size: 1.05rem;
+            font-weight: 600;
+            color: var(--sasin-dark);
+            margin-bottom: 4px;
+        }
+        .card-info .card-type {
+            display: inline-block;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            padding: 2px 10px;
+            border-radius: 100px;
+            margin-bottom: 6px;
+            width: fit-content;
+        }
+        .card-type-orientation { background: rgba(232,93,58,0.1); color: var(--sasin-accent); }
+        .card-type-bootcamp { background: rgba(74,144,217,0.1); color: #2B6CB0; }
+        .card-type-class { background: rgba(201,168,76,0.15); color: var(--sasin-gold-dark); }
+        .card-type-holiday { background: rgba(113,128,150,0.1); color: #718096; }
+
+        .card-info .time {
+            font-size: 0.85rem;
+            color: var(--sasin-text-light);
+        }
+        .card-info .time svg {
+            vertical-align: middle;
+            margin-right: 4px;
+        }
+        .card-toggle {
+            display: flex;
+            align-items: center;
+            padding: 0 20px;
+            color: var(--sasin-text-light);
+            cursor: pointer;
+            font-size: 0.8rem;
+            transition: color 0.2s;
+        }
+        .card-toggle:hover { color: var(--sasin-gold-dark); }
+        .card-toggle .arrow {
+            transition: transform 0.3s ease;
+            display: inline-block;
+        }
+        .card-toggle .arrow.open { transform: rotate(180deg); }
+
+        .card-body {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.4s ease, padding 0.3s ease;
+            padding: 0 20px;
+            background: rgba(253,248,240,0.5);
+        }
+        .card-body.open {
+            max-height: 500px;
+            padding: 20px;
+        }
+        .card-body p {
+            font-size: 0.92rem;
+            color: var(--sasin-text);
+            margin-bottom: 8px;
+        }
+        .card-body p:last-child { margin-bottom: 0; }
+        .card-body ul {
+            list-style: none;
+            padding: 0;
+        }
+        .card-body ul li {
+            font-size: 0.9rem;
+            color: var(--sasin-text);
+            padding: 4px 0;
+            padding-left: 20px;
+            position: relative;
+        }
+        .card-body ul li::before {
+            content: '•';
+            position: absolute;
+            left: 6px;
+            color: var(--sasin-gold);
+            font-weight: bold;
+        }
+
+        /* ===== INFO BOXES ===== */
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        .info-card {
+            background: var(--sasin-white);
+            border-radius: var(--radius-sm);
+            padding: 28px 24px;
+            box-shadow: var(--shadow-sm);
+            border-top: 3px solid var(--sasin-gold);
+        }
+        .info-card h3 {
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--sasin-dark);
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .info-card p {
+            font-size: 0.9rem;
+            color: var(--sasin-text-light);
+            line-height: 1.7;
+        }
+        .info-card .emoji {
+            font-size: 1.3rem;
+        }
+
+        /* ===== FOOTER ===== */
+        .footer {
+            background: var(--sasin-dark);
+            color: rgba(255,255,255,0.5);
+            text-align: center;
+            padding: 40px 24px;
+            font-size: 0.85rem;
+        }
+        .footer a {
+            color: var(--sasin-gold-light);
+            text-decoration: none;
+        }
+        .footer a:hover { text-decoration: underline; }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 640px) {
+            .card-header { flex-direction: column; }
+            .card-date-badge {
+                flex-direction: row;
+                gap: 8px;
+                min-width: unset;
+                padding: 12px 16px;
+                justify-content: flex-start;
+            }
+            .card-date-badge .day { font-size: 1.2rem; }
+            .card-date-badge .month { margin-top: 0; }
+            .card-toggle { padding: 12px 16px; justify-content: center; }
+            .hero { padding: 60px 20px 40px; }
+            .section { padding: 40px 0; }
+            .hero-meta { gap: 20px; }
+        }
+
+        /* ===== CALENDAR DOWNLOAD ===== */
+        .download-section {
+            text-align: center;
+            margin-top: 40px;
+        }
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 28px;
+            border-radius: 100px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
+        }
+        .btn-primary {
+            background: var(--sasin-dark);
+            color: var(--sasin-white);
+        }
+        .btn-primary:hover {
+            background: #2A2A44;
+            box-shadow: var(--shadow-md);
+            transform: translateY(-1px);
+        }
+        .btn-outline {
+            background: transparent;
+            color: var(--sasin-dark);
+            border: 2px solid var(--sasin-gold);
+        }
+        .btn-outline:hover {
+            background: var(--sasin-gold);
+            color: var(--sasin-white);
+        }
+    </style>
+</head>
+<body>
+
+<!-- ===== HERO ===== -->
+<section class="hero">
+    <div class="hero-content">
+        <div class="hero-label">Class of 2026</div>
+        <h1>Sasin <span>EMBA</span></h1>
+        <p>Executive MBA Program — A transformative 2-year journey in leadership, strategy, and innovation at one of ASEAN's top business schools.</p>
+        <div class="hero-meta">
+            <div class="hero-meta-item">
+                <div class="value">2</div>
+                <div class="label">Years</div>
+            </div>
+            <div class="hero-meta-item">
+                <div class="value">May 29</div>
+                <div class="label">Orientation</div>
+            </div>
+            <div class="hero-meta-item">
+                <div class="value">Bangkok</div>
+                <div class="label">Location</div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ===== PROGRAM OVERVIEW ===== -->
+<section class="section">
+    <div class="container">
+        <h2 class="section-title">Program Kick-off</h2>
+        <div class="divider"></div>
+        <p class="section-subtitle">Your EMBA journey begins with an immersive week of orientation, bootcamp, and your first classes.</p>
+
+        <div class="calendar">
+
+            <!-- Orientation -->
+            <div class="calendar-card orientation">
+                <div class="card-header" onclick="toggleCard(this)">
+                    <div class="card-date-badge">
+                        <div class="day">29</div>
+                        <div class="month">May</div>
+                        <div class="dow">Friday</div>
+                    </div>
+                    <div class="card-info">
+                        <span class="card-type card-type-orientation">Orientation</span>
+                        <h3>Orientation at Sasin</h3>
+                        <div class="time">🕐 2:00 PM – 8:00 PM</div>
+                    </div>
+                    <div class="card-toggle"><span class="arrow">▼</span></div>
+                </div>
+                <div class="card-body">
+                    <p>Welcome to Sasin! Meet your cohort, faculty, and program staff. Overview of the EMBA journey, expectations, and networking reception.</p>
+                    <ul>
+                        <li>Program introduction &amp; academic calendar</li>
+                        <li>Meet your cohort &amp; faculty</li>
+                        <li>Networking dinner &amp; reception</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Bootcamp -->
+            <div class="calendar-card bootcamp">
+                <div class="card-header" onclick="toggleCard(this)">
+                    <div class="card-date-badge">
+                        <div class="day">30</div>
+                        <div class="month">May</div>
+                        <div class="dow">Sat</div>
+                    </div>
+                    <div class="card-info" style="border-bottom: 1px solid rgba(74,144,217,0.1); padding-bottom: 8px;">
+                        <span class="card-type card-type-bootcamp">Bootcamp</span>
+                        <h3>AI, ESG &amp; Future Skills Bootcamp</h3>
+                        <div class="time">📍 Offsite (near Bangkok) · 3 days</div>
+                    </div>
+                    <div class="card-toggle" style="align-self: flex-end;"><span class="arrow">▼</span></div>
+                </div>
+                <div class="card-body">
+                    <p><strong>Departure from Sasin</strong> — early morning Saturday May 30<br>
+                    <strong>Return to Bangkok</strong> — late afternoon Monday June 1</p>
+                    <p>An intensive 3-day residential bootcamp designed to bond your cohort and build foundational skills.</p>
+                    <ul>
+                        <li><strong>Day 1 (May 30)</strong> — AI &amp; Digital Transformation workshops</li>
+                        <li><strong>Day 2 (May 31)</strong> — ESG &amp; Sustainability, leadership challenges</li>
+                        <li><strong>Day 3 (Jun 1)</strong> — Future Skills &amp; team-building activities</li>
+                    </ul>
+                    <p>Transportation, accommodation, and meals provided.</p>
+                </div>
+            </div>
+
+            <!-- Public Holiday -->
+            <div class="calendar-card holiday">
+                <div class="card-header" onclick="toggleCard(this)">
+                    <div class="card-date-badge">
+                        <div class="day">2–3</div>
+                        <div class="month">Jun</div>
+                        <div class="dow">Tue–Wed</div>
+                    </div>
+                    <div class="card-info">
+                        <span class="card-type card-type-holiday">Public Holiday</span>
+                        <h3>No Classes</h3>
+                        <div class="time">🌴 National holiday</div>
+                    </div>
+                    <div class="card-toggle"><span class="arrow">▼</span></div>
+                </div>
+                <div class="card-body">
+                    <p>Public holidays. No classes scheduled. Use this time to rest or catch up on pre-reading materials.</p>
+                </div>
+            </div>
+
+            <!-- Evening Classes -->
+            <div class="calendar-card">
+                <div class="card-header" onclick="toggleCard(this)">
+                    <div class="card-date-badge">
+                        <div class="day">4–5</div>
+                        <div class="month">Jun</div>
+                        <div class="dow">Thu–Fri</div>
+                    </div>
+                    <div class="card-info">
+                        <span class="card-type card-type-class">Evening Classes</span>
+                        <h3>First Evening Classes at Sasin</h3>
+                        <div class="time">🕐 6:00 PM – 9:30 PM</div>
+                    </div>
+                    <div class="card-toggle"><span class="arrow">▼</span></div>
+                </div>
+                <div class="card-body">
+                    <p>Your first regular evening classes at Sasin campus. Course details will be shared during orientation.</p>
+                    <ul>
+                        <li>Thursday, June 4 — 6:00 PM – 9:30 PM</li>
+                        <li>Friday, June 5 — 6:00 PM – 9:30 PM</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Full Day -->
+            <div class="calendar-card" style="border-left-color: var(--sasin-gold);">
+                <div class="card-header" onclick="toggleCard(this)">
+                    <div class="card-date-badge">
+                        <div class="day">6</div>
+                        <div class="month">Jun</div>
+                        <div class="dow">Sat</div>
+                    </div>
+                    <div class="card-info">
+                        <span class="card-type card-type-class">Full-Day Session</span>
+                        <h3>Full-Day Sessions at Sasin</h3>
+                        <div class="time">📍 Sasin Campus · All day</div>
+                    </div>
+                    <div class="card-toggle"><span class="arrow">▼</span></div>
+                </div>
+                <div class="card-body">
+                    <p>Full-day academic sessions. Prepare for an intensive but rewarding day of learning and peer collaboration.</p>
+                    <ul>
+                        <li>Complete schedule shared during orientation week</li>
+                        <li>Breakfast and lunch provided</li>
+                    </ul>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Download Section -->
+        <div class="download-section">
+            <p style="margin-bottom: 16px; color: var(--sasin-text-light);">Save the schedule to your calendar</p>
+            <a href="#" onclick="downloadICS(event)" class="btn btn-primary">
+                📅 Download Calendar (.ics)
+            </a>
+            <a href="#" onclick="copyShareLink(event)" class="btn btn-outline" style="margin-left: 12px;">
+                🔗 Copy Share Link
+            </a>
+        </div>
+    </div>
+</section>
+
+<!-- ===== KEY INFO ===== -->
+<section class="section" style="background: var(--sasin-white);">
+    <div class="container">
+        <h2 class="section-title">What to Expect</h2>
+        <div class="divider"></div>
+        <p class="section-subtitle">Everything you need to know for a strong start to your EMBA journey.</p>
+
+        <div class="info-grid">
+            <div class="info-card">
+                <h3><span class="emoji">🎒</span> What to Bring</h3>
+                <p>Laptop, business casual attire for classes, comfortable clothes for bootcamp activities, any pre-reading materials shared by the program office.</p>
+            </div>
+            <div class="info-card">
+                <h3><span class="emoji">🚌</span> Bootcamp Logistics</h3>
+                <p>Transportation from Sasin, accommodation, and all meals are provided. Departure early Saturday morning, return late Monday afternoon.</p>
+            </div>
+            <div class="info-card">
+                <h3><span class="emoji">🤝</span> Cohort Bonding</h3>
+                <p>This experience is designed to help you bond with classmates, develop leadership skills, and engage in interactive workshops and team-building activities.</p>
+            </div>
+            <div class="info-card">
+                <h3><span class="emoji">📋</span> Program Format</h3>
+                <p>Evening classes (6–9:30 PM) on weekdays + full-day sessions on Saturdays. Expect a rigorous but rewarding schedule balancing work and study.</p>
+            </div>
+            <div class="info-card">
+                <h3><span class="emoji">📍</span> Campus</h3>
+                <p>Sasin School of Management, Chulalongkorn University, Bangkok. Most classes held on campus unless otherwise noted for offsite activities.</p>
+            </div>
+            <div class="info-card">
+                <h3><span class="emoji">📧</span> Contact</h3>
+                <p>Program office will share detailed information via email. For urgent inquiries, contact the EMBA program coordinator during orientation.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ===== FOOTER ===== -->
+<footer class="footer">
+    <p>Sasin EMBA 2026 · <a href="https://www.sasin.edu" target="_blank">sasin.edu</a></p>
+    <p style="margin-top: 8px;">This page is a personal reference. Official schedule subject to change.</p>
+</footer>
+
+<script>
+function toggleCard(header) {
+    const card = header.parentElement;
+    const body = card.querySelector('.card-body');
+    const arrow = card.querySelector('.arrow');
+    body.classList.toggle('open');
+    arrow.classList.toggle('open');
+}
+
+function downloadICS(e) {
+    e.preventDefault();
+    const icsContent = [
+        'BEGIN:VCALENDAR',
+        'VERSION:2.0',
+        'PRODID:-//Sasin EMBA//Schedule//EN',
+        'BEGIN:VEVENT',
+        'DTSTART;VALUE=DATE:20260529',
+        'DTEND;VALUE=DATE:20260530',
+        'SUMMARY:Sasin EMBA Orientation',
+        'DESCRIPTION:Orientation at Sasin (2:00 PM – 8:00 PM)',
+        'LOCATION:Sasin School of Management, Chulalongkorn University',
+        'END:VEVENT',
+        'BEGIN:VEVENT',
+        'DTSTART;VALUE=DATE:20260530',
+        'DTEND;VALUE=DATE:20260602',
+        'SUMMARY:Sasin EMBA Bootcamp - AI, ESG & Future Skills',
+        'DESCRIPTION:3-day offsite bootcamp near Bangkok. Transportation, accommodation, and meals provided.',
+        'END:VEVENT',
+        'BEGIN:VEVENT',
+        'DTSTART;VALUE=DATE:20260602',
+        'DTEND;VALUE=DATE:20260604',
+        'SUMMARY:Public Holiday - No Classes',
+        'END:VEVENT',
+        'BEGIN:VEVENT',
+        'DTSTART;VALUE=DATE:20260604',
+        'DTEND;VALUE=DATE:20260606',
+        'SUMMARY:Sasin EMBA Evening Classes (6:00-9:30 PM)',
+        'END:VEVENT',
+        'BEGIN:VEVENT',
+        'DTSTART;VALUE=DATE:20260606',
+        'DTEND;VALUE=DATE:20260607',
+        'SUMMARY:Sasin EMBA Full-Day Session',
+        'END:VEVENT',
+        'END:VCALENDAR'
+    ].join('\r\n');
+
+    const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = 'sasin-emba-2026-kickoff.ics';
+    link.click();
+    URL.revokeObjectURL(link.href);
+}
+
+function copyShareLink(e) {
+    e.preventDefault();
+    const url = window.location.href;
+    navigator.clipboard.writeText(url).then(() => {
+        const btn = e.currentTarget;
+        const original = btn.innerHTML;
+        btn.innerHTML = '✅ Copied!';
+        setTimeout(() => btn.innerHTML = original, 2000);
+    }).catch(() => {
+        prompt('Copy this link:', url);
+    });
+}
+</script>
+</body>
+</html>
