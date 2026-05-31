@@ -1,0 +1,753 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AgriTech: Challenges & Opportunities in SEA | Sasin EMBA 2026</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:wght@600;700;800&display=swap" rel="stylesheet" />
+    <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+    <style>
+        :root {
+            --sasin-gold: #C9A84C;
+            --sasin-gold-light: #E8D48B;
+            --sasin-gold-dark: #A68B2E;
+            --sasin-cream: #FDF8F0;
+            --sasin-dark: #1A1A2E;
+            --sasin-mid: #2D2D44;
+            --sasin-text: #3D3D5C;
+            --sasin-text-light: #6B6B8A;
+            --sasin-accent: #E85D3A;
+            --sasin-white: #FFFFFF;
+            --shadow-sm: 0 1px 3px rgba(0,0,0,0.08);
+            --shadow-md: 0 4px 16px rgba(0,0,0,0.10);
+            --shadow-lg: 0 8px 32px rgba(0,0,0,0.12);
+            --radius: 16px;
+            --radius-sm: 10px;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Inter', -apple-system, sans-serif;
+            background: var(--sasin-cream);
+            color: var(--sasin-text);
+            line-height: 1.7;
+            overflow-x: hidden;
+        }
+        /* ===== HERO ===== */
+        .hero {
+            background: linear-gradient(135deg, var(--sasin-dark) 0%, var(--sasin-mid) 50%, #3A3A5C 100%);
+            color: var(--sasin-white);
+            padding: 80px 24px 60px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        .hero::before {
+            content: '';
+            position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
+            background: radial-gradient(circle at 30% 50%, rgba(201,168,76,0.08) 0%, transparent 50%),
+                        radial-gradient(circle at 70% 50%, rgba(201,168,76,0.05) 0%, transparent 50%);
+            animation: heroGlow 20s ease-in-out infinite;
+        }
+        @keyframes heroGlow {
+            0%, 100% { transform: translate(0,0); }
+            50% { transform: translate(-5%,5%); }
+        }
+        .hero-content { position: relative; z-index: 1; max-width: 800px; margin: 0 auto; }
+        .hero-label {
+            display: inline-block; background: rgba(201,168,76,0.15); color: var(--sasin-gold-light);
+            padding: 6px 18px; border-radius: 100px; font-size: 0.85rem; font-weight: 600;
+            letter-spacing: 2px; text-transform: uppercase; margin-bottom: 24px;
+            border: 1px solid rgba(201,168,76,0.25);
+        }
+        .hero h1 {
+            font-family: 'Playfair Display', serif; font-size: 2.8rem; font-weight: 800;
+            line-height: 1.2; margin-bottom: 16px;
+        }
+        .hero h1 span { color: var(--sasin-gold); }
+        .hero-desc { font-size: 1.1rem; color: rgba(255,255,255,0.75); margin-bottom: 32px; max-width: 600px; margin-left: auto; margin-right: auto; }
+        .hero-meta { display: flex; gap: 32px; justify-content: center; flex-wrap: wrap; }
+        .hero-meta-item { text-align: center; }
+        .hero-meta-item .icon { font-size: 1.5rem; display: block; margin-bottom: 4px; }
+        .hero-meta-item .label { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; color: rgba(255,255,255,0.5); }
+        .hero-meta-item .value { font-size: 1rem; font-weight: 600; color: var(--sasin-white); }
+
+        /* ===== NAV ===== */
+        .nav-bar {
+            background: var(--sasin-white);
+            border-bottom: 1px solid rgba(0,0,0,0.06);
+            padding: 12px 24px;
+            position: sticky; top: 0; z-index: 100;
+        }
+        .nav-inner { max-width: 1100px; margin: 0 auto; display: flex; gap: 24px; align-items: center; }
+        .nav-back { color: var(--sasin-text-light); text-decoration: none; font-size: 0.9rem; font-weight: 500; display: flex; align-items: center; gap: 6px; }
+        .nav-back:hover { color: var(--sasin-gold-dark); }
+        .nav-title { font-family: 'Playfair Display', serif; font-size: 1.1rem; font-weight: 700; color: var(--sasin-dark); }
+        .nav-spacer { flex: 1; }
+        .nav-toc-link { color: var(--sasin-gold-dark); text-decoration: none; font-size: 0.85rem; font-weight: 600; }
+        .nav-toc-link:hover { text-decoration: underline; }
+
+        /* ===== SECTIONS ===== */
+        .section { max-width: 900px; margin: 0 auto; padding: 64px 24px; }
+        .section-title {
+            font-family: 'Playfair Display', serif; font-size: 1.8rem; font-weight: 700; color: var(--sasin-dark);
+            margin-bottom: 8px;
+        }
+        .section-accent {
+            width: 48px; height: 3px; background: var(--sasin-gold); border-radius: 2px; margin-bottom: 32px;
+        }
+        .section-subtitle { font-size: 1rem; color: var(--sasin-text-light); margin-bottom: 40px; }
+
+        /* ===== PROFESSOR CARD ===== */
+        .prof-card {
+            background: var(--sasin-white); border-radius: var(--radius);
+            box-shadow: var(--shadow-md); overflow: hidden; display: flex; gap: 0;
+            margin-bottom: 48px; flex-wrap: wrap;
+        }
+        .prof-image {
+            flex: 0 0 220px; background: var(--sasin-dark);
+            display: flex; align-items: center; justify-content: center;
+            padding: 32px; min-height: 220px;
+        }
+        .prof-initials {
+            width: 120px; height: 120px; border-radius: 50%; background: linear-gradient(135deg, var(--sasin-gold), var(--sasin-gold-dark));
+            display: flex; align-items: center; justify-content: center;
+            font-family: 'Playfair Display', serif; font-size: 2.4rem; font-weight: 700; color: var(--sasin-dark);
+        }
+        .prof-info { flex: 1; padding: 32px; }
+        .prof-name { font-family: 'Playfair Display', serif; font-size: 1.5rem; font-weight: 700; color: var(--sasin-dark); }
+        .prof-title { font-size: 0.95rem; color: var(--sasin-text-light); margin: 4px 0 12px; }
+        .prof-badges { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
+        .prof-badge {
+            background: rgba(201,168,76,0.1); color: var(--sasin-gold-dark);
+            font-size: 0.78rem; font-weight: 600; padding: 4px 12px; border-radius: 100px;
+        }
+        .prof-badge.green { background: rgba(16,185,129,0.1); color: #059669; }
+        .prof-detail { font-size: 0.9rem; color: var(--sasin-text); line-height: 1.7; }
+
+        /* ===== TABLE ===== */
+        .data-table { width: 100%; border-collapse: collapse; margin: 24px 0; font-size: 0.9rem; }
+        .data-table th {
+            background: var(--sasin-dark); color: var(--sasin-white); padding: 12px 16px;
+            text-align: left; font-weight: 600; font-size: 0.8rem; letter-spacing: 0.5px;
+        }
+        .data-table td {
+            padding: 12px 16px; border-bottom: 1px solid rgba(0,0,0,0.06);
+            background: var(--sasin-white);
+        }
+        .data-table tr:hover td { background: rgba(201,168,76,0.04); }
+
+        /* ===== ACCORDION CARDS ===== */
+        .accordion { margin: 32px 0; }
+        .acc-card {
+            background: var(--sasin-white); border-radius: var(--radius-sm);
+            box-shadow: var(--shadow-sm); margin-bottom: 12px; overflow: hidden;
+            border: 1px solid rgba(0,0,0,0.04);
+        }
+        .acc-header {
+            padding: 20px 24px; cursor: pointer; display: flex; align-items: center; gap: 16px;
+            transition: background 0.2s;
+        }
+        .acc-header:hover { background: rgba(201,168,76,0.03); }
+        .acc-icon {
+            width: 40px; height: 40px; border-radius: 8px; flex-shrink: 0;
+            display: flex; align-items: center; justify-content: center; font-size: 1.2rem;
+        }
+        .acc-icon.swot-s { background: rgba(16,185,129,0.1); }
+        .acc-icon.swot-w { background: rgba(245,158,11,0.1); }
+        .acc-icon.swot-o { background: rgba(59,130,246,0.1); }
+        .acc-icon.swot-t { background: rgba(239,68,68,0.1); }
+        .acc-title { font-weight: 600; color: var(--sasin-dark); font-size: 1rem; }
+        .acc-toggle { margin-left: auto; color: var(--sasin-text-light); transition: transform 0.3s; }
+        .acc-card.open .acc-toggle { transform: rotate(180deg); }
+        .acc-body { max-height: 0; overflow: hidden; transition: max-height 0.5s ease; }
+        .acc-card.open .acc-body { max-height: 8000px; }
+        .acc-body-inner { padding: 0 24px 24px 80px; font-size: 0.9rem; color: var(--sasin-text); line-height: 1.8; }
+        .acc-body-inner ul { padding-left: 20px; }
+        .acc-body-inner li { margin-bottom: 6px; }
+
+        /* ===== INFO GRID ===== */
+        .info-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin: 32px 0; }
+        .info-card {
+            background: var(--sasin-white); border-radius: var(--radius-sm);
+            padding: 28px; box-shadow: var(--shadow-sm); border: 1px solid rgba(0,0,0,0.04);
+        }
+        .info-card-emoji { font-size: 2rem; margin-bottom: 12px; }
+        .info-card-title { font-weight: 700; font-size: 1rem; color: var(--sasin-dark); margin-bottom: 8px; }
+        .info-card-desc { font-size: 0.88rem; color: var(--sasin-text-light); line-height: 1.6; }
+
+        /* ===== KPI STRIP ===== */
+        .kpi-strip { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin: 32px 0; }
+        .kpi-card {
+            background: var(--sasin-white); border-radius: var(--radius-sm);
+            padding: 24px; box-shadow: var(--shadow-sm); text-align: center;
+            border-top: 3px solid var(--sasin-gold);
+        }
+        .kpi-num { font-family: 'Playfair Display', serif; font-size: 2rem; font-weight: 800; color: var(--sasin-dark); }
+        .kpi-label { font-size: 0.8rem; color: var(--sasin-text-light); text-transform: uppercase; letter-spacing: 1px; margin-top: 4px; }
+
+        /* ===== PUBLICATION LIST ===== */
+        .pub-list { list-style: none; }
+        .pub-item {
+            background: var(--sasin-white); padding: 20px 24px; border-radius: var(--radius-sm);
+            margin-bottom: 12px; border-left: 4px solid var(--sasin-gold);
+            box-shadow: var(--shadow-sm); font-size: 0.88rem;
+        }
+        .pub-title { font-weight: 600; color: var(--sasin-dark); }
+        .pub-journal { color: var(--sasin-gold-dark); font-weight: 500; }
+        .pub-badge {
+            display: inline-block; background: rgba(16,185,129,0.1); color: #059669;
+            font-size: 0.72rem; font-weight: 700; padding: 2px 8px; border-radius: 4px;
+            margin-left: 8px;
+        }
+
+        /* ===== FOOTER ===== */
+        .footer {
+            background: var(--sasin-dark); color: rgba(255,255,255,0.6);
+            text-align: center; padding: 40px 24px; font-size: 0.85rem; margin-top: 64px;
+        }
+        .footer a { color: var(--sasin-gold-light); text-decoration: none; }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 768px) {
+            .hero h1 { font-size: 2rem; }
+            .prof-card { flex-direction: column; }
+            .prof-image { flex: 0 0 140px; min-height: 140px; }
+            .section { padding: 40px 16px; }
+            .section-title { font-size: 1.5rem; }
+            .acc-body-inner { padding: 0 16px 20px 60px; }
+        }
+
+        /* ===== TOC SIDEBAR (desktop) ===== */
+        .toc-fixed {
+            position: fixed; left: 24px; top: 120px; width: 200px;
+            font-size: 0.82rem; z-index: 50;
+        }
+        .toc-fixed-title {
+            font-weight: 700; text-transform: uppercase; letter-spacing: 1px;
+            color: var(--sasin-text-light); margin-bottom: 12px; font-size: 0.72rem;
+        }
+        .toc-fixed a {
+            display: block; padding: 4px 0; color: var(--sasin-text-light);
+            text-decoration: none; border-left: 2px solid transparent; padding-left: 12px;
+            transition: all 0.2s;
+        }
+        .toc-fixed a:hover { color: var(--sasin-gold-dark); border-left-color: var(--sasin-gold); }
+        @media (max-width: 1200px) { .toc-fixed { display: none; } }
+    </style>
+</head>
+<body>
+
+<!-- SIDE TOC -->
+<nav class="toc-fixed">
+    <div class="toc-fixed-title">On this page</div>
+    <a href="#prof">Professor Cavite</a>
+    <a href="#pubs">Key Publications</a>
+    <a href="#landscape">SEA AgriTech</a>
+    <a href="#esg">ESG × Agriculture</a>
+    <a href="#swot">SWOT Analysis</a>
+    <a href="#pestle">PESTLE Analysis</a>
+    <a href="#startups">Case Studies</a>
+    <a href="#investment">Investment Data</a>
+    <a href="#discuss">Prep Questions</a>
+    <a href="#refs">References</a>
+</nav>
+
+<!-- TOP NAV -->
+<div class="nav-bar">
+    <div class="nav-inner">
+        <a class="nav-back" href="index.html">← Back to Program</a>
+        <span class="nav-spacer"></span>
+        <span class="nav-title">EMBA AgriTech Research Brief</span>
+        <span class="nav-spacer"></span>
+        <a class="nav-toc-link" href="#refs">📚 24 References</a>
+    </div>
+</div>
+
+<!-- HERO -->
+<section class="hero">
+    <div class="hero-content">
+        <div class="hero-label">EMBA AgriTech Module</div>
+        <h1>Challenges & <span>Opportunities</span> in Southeast Asia</h1>
+        <p class="hero-desc">
+            Connecting agriculture with ESG — sustainability, agriTech solutions, and the $90B opportunity in Southeast Asia.
+            Pre-class research brief with SWOT & PESTLE frameworks.
+        </p>
+        <div class="hero-meta">
+            <div class="hero-meta-item">
+                <span class="icon">👨‍🏫</span>
+                <span class="label">Professor</span>
+                <span class="value">Harry Jay Cavite, Ph.D.</span>
+            </div>
+            <div class="hero-meta-item">
+                <span class="icon">🏫</span>
+                <span class="label">School</span>
+                <span class="value">Sasin School of Management</span>
+            </div>
+            <div class="hero-meta-item">
+                <span class="icon">📅</span>
+                <span class="label">Prepared</span>
+                <span class="value">May 31, 2026</span>
+            </div>
+            <div class="hero-meta-item">
+                <span class="icon">📊</span>
+                <span class="label">Activity</span>
+                <span class="value">SWOT + PESTLE</span>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- PROFESSOR PROFILE -->
+<section class="section" id="prof">
+    <h2 class="section-title">Professor Harry Jay Cavite, Ph.D.</h2>
+    <div class="section-accent"></div>
+
+    <div class="prof-card">
+        <div class="prof-image">
+            <div class="prof-initials">HJC</div>
+        </div>
+        <div class="prof-info">
+            <div class="prof-name">Harry Jay M. Cavite, Ph.D.</div>
+            <div class="prof-title">Full-time Faculty (Marketing) · Sasin School of Management, Chulalongkorn University</div>
+            <div class="prof-badges">
+                <span class="prof-badge">📋 Ph.D. Agribusiness Management (KMITL, 2022)</span>
+                <span class="prof-badge">🌾 Licensed Agriculturist (Philippines)</span>
+                <span class="prof-badge green">📊 411+ Google Scholar Citations</span>
+                <span class="prof-badge">🔬 ESG & Sustainability</span>
+                <span class="prof-badge">📈 Data & Analytics</span>
+            </div>
+            <p class="prof-detail">
+                Dr. Cavite's research centers on <strong>marketing and management research in agribusiness</strong> — consumers' purchase intentions, farmers' technology adoption, organic products, and product traceability. With 10+ years of combined experience spanning Philippine government agriculture (Department of Agriculture, PhilRice) to Thai academia (KMITL, Sasin), his work connects directly to UN SDG 12: Responsible Consumption and Production. He teaches marketing research in the Flexible MBA and quantitative research in the DBA program.
+            </p>
+        </div>
+    </div>
+
+    <h3 style="font-family:'Playfair Display',serif;font-size:1.3rem;margin-bottom:16px;">Career Trajectory</h3>
+    <table class="data-table">
+        <tr><th>Period</th><th>Role</th><th>Institution</th></tr>
+        <tr><td>2022–Present</td><td>Lecturer of Marketing</td><td>Sasin School of Management, Thailand</td></tr>
+        <tr><td>2022</td><td>Post-doctoral Researcher</td><td>KMITL, Thailand</td></tr>
+        <tr><td>2019–2022</td><td>Doctoral Researcher</td><td>KMITL, Thailand</td></tr>
+        <tr><td>2018–2019</td><td>Instructor I</td><td>Central Luzon State University, Philippines</td></tr>
+        <tr><td>2016–2018</td><td>Graduate Researcher</td><td>Philippine Rice Research Institute (PhilRice)</td></tr>
+        <tr><td>2013</td><td>Agricultural Technologist II</td><td>Department of Agriculture Region VIII, Philippines</td></tr>
+    </table>
+</section>
+
+<!-- KEY PUBLICATIONS -->
+<section class="section" id="pubs" style="padding-top:0;">
+    <h2 class="section-title">Key Publications</h2>
+    <div class="section-accent"></div>
+    <p class="section-subtitle">Prof. Cavite's work consistently connects farmer-side technology adoption barriers, consumer-side ESG-driven demand, and policy frameworks for sustainable agriculture.</p>
+
+    <ul class="pub-list">
+        <li class="pub-item">
+            <span class="pub-title">"Towards agri-food industry sustainability: Addressing agricultural technology adoption challenges through innovation"</span><br>
+            <span class="pub-journal">Business Strategy and the Environment</span> (2024)<span class="pub-badge">Scopus Q1</span><span class="pub-badge">ABDC A</span><span class="pub-badge">ABS 3</span><br>
+            <small>⭐ KEY PAPER — Directly addresses technology adoption challenges in agri-food, innovation as solution for sustainability. Likely foundational to his lecture.</small>
+        </li>
+        <li class="pub-item">
+            <span class="pub-title">"Millennial Consumers' Intention to Purchase Organic Food: Do Environmental Concerns Matter?"</span><br>
+            <span class="pub-journal">Business Strategy and the Environment</span> (2025)<br>
+            <small>Links consumer behavior, environmental concerns, and organic food demand — the "demand side" of ESG in agribusiness.</small>
+        </li>
+        <li class="pub-item">
+            <span class="pub-title">"Farmers' perception of consumer information and adoption intention towards organic rice farming"</span><br>
+            <span class="pub-journal">Outlook on Agriculture</span> (2023)<br>
+            <small>Evidence from community enterprise in rural Thailand — core case of technology adoption + sustainability in SEA context.</small>
+        </li>
+        <li class="pub-item">
+            <span class="pub-title">"Alternate Wetting and Drying as Water-Saving Technology: GAP Rice Farmers in Thailand"</span><br>
+            <span class="pub-journal">Water</span> (2023)<span class="pub-badge">Scopus Q1</span><br>
+            <small>Water-saving agritech adoption — directly relevant to climate-smart agriculture.</small>
+        </li>
+        <li class="pub-item">
+            <span class="pub-title">"Community enterprise consumers' intention to purchase organic rice: the moderating role of product traceability knowledge"</span><br>
+            <span class="pub-journal">British Food Journal</span> (2022)<br>
+            <small>Traceability as ESG enabler — transparency in food supply chains.</small>
+        </li>
+    </ul>
+</section>
+
+<!-- AGRI LANDSCAPE -->
+<section class="section" id="landscape" style="padding-top:0;">
+    <h2 class="section-title">SEA AgriTech Landscape (2025–2026)</h2>
+    <div class="section-accent"></div>
+
+    <div class="kpi-strip">
+        <div class="kpi-card"><div class="kpi-num">$153B+</div><div class="kpi-label">Regional Ag Market (2025)</div></div>
+        <div class="kpi-card"><div class="kpi-num">$90B</div><div class="kpi-label">AgriTech Unlock Potential by 2033</div></div>
+        <div class="kpi-card"><div class="kpi-num">~40%</div><div class="kpi-label">Workforce in Agriculture</div></div>
+        <div class="kpi-card"><div class="kpi-num">-70%</div><div class="kpi-label">VC Funding Drop (2022→2025)</div></div>
+        <div class="kpi-card"><div class="kpi-num">780M+</div><div class="kpi-label">Population Growth by 2050</div></div>
+    </div>
+
+    <div class="info-grid">
+        <div class="info-card">
+            <div class="info-card-emoji">🤖</div>
+            <div class="info-card-title">AI & Precision Agriculture</div>
+            <div class="info-card-desc">AI-powered crop disease detection, drone spraying, satellite monitoring. EasyRice (Thailand) achieves 95% accuracy in rice quality grading — 10× faster than human inspection.</div>
+        </div>
+        <div class="info-card">
+            <div class="info-card-emoji">🌡️</div>
+            <div class="info-card-title">Climate-Smart Farming</div>
+            <div class="info-card-desc">Climate change threatens -7% to -9% cereal yields by 2050. $21B losses from climate disasters (2008–2018). AWD water-saving tech, drought-resistant seeds emerging.</div>
+        </div>
+        <div class="info-card">
+            <div class="info-card-emoji">🔗</div>
+            <div class="info-card-title">Supply Chain Innovation</div>
+            <div class="info-card-desc">Blockchain traceability via DiMuto (Singapore). 30–40% post-harvest losses being reduced through cold chain investments in Vietnam, Thailand, Indonesia.</div>
+        </div>
+        <div class="info-card">
+            <div class="info-card-emoji">🏙️</div>
+            <div class="info-card-title">Urban & Vertical Farming</div>
+            <div class="info-card-desc">Singapore's SGD 60M Agri-Food Fund. Sustenir achieves 14× higher yields with 90% less water. AI-controlled hydroponics in climate-controlled environments.</div>
+        </div>
+        <div class="info-card">
+            <div class="info-card-emoji">🥩</div>
+            <div class="info-card-title">Alternative Proteins</div>
+            <div class="info-card-desc">Plant-based meats localized for SEA (Green Rebel's rendang & satay). Cultivated meat R&D in Singapore. Food waste valorization via TreeDots across 14 countries.</div>
+        </div>
+        <div class="info-card">
+            <div class="info-card-emoji">⚠️</div>
+            <div class="info-card-title">Key Challenges</div>
+            <div class="info-card-desc">Small farms (<2 ha average), aging farmers, low digital literacy, high tech costs, regulatory barriers, 60%+ venture failure rate from premature regional expansion.</div>
+        </div>
+    </div>
+</section>
+
+<!-- ESG + AGRICULTURE -->
+<section class="section" id="esg" style="padding-top:0;">
+    <h2 class="section-title">ESG × Agriculture in ASEAN</h2>
+    <div class="section-accent"></div>
+
+    <div class="accordion">
+        <div class="acc-card open" onclick="this.classList.toggle('open')">
+            <div class="acc-header">
+                <div class="acc-icon swot-s">🌍</div>
+                <div class="acc-title">Environmental (E)</div>
+                <span class="acc-toggle">▾</span>
+            </div>
+            <div class="acc-body"><div class="acc-body-inner">
+                <ul>
+                    <li><strong>Carbon:</strong> Agriculture = ~19% of SEA emissions (deforestation, rice methane, livestock)</li>
+                    <li><strong>Water:</strong> Rice uses 40% of freshwater; AWD technology reduces by 30%</li>
+                    <li><strong>Soil:</strong> Chemical overuse degrading 40% of agricultural land</li>
+                    <li><strong>Biodiversity:</strong> Deforestation for palm oil/rubber; RSPO certification growing</li>
+                    <li><strong>Climate adaptation:</strong> Mangrove restoration, drought-resistant seeds, precision irrigation</li>
+                </ul>
+            </div></div>
+        </div>
+        <div class="acc-card" onclick="this.classList.toggle('open')">
+            <div class="acc-header">
+                <div class="acc-icon swot-s">👥</div>
+                <div class="acc-title">Social (S)</div>
+                <span class="acc-toggle">▾</span>
+            </div>
+            <div class="acc-body"><div class="acc-body-inner">
+                <ul>
+                    <li><strong>Livelihoods:</strong> ~100 million smallholder farmers in ASEAN</li>
+                    <li><strong>Food security:</strong> Rice self-sufficiency concerns as urbanization expands</li>
+                    <li><strong>Labor rights:</strong> Aging farm workforce (avg. age 50+ in Thailand)</li>
+                    <li><strong>Gender:</strong> Women ~50% of ag labor but limited land ownership</li>
+                    <li><strong>Community enterprise:</strong> Prof. Cavite's research focus — cooperative models for organic transition</li>
+                </ul>
+            </div></div>
+        </div>
+        <div class="acc-card" onclick="this.classList.toggle('open')">
+            <div class="acc-header">
+                <div class="acc-icon swot-s">⚖️</div>
+                <div class="acc-title">Governance (G)</div>
+                <span class="acc-toggle">▾</span>
+            </div>
+            <div class="acc-body"><div class="acc-body-inner">
+                <ul>
+                    <li><strong>Traceability:</strong> EU Deforestation Regulation (EUDR) requires geolocation proof</li>
+                    <li><strong>Certifications:</strong> GlobalG.A.P., Organic, Fair Trade, MSC — market access requirements</li>
+                    <li><strong>Policy:</strong> Thailand's BCG Model, Indonesia's Stratnas AI, Vietnam's green agriculture strategy</li>
+                    <li><strong>ESG reporting:</strong> Becoming mandatory for export markets; SMEs increasingly adopting</li>
+                    <li><strong>Key tension:</strong> Global ESG requirements vs. smallholder capacity to comply</li>
+                </ul>
+            </div></div>
+        </div>
+    </div>
+</section>
+
+<!-- SWOT -->
+<section class="section" id="swot" style="padding-top:0;">
+    <h2 class="section-title">SWOT Analysis: AgriTech in Southeast Asia</h2>
+    <div class="section-accent"></div>
+
+    <div class="accordion">
+        <div class="acc-card" onclick="this.classList.toggle('open')">
+            <div class="acc-header">
+                <div class="acc-icon swot-s">💪</div>
+                <div class="acc-title">Strengths</div>
+                <span class="acc-toggle">▾</span>
+            </div>
+            <div class="acc-body"><div class="acc-body-inner">
+                <ul>
+                    <li><strong>Agricultural heritage:</strong> Deep traditional knowledge; rice = cultural backbone</li>
+                    <li><strong>Biodiversity:</strong> Diverse agro-ecological zones; multiple crop systems</li>
+                    <li><strong>Youth demographics:</strong> Large tech-savvy population in urban areas</li>
+                    <li><strong>Export dominance:</strong> World's top exporter of rice, palm oil, rubber, seafood</li>
+                    <li><strong>Government support:</strong> National agritech strategies (Thailand 4.0, Indonesia Stratnas AI)</li>
+                    <li><strong>Digital infrastructure:</strong> 90%+ mobile penetration; expanding 4G/5G</li>
+                    <li><strong>Low labor costs:</strong> Competitive advantage for labor-intensive crops</li>
+                </ul>
+            </div></div>
+        </div>
+        <div class="acc-card" onclick="this.classList.toggle('open')">
+            <div class="acc-header">
+                <div class="acc-icon swot-w">⚠️</div>
+                <div class="acc-title">Weaknesses</div>
+                <span class="acc-toggle">▾</span>
+            </div>
+            <div class="acc-body"><div class="acc-body-inner">
+                <ul>
+                    <li><strong>Smallholder fragmentation:</strong> Average farm <2 ha; difficult to scale</li>
+                    <li><strong>Aging farmers:</strong> Average age 50+ in Thailand; Japan-like trajectory</li>
+                    <li><strong>Low digital literacy:</strong> Rural farmers lack tech skills for precision agriculture</li>
+                    <li><strong>Post-harvest losses:</strong> 30–40% due to poor storage and logistics</li>
+                    <li><strong>Limited R&D:</strong> Ag R&D <1% of agricultural GDP in most SEA countries</li>
+                    <li><strong>Financial exclusion:</strong> Limited credit for smallholders; high-interest informal lending</li>
+                    <li><strong>Infrastructure gaps:</strong> Rural roads, cold storage, irrigation inconsistent</li>
+                </ul>
+            </div></div>
+        </div>
+        <div class="acc-card" onclick="this.classList.toggle('open')">
+            <div class="acc-header">
+                <div class="acc-icon swot-o">🚀</div>
+                <div class="acc-title">Opportunities</div>
+                <span class="acc-toggle">▾</span>
+            </div>
+            <div class="acc-body"><div class="acc-body-inner">
+                <ul>
+                    <li><strong>$90B GDP unlock:</strong> Digital agritech could add $90B annually by 2033</li>
+                    <li><strong>AI revolution:</strong> Could contribute $1T to regional economy by 2030</li>
+                    <li><strong>ESG premium:</strong> Traceable, sustainable products command 10–30% price premiums</li>
+                    <li><strong>Carbon markets:</strong> Credits from regenerative agriculture, avoided deforestation</li>
+                    <li><strong>ASEAN integration:</strong> RCEP, EVFTA open export markets requiring higher standards</li>
+                    <li><strong>Fintech-agritech convergence:</strong> Mobile payments, micro-insurance, digital lending</li>
+                    <li><strong>Climate adaptation tech:</strong> Drought-resistant seeds, water-saving irrigation, early warning</li>
+                    <li><strong>Alternative proteins:</strong> Growing middle-class demand for sustainable protein</li>
+                </ul>
+            </div></div>
+        </div>
+        <div class="acc-card" onclick="this.classList.toggle('open')">
+            <div class="acc-header">
+                <div class="acc-icon swot-t">🔴</div>
+                <div class="acc-title">Threats</div>
+                <span class="acc-toggle">▾</span>
+            </div>
+            <div class="acc-body"><div class="acc-body-inner">
+                <ul>
+                    <li><strong>Climate change:</strong> -7% to -9% cereal yields by 2050; Mekong saltwater intrusion</li>
+                    <li><strong>Extreme weather:</strong> Increasing typhoons, floods — $21B losses (2008–2018)</li>
+                    <li><strong>Water scarcity:</strong> Competition from industry/urban use; groundwater depletion</li>
+                    <li><strong>Land conversion:</strong> Agricultural land lost to urbanization at accelerating rate</li>
+                    <li><strong>Global competition:</strong> Brazil, India, Africa competing on commodity crops</li>
+                    <li><strong>Trade barriers:</strong> EUDR, carbon border taxes — compliance costs for smallholders</li>
+                    <li><strong>Funding winter:</strong> Agritech VC down ~70%; eFishery scandal damaged trust</li>
+                    <li><strong>Brain drain:</strong> Rural youth migrating to cities; farm labor shortage</li>
+                </ul>
+            </div></div>
+        </div>
+    </div>
+</section>
+
+<!-- PESTLE -->
+<section class="section" id="pestle" style="padding-top:0;">
+    <h2 class="section-title">PESTLE Analysis: AgriTech in Southeast Asia</h2>
+    <div class="section-accent"></div>
+
+    <table class="data-table">
+        <tr><th style="width:100px">Factor</th><th>Key Points</th></tr>
+        <tr><td><strong>P</strong>olitical</td><td>ASEAN Economic Community reducing trade barriers; Thailand 4.0 / BCG Model; Indonesia Stratnas AI; land reform tensions; US-China trade effects; Myanmar crisis disruptions</td></tr>
+        <tr><td><strong>E</strong>conomic</td><td>$153B+ market; VC funding -70% from peak; currency volatility; fertilizer price spikes; 350M+ ASEAN middle class by 2030; rising interest rates squeeze startup funding</td></tr>
+        <tr><td><strong>S</strong>ocial</td><td>Aging farmers vs. young urban consumers; 50%+ urban by 2030; organic demand +15–20%/yr; rice centrality; halal market growth; rural-urban education gap; COVID accelerating digital adoption</td></tr>
+        <tr><td><strong>T</strong>echnological</td><td>AI/ML for disease detection & yield prediction; IoT soil sensors & smart irrigation; drone adoption; blockchain traceability (DiMuto); CRISPR gene editing; satellite imaging; 5G rollout; data interoperability gap</td></tr>
+        <tr><td><strong>L</strong>egal</td><td>EUDR requiring geolocation proof; Food safety standards (Codex); GMO regulations vary widely; foreign land ownership restrictions; data privacy laws (PDPA); nascent carbon credit frameworks</td></tr>
+        <tr><td><strong>E</strong>nvironmental</td><td>Among world's most climate-exposed regions; 1.5M+ hectares/yr deforestation; Mekong dam impacts; 40% soil degradation; rice methane (AWD cuts 30–50%); regenerative agriculture as carbon sink</td></tr>
+    </table>
+</section>
+
+<!-- CASE STUDIES -->
+<section class="section" id="startups" style="padding-top:0;">
+    <h2 class="section-title">AgriTech Case Studies</h2>
+    <div class="section-accent"></div>
+
+    <div class="info-grid">
+        <div class="info-card">
+            <div class="info-card-emoji">🇹🇭</div>
+            <div class="info-card-title">EasyRice (Thailand)</div>
+            <div class="info-card-desc">AI-powered rice quality grading — 95% accuracy, 10× faster than manual. Serves 20,000+ farmers/processors. Directly relevant to Prof. Cavite's Thai rice research.</div>
+        </div>
+        <div class="info-card">
+            <div class="info-card-emoji">🇮🇩</div>
+            <div class="info-card-title">Gokomodo (Indonesia)</div>
+            <div class="info-card-desc">Agritech marketplace for 33M smallholders. GokoMart retail + digital agronomy education. Soil preservation training reduces burning.</div>
+        </div>
+        <div class="info-card">
+            <div class="info-card-emoji">🇮🇩</div>
+            <div class="info-card-title">Chickin (Indonesia)</div>
+            <div class="info-card-desc">IoT poultry optimization — 60,000+ farmers, reduced feed costs, doubled profits. Addresses 30–40 day harvest cycle "panic selling."</div>
+        </div>
+        <div class="info-card">
+            <div class="info-card-emoji">🇸🇬</div>
+            <div class="info-card-title">Sustenir (Singapore)</div>
+            <div class="info-card-desc">Vertical farming — 14× higher yields, 90% less water, AI-powered monitoring. Urban food security model for land-scarce cities.</div>
+        </div>
+        <div class="info-card">
+            <div class="info-card-emoji">🇸🇬</div>
+            <div class="info-card-title">DiMuto (Singapore)</div>
+            <div class="info-card-desc">Blockchain food traceability for produce exports. End-to-end visibility — food safety compliance, fraud prevention, international market access.</div>
+        </div>
+        <div class="info-card">
+            <div class="info-card-emoji">🌏</div>
+            <div class="info-card-title">TreeDots (Regional)</div>
+            <div class="info-card-desc">Food surplus marketplace across 13 cities, 3 countries. 90% of food waste is upstream; 66% still edible. Trades surplus across 14 countries.</div>
+        </div>
+    </div>
+</section>
+
+<!-- INVESTMENT -->
+<section class="section" id="investment" style="padding-top:0;">
+    <h2 class="section-title">Investment Landscape</h2>
+    <div class="section-accent"></div>
+
+    <div class="kpi-strip">
+        <div class="kpi-card"><div class="kpi-num">$1.7B</div><div class="kpi-label">Agrifoodtech Funding (2022 Peak)</div></div>
+        <div class="kpi-card"><div class="kpi-num">192</div><div class="kpi-label">Deal Count (2022)</div></div>
+        <div class="kpi-card"><div class="kpi-num">~70%</div><div class="kpi-label">Funding Decline (2022→2025)</div></div>
+        <div class="kpi-card"><div class="kpi-num">60%+</div><div class="kpi-label">Venture Failure Rate (2022–25)</div></div>
+        <div class="kpi-card"><div class="kpi-num">$750M</div><div class="kpi-label">2022 Funding Peak Before Drop</div></div>
+    </div>
+
+    <p style="margin-top:24px;font-size:0.95rem;color:var(--sasin-text-light);">
+        <strong>Key Report:</strong> <em>"The Opportunity for AgriTech Investment in Southeast Asia"</em> (Briter/Beanstalk, April 2026) — $90B potential across 13 markets, with India as the scaling model. Supported by FMO Ventures, IFC (World Bank Group), and Rabo Foundation. The key insight: 60%+ of failures were caused by premature regional expansion, not product-market fit problems.
+    </p>
+</section>
+
+<!-- DISCUSSION QUESTIONS -->
+<section class="section" id="discuss" style="padding-top:0;">
+    <h2 class="section-title">Discussion Questions to Prepare</h2>
+    <div class="section-accent"></div>
+    <p class="section-subtitle">Built around Prof. Cavite's published research — connecting his work to broader themes.</p>
+
+    <div class="accordion">
+        <div class="acc-card" onclick="this.classList.toggle('open')">
+            <div class="acc-header"><div class="acc-title">1. Technology Adoption Gap</div><span class="acc-toggle">▾</span></div>
+            <div class="acc-body"><div class="acc-body-inner">
+                Prof. Cavite's research shows organic rice adoption is far below policy targets despite incentives. What behavioral, economic, and information barriers explain this? How would you apply this framework to agritech adoption in general?
+            </div></div>
+        </div>
+        <div class="acc-card" onclick="this.classList.toggle('open')">
+            <div class="acc-header"><div class="acc-title">2. Consumer-Driven Sustainability</div><span class="acc-toggle">▾</span></div>
+            <div class="acc-body"><div class="acc-body-inner">
+                His 2025 paper asks whether environmental concerns drive millennials' organic purchases. How can agritech companies leverage consumer ESG demand to create pull (not just push) for sustainable farming?
+            </div></div>
+        </div>
+        <div class="acc-card" onclick="this.classList.toggle('open')">
+            <div class="acc-header"><div class="acc-title">3. Smallholder vs. Corporate</div><span class="acc-toggle">▾</span></div>
+            <div class="acc-body"><div class="acc-body-inner">
+                Can agritech serve both 33M Indonesian smallholders AND large agribusinesses — or do solutions need to be fundamentally different?
+            </div></div>
+        </div>
+        <div class="acc-card" onclick="this.classList.toggle('open')">
+            <div class="acc-header"><div class="acc-title">4. ESG as Trade Barrier or Opportunity?</div><span class="acc-toggle">▾</span></div>
+            <div class="acc-body"><div class="acc-body-inner">
+                EUDR requires deforestation-free supply chains — will this exclude smallholders or incentivize them to adopt traceability tech?
+            </div></div>
+        </div>
+        <div class="acc-card" onclick="this.classList.toggle('open')">
+            <div class="acc-header"><div class="acc-title">5. Thailand's AgriTech Priority</div><span class="acc-toggle">▾</span></div>
+            <div class="acc-body"><div class="acc-body-inner">
+                As a top rice exporter with aging farmers, what agritech solutions should Thailand prioritize? How does Prof. Cavite's research on Thai organic rice inform this?
+            </div></div>
+        </div>
+        <div class="acc-card" onclick="this.classList.toggle('open')">
+            <div class="acc-header"><div class="acc-title">6. SWOT Application</div><span class="acc-toggle">▾</span></div>
+            <div class="acc-body"><div class="acc-body-inner">
+                Pick one SEA country — conduct a rapid SWOT of its agritech potential. What's the single most leverageable strength and most critical threat?
+            </div></div>
+        </div>
+        <div class="acc-card" onclick="this.classList.toggle('open')">
+            <div class="acc-header"><div class="acc-title">7. The $90B Question</div><span class="acc-toggle">▾</span></div>
+            <div class="acc-body"><div class="acc-body-inner">
+                Digital agritech could unlock $90B, but venture funding has collapsed 70% since 2022. What needs to change to unlock this capital?
+            </div></div>
+        </div>
+        <div class="acc-card" onclick="this.classList.toggle('open')">
+            <div class="acc-header"><div class="acc-title">8. Carbon Markets for Smallholders</div><span class="acc-toggle">▾</span></div>
+            <div class="acc-body"><div class="acc-body-inner">
+                Can ASEAN smallholders realistically access carbon credit markets? What infrastructure is needed?
+            </div></div>
+        </div>
+    </div>
+</section>
+
+<!-- REFERENCES -->
+<section class="section" id="refs" style="padding-top:0;">
+    <h2 class="section-title">References</h2>
+    <div class="section-accent"></div>
+
+    <div class="accordion">
+        <div class="acc-card" onclick="this.classList.toggle('open')">
+            <div class="acc-header"><div class="acc-title">Prof. Cavite's Publications (6 papers)</div><span class="acc-toggle">▾</span></div>
+            <div class="acc-body"><div class="acc-body-inner">
+                <ol style="font-size:0.85rem;">
+                    <li>Limpamont, A., Kittipanya-ngam, P., Chindasombatcharoen, N., & Cavite, H.J.M. (2024). Towards agri-food industry sustainability. <em>Business Strategy and the Environment</em>. <a href="https://doi.org/10.1002/bse.3871" target="_blank">DOI</a></li>
+                    <li>Cavite, H.J.M. et al. (2025). Millennial Consumers' Intention to Purchase Organic Food. <em>Business Strategy and the Environment</em>. <a href="https://doi.org/10.1002/bse.4162" target="_blank">DOI</a></li>
+                    <li>Cavite, H.J. et al. (2023). Farmers' perception of consumer information and organic rice adoption. <em>Outlook on Agriculture</em>. <a href="https://doi.org/10.1177/00307270221135250" target="_blank">DOI</a></li>
+                    <li>Suwanmaneepong, S. et al. (2023). Alternate Wetting and Drying as Water-Saving Technology. <em>Water</em>. <a href="https://doi.org/10.3390/w15030402" target="_blank">DOI</a></li>
+                    <li>Cavite, H.J., Mankeb, P. & Suwanmaneepong, S. (2022). Organic rice traceability. <em>British Food Journal</em>. <a href="https://doi.org/10.1108/BFJ-02-2021-0148" target="_blank">DOI</a></li>
+                    <li>Suwanmaneepong, S. et al. (2020). Cost analysis of organic vs. conventional rice. <em>Organic Agriculture</em>. <a href="https://doi.org/10.1007/s13165-020-00280-9" target="_blank">DOI</a></li>
+                </ol>
+            </div></div>
+        </div>
+        <div class="acc-card" onclick="this.classList.toggle('open')">
+            <div class="acc-header"><div class="acc-title">Industry Reports & Articles (12 sources)</div><span class="acc-toggle">▾</span></div>
+            <div class="acc-body"><div class="acc-body-inner">
+                <ol style="font-size:0.85rem;" start="7">
+                    <li>Source of Asia (2025). Agriculture in Southeast Asia 2025-2026. <a href="https://www.sourceofasia.com/agriculture-in-southeast-asia-2025-2026/" target="_blank">Link</a></li>
+                    <li>East Ventures (2024). 5 Keys to Redefining Agritech in SEA. <a href="https://east.vc/news/insights/redefining-agritech-in-southeast-asia-5-key-takeaways" target="_blank">Link</a></li>
+                    <li>ASEAN Exchanges (2024). ASEAN Agritech: Key Beneficiary of the AI Revolution. <a href="https://www.aseanexchanges.org/content/asean-agritech-key-beneficiary-of-the-ai-revolution/" target="_blank">Link</a></li>
+                    <li>EDB Singapore. The Future of Agrifood Tech in SEA. <a href="https://www.edb.gov.sg/en/business-insights/insights/the-future-of-agrifood-tech-in-southeast-asia-agriculture-in-the-digital-decade.html" target="_blank">Link</a></li>
+                    <li>Farmonaut (2025). Agriculture SEA: 2025 Trends & Challenges. <a href="https://farmonaut.com/asia/agriculture-southeast-asia-2025-trends-challenges" target="_blank">Link</a></li>
+                    <li>Agribusiness Academy (2025). Agritech & Food Tech Innovations in SEA. <a href="https://learning.agribusiness.academy/agritech-food-tech-innovations-in-southeast-asia/" target="_blank">Link</a></li>
+                    <li>AgriTech Insights (2026). SEA's $90B AgriTech Potential. <a href="https://agritechinsights.com/index.php/2026/04/02/southeast-asias-90b-agritech-potential/" target="_blank">Link</a></li>
+                    <li>Global Agriculture (2026). AgriTech Could Unlock $90B Across SEA. <a href="https://www.global-agriculture.com/investment-startups/agritech-could-unlock-90-billion-across-southeast-asia-new-report-says-india-shows-the-way/" target="_blank">Link</a></li>
+                    <li>Briter (2026). The Opportunity for AgriTech Investment in SEA and South Asia. <a href="https://www.briter.co/insights/reports/the-opportunity-for-agritech-investment-in-southeast-and-south-asia" target="_blank">Link</a></li>
+                    <li>Integra Partners (2025). 2024 in Review: Key Startup Trends. <a href="https://integrapartners.co/integra-perspectives/2024-review-trends-and-predictions-for-2025-in-sea/" target="_blank">Link</a></li>
+                    <li>Cropaia (2024). ESG Principles in Agtech and Foodtech. <a href="https://cropaia.com/blog/esg-principles/" target="_blank">Link</a></li>
+                    <li>C4S Courses (2026). SEA's Agri-Tech Opportunity: Lessons from India. <a href="https://c4scourses.in/agriculture/southeast-asias-agri-tech-opportunity-lessons-from-india/" target="_blank">Link</a></li>
+                </ol>
+            </div></div>
+        </div>
+        <div class="acc-card" onclick="this.classList.toggle('open')">
+            <div class="acc-header"><div class="acc-title">Institutional Sources (6 sources)</div><span class="acc-toggle">▾</span></div>
+            <div class="acc-body"><div class="acc-body-inner">
+                <ol style="font-size:0.85rem;" start="19">
+                    <li>World Bank Data. Agriculture value added (% of GDP) — ASEAN. <a href="https://data.worldbank.org/indicator/NV.AGR.TOTL.ZS" target="_blank">Link</a></li>
+                    <li>ADB (2021). Asian Development Outlook Update. <a href="https://www.adb.org/sites/default/files/publication/726556/ado2021-update.pdf" target="_blank">Link</a></li>
+                    <li>Sasin School of Management. Executive MBA Program. <a href="https://www.sasin.edu/programs/executive-mba/overview" target="_blank">Link</a></li>
+                    <li>Sasin School of Management. Harry Jay M. Cavite Profile. <a href="https://www.sasin.edu/profile/harry-jay-m-cavite" target="_blank">Link</a></li>
+                    <li>Google Scholar — Harry Jay Cavite. <a href="https://scholar.google.com/citations?user=7RUgbHcAAAAJ" target="_blank">Link</a></li>
+                    <li>Sasin ESG & Sustainability. <a href="https://www.sasin.edu/page/esg" target="_blank">Link</a></li>
+                </ol>
+            </div></div>
+        </div>
+    </div>
+</section>
+
+<!-- FOOTER -->
+<footer class="footer">
+    <p>Research compiled from Sasin School of Management profiles, Google Scholar, industry reports, ASEAN institutional sources, and startup ecosystem analysis.</p>
+    <p style="margin-top:12px;">All URLs verified as of May 31, 2026 · <a href="https://github.com/auttapongb/sasin-cfoth-ai">GitHub</a></p>
+</footer>
+
+</body>
+</html>
