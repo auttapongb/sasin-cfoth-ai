@@ -461,7 +461,24 @@ function renderRoster() {
   document.getElementById('headerCount').textContent = `${filtered.length} classmate${filtered.length!==1?'s':''}`;
   
   const grid = document.getElementById('rosterGrid');
-  grid.innerHTML = filtered.map(p => {
+  let cards = '';
+  
+  // Show "Create My Profile" card at top if logged in and not in roster
+  if (currentUser && !query) {
+    const hasProfile = people.some(p => currentUser.name && (p.name === currentUser.name || currentUser.name.includes(p.name)));
+    if (!hasProfile) {
+      cards += `
+        <div class="person-card" style="border:2px dashed var(--gold);background:rgba(201,168,76,0.05);cursor:pointer" onclick="createMyProfile()">
+          <div class="person-avatar" style="background:linear-gradient(135deg,var(--gold),var(--gold-dark));font-size:1.5rem">✨</div>
+          <div class="person-info">
+            <div class="person-name" style="color:var(--gold-dark)">Create Your Profile</div>
+            <div class="person-work">Tap here to add yourself to the roster</div>
+          </div>
+        </div>`;
+    }
+  }
+  
+  cards += filtered.map(p => {
     const initials = p.name.split(' ').map(w=>w[0]).join('').substring(0,2).toUpperCase();
     const imgSrc = p.image || p.linePicture || '';
     const imgTag = imgSrc 
@@ -480,7 +497,9 @@ function renderRoster() {
     `;
   }).join('');
   
-  if (filtered.length === 0) {
+  grid.innerHTML = cards;
+  
+  if (filtered.length === 0 && !cards) {
     grid.innerHTML = `<div class="empty-state"><span class="emoji">🔍</span>No classmates found matching "${query}"</div>`;
   }
 }
