@@ -324,7 +324,7 @@ body{font-family:'Inter',-apple-system,sans-serif;background:var(--cream);color:
 const CONFIG = {
   lineLiffId: '2010243566-dvAqwy7o',        // LINE LIFF ID
   googleClientId: '238908363321-cor235qk68ale6oijldsp5v8m04k53cp.apps.googleusercontent.com', // Google OAuth
-  uploadServer: 'https://api.cfoth.ai:8899', // Image upload server (Let's Encrypt HTTPS)
+  uploadServer: 'https://api.cfoth.ai', // Image upload server (port 443 via nginx proxy — no blocked ports!)
   githubRepo: 'auttapongb/sasin-cfoth-ai',
   dataPath: 'emba2026/data.json',
   commentsPath: 'emba2026/comments.json',
