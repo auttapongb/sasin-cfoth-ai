@@ -58,6 +58,11 @@ body{font-family:'Inter',sans-serif;background:var(--cream);color:var(--text);li
 .person-work{font-size:0.8rem;color:var(--text-light);line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .person-topics{display:flex;gap:4px;flex-wrap:wrap;margin-top:6px}
 .person-tag{background:rgba(201,168,76,0.1);color:var(--gold-dark);font-size:0.65rem;padding:2px 8px;border-radius:100px;font-weight:500}
+.person-role{display:inline-block;font-size:0.6rem;padding:2px 8px;border-radius:100px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;margin-left:4px;vertical-align:middle}
+.role-senior{background:rgba(139,92,246,0.12);color:#7c3aed}
+.role-professor{background:rgba(239,68,68,0.1);color:#dc2626}
+.modal-role-select{margin-top:8px;font-size:0.8rem}
+.modal-role-select select{padding:4px 8px;border-radius:6px;border:1px solid rgba(0,0,0,0.15);font-family:inherit;font-size:0.8rem}
 
 /* MODAL */
 .modal-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:200;display:flex;align-items:center;justify-content:center;padding:20px;animation:fadeIn 0.2s}
@@ -485,11 +490,13 @@ function renderRoster() {
       ? `<img class="person-avatar" src="${imgSrc}" alt="${p.name}" onerror="this.style.display='none'"/>`
       : `<div class="person-avatar">${initials}</div>`;
     const tags = (p.topics || []).slice(0,3).map(t => `<span class="person-tag">${t}</span>`).join('');
+    const roleBadge = p.role === 'senior' ? '<span class="person-role role-senior">EMBA 2025</span>' : 
+                      p.role === 'professor' ? '<span class="person-role role-professor">Professor</span>' : '';
     return `
       <div class="person-card ${p.type==='detailed'?'detailed':''}" onclick="openProfile('${p.name}')">
         ${imgTag}
         <div class="person-info">
-          <div class="person-name">${p.name}</div>
+          <div class="person-name">${p.name} ${roleBadge}</div>
           <div class="person-work">${p.work || 'â€”'}</div>
           ${tags ? `<div class="person-topics">${tags}</div>` : ''}
         </div>
@@ -536,6 +543,8 @@ function renderModal() {
     ? `<img class="modal-avatar" src="${imgSrc}" alt="${p.name}"/>`
     : `<div class="modal-avatar-placeholder">${initials}</div>`;
   const linePicTag = p.linePicture && p.image ? `<img class="modal-avatar" src="${p.linePicture}" alt="LINE" style="width:48px;height:48px;margin-left:8px;border:2px solid #06C755" title="LINE profile picture"/>` : '';
+  const roleBadge = p.role === 'senior' ? '<span class="person-role role-senior" style="font-size:0.7rem;padding:3px 10px">EMBA 2025 Senior</span>' : 
+                    p.role === 'professor' ? '<span class="person-role role-professor" style="font-size:0.7rem;padding:3px 10px">Professor</span>' : '';
   
   const personComments = comments[p.name] || [];
   const editHint = p.lastEditor ? `<div style="font-size:0.7rem;color:var(--text-light);margin-top:2px">Last edited by ${p.lastEditor}</div>` : '';
@@ -545,7 +554,7 @@ function renderModal() {
       ${imgTag}
       ${linePicTag}
       <div class="modal-title">
-        <div class="modal-name">${p.name}</div>
+        <div class="modal-name">${p.name} ${roleBadge}</div>
         <div class="modal-work">${p.work || ''}</div>
       </div>
       <button class="modal-close" onclick="closeModal()">âœ•</button>
@@ -557,7 +566,9 @@ ${currentUser ? `<div class="edit-toggle" onclick="toggleEdit()">${isEditing?'ðŸ
       <div class="modal-section">
         <div class="modal-section-title">About</div>
         ${isEditing 
-          ? `<div class="editable" contenteditable="true" id="editNotes">${(p.notes||[]).join('\\n')}</div>
+          ? `<div style="margin-bottom:10px"><label style="font-size:0.78rem;color:var(--text-light)">Name</label>
+             <input class="editable" id="editName" value="${p.name.replace(/"/g,'&quot;')}" style="width:100%;padding:8px 12px;font-size:0.9rem"/></div>
+             <div class="editable" contenteditable="true" id="editNotes">${(p.notes||[]).join('\\n')}</div>
              <div class="edit-actions">
                <button class="btn btn-gold btn-sm" onclick="saveEdit()">ðŸ’¾ Save</button>
                <button class="btn btn-outline btn-sm" style="color:var(--text);border-color:rgba(0,0,0,0.2)" onclick="toggleEdit()">Cancel</button>
@@ -569,6 +580,14 @@ ${currentUser ? `<div class="edit-toggle" onclick="toggleEdit()">${isEditing?'ðŸ
                <div class="modal-section-title">Profile Photo (Admin)</div>
                <input type="file" accept="image/*" id="imageUpload" onchange="uploadImage()" style="font-size:0.8rem"/>
                <div id="imagePreview" style="margin-top:6px">${p.image ? `<img src="${p.image}" style="width:80px;height:80px;border-radius:50%;object-fit:cover"/>` : ''}</div>
+             </div>
+             <div class="modal-role-select">
+               <label style="font-size:0.78rem;color:var(--text-light);display:block;margin-bottom:4px">Role</label>
+               <select id="editRole" style="padding:6px 10px;border-radius:8px;border:1px solid rgba(0,0,0,0.15);font-family:inherit">
+                 <option value="">Student (EMBA 2026)</option>
+                 <option value="senior" ${p.role==='senior'?'selected':''}>Senior (EMBA 2025)</option>
+                 <option value="professor" ${p.role==='professor'?'selected':''}>Professor</option>
+               </select>
              </div>` : ''}
       </div>
       
@@ -617,9 +636,13 @@ function isUserAdmin() {
 function saveEdit() {
   if (!currentUser) { alert('Please login first'); return; }
   const notesEl = document.getElementById('editNotes');
+  const nameEl = document.getElementById('editName');
+  const roleEl = document.getElementById('editRole');
   if (notesEl) {
     const text = notesEl.innerText.trim();
     activePerson.notes = text ? text.split('\n').filter(l=>l.trim()) : [];
+    if (nameEl) activePerson.name = nameEl.value.trim() || activePerson.name;
+    if (roleEl) activePerson.role = roleEl.value || null;
     activePerson.lastEditor = currentUser.name;
     const idx = people.findIndex(p => p.name === activePerson.name);
     if (idx >= 0) people[idx] = activePerson;
@@ -627,6 +650,7 @@ function saveEdit() {
     isEditing = false;
     renderModal();
     renderRoster();
+    updateLoginUI();
   }
 }
 
