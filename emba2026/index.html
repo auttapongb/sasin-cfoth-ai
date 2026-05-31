@@ -941,42 +941,98 @@ function toggleEdit() {
 async function saveEdit() {
   if (!currentUser) { alert('Please login first'); return; }
   
-  // Upload image first if a file is selected
-  const fileInput = document.getElementById('imageUpload');
-  if (fileInput && fileInput.files[0]) {
-    showToast('📤 Uploading image...', 'info');
-    await uploadImageNow();
-  }
+  // --- Disable save button + show spinner ---
+  const saveBtn = document.querySelector('#modalContent .edit-actions .btn-gold');
+  const origText = saveBtn ? saveBtn.innerHTML : '💾 Save';
+  if (saveBtn) { saveBtn.disabled = true; saveBtn.innerHTML = '⏳ Saving...'; }
   
-  const notesEl = document.getElementById('editNotes');
-  const nameEl = document.getElementById('editName');
-  const workEl = document.getElementById('editWork');
-  const roleEl = document.getElementById('editRole');
-  const topicsEl = document.getElementById('editTopics');
-  const igEl = document.getElementById('editIg');
-  if (notesEl) {
-    const oldName = activePerson.name; // capture BEFORE name change
-    const text = notesEl.innerText.trim();
-    activePerson.notes = text ? text.split('\n').filter(l=>l.trim()) : [];
-    if (nameEl) activePerson.name = nameEl.value.trim() || activePerson.name;
-    if (workEl) activePerson.work = workEl.value.trim();
-    if (roleEl) activePerson.role = roleEl.value || null;
-    if (topicsEl) activePerson.topics = topicsEl.innerText.trim().split(',').map(t=>t.trim()).filter(Boolean);
-    if (igEl) activePerson.ig = igEl.value.trim() || null;
-    activePerson.lastEditor = currentUser.name;
-    const idx = people.findIndex(p => p.name === oldName || p === activePerson);
-    if (idx >= 0) people[idx] = activePerson;
-    saveToStorage();
+  try {
+    // --- STEP 1: Upload image if file selected ---
+    const fileInput = document.getElementById('imageUpload');
+    if (fileInput && fileInput.files && fileInput.files[0]) {
+      const file = fileInput.files[0];
+      const preview = document.getElementById('imagePreview');
+      if (preview) preview.innerHTML = '<div style="display:flex;align-items:center;gap:8px;font-size:0.82rem;color:var(--gold)"><span style="display:inline-block;width:14px;height:14px;border:2px solid var(--gold);border-top-color:transparent;border-radius:50%;animation:spin 0.8s linear infinite"></span> Uploading to GitHub...</div>';
+      showToast('📤 Uploading image...', 'info');
+      
+      try {
+        const url = await uploadToServer(file, activePerson.name);
+        activePerson.image = url;
+        if (preview) preview.innerHTML = '<span style="font-size:0.78rem;color:#22c55e">✅ Uploaded to GitHub!</span><br><img src="'+url+'" style="width:80px;height:80px;border-radius:50%;object-fit:cover;margin-top:4px"/>';
+        showToast('✅ Image saved to GitHub!', 'success');
+      } catch(uploadErr) {
+        console.error('UPLOAD FAILED:', uploadErr);
+        alert('Image upload failed: ' + (uploadErr.message || 'Unknown error') + '\n\nThe image will be saved locally instead.\n\nReason: Your network may block port 8899. The server is at api.cfoth.ai:8899');
+        // Base64 fallback
+        const dataUrl = await compressImageToBase64(file);
+        activePerson.image = dataUrl;
+        if (preview) preview.innerHTML = '<span style="font-size:0.78rem;color:#f59e0b">⚠️ Saved locally</span><br><img src="'+dataUrl+'" style="width:80px;height:80px;border-radius:50%;object-fit:cover;margin-top:4px"/>';
+        showToast('⚠️ Image saved locally', 'error');
+      }
+      fileInput.value = '';
+    }
+
+    // --- STEP 2: Save all text fields ---
+    const notesEl = document.getElementById('editNotes');
+    const nameEl = document.getElementById('editName');
+    const workEl = document.getElementById('editWork');
+    const roleEl = document.getElementById('editRole');
+    const topicsEl = document.getElementById('editTopics');
+    const igEl = document.getElementById('editIg');
+    
+    if (notesEl) {
+      const oldName = activePerson.name;
+      const text = notesEl.innerText.trim();
+      activePerson.notes = text ? text.split('\n').filter(l=>l.trim()) : [];
+      if (nameEl) activePerson.name = nameEl.value.trim() || activePerson.name;
+      if (workEl) activePerson.work = workEl.value.trim();
+      if (roleEl) activePerson.role = roleEl.value || null;
+      if (topicsEl) activePerson.topics = topicsEl.innerText.trim().split(',').map(t=>t.trim()).filter(Boolean);
+      if (igEl) activePerson.ig = igEl.value.trim() || null;
+      activePerson.lastEditor = currentUser.name;
+      
+      const idx = people.findIndex(p => p.name === oldName || p === activePerson);
+      if (idx >= 0) people[idx] = activePerson;
+      saveToStorage();
+    }
+    
     isEditing = false;
     renderModal();
     renderRoster();
     updateLoginUI();
+    _uploadPending = false;
     showToast('Profile saved ✓', 'success');
-
-    if (activePerson.ig && !activePerson.image) {
-      fetchIgPic().catch(() => {});
-    }
+    
+  } catch(bigErr) {
+    console.error('SAVE CRASHED:', bigErr);
+    alert('Error saving profile: ' + (bigErr.message || 'Unknown'));
+    showToast('❌ Save failed: ' + bigErr.message, 'error');
+  } finally {
+    if (saveBtn) { saveBtn.disabled = false; saveBtn.innerHTML = origText; }
   }
+}
+
+// Helper: compress image to base64 data URL
+function compressImageToBase64(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      const img = new Image();
+      img.onload = function() {
+        const canvas = document.createElement('canvas');
+        const maxW = 400, maxH = 400;
+        let w = img.width, h = img.height;
+        if (w > maxW || h > maxH) { const r = Math.min(maxW/w, maxH/h); w *= r; h *= r; }
+        canvas.width = w; canvas.height = h;
+        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+        resolve(canvas.toDataURL('image/jpeg', 0.7));
+      };
+      img.onerror = reject;
+      img.src = e.target.result;
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
 }
 
 // ============================================================
@@ -992,10 +1048,10 @@ function showToast(msg, type) {
   setTimeout(function(){ el.style.opacity='0'; el.style.transition='opacity 0.3s'; setTimeout(function(){ el.remove(); },300); }, 3500);
 }
 
-// Upload state tracker (so saveEdit can warn if upload is pending)
+// Upload state tracker
 let _uploadPending = false;
 
-// Preview selected image locally (upload happens on Save)
+// Simple preview when user selects a file (NO upload — saveEdit handles that)
 function previewSelectedImage() {
   const fileInput = document.getElementById('imageUpload');
   const file = fileInput.files[0];
@@ -1003,56 +1059,10 @@ function previewSelectedImage() {
   const preview = document.getElementById('imagePreview');
   const reader = new FileReader();
   reader.onload = function(e) {
-    preview.innerHTML = '<span style="font-size:0.78rem;color:var(--gold)">📎 Ready to upload on Save</span><br><img src="'+e.target.result+'" style="width:80px;height:80px;border-radius:50%;object-fit:cover;margin-top:4px"/>';
+    preview.innerHTML = '<span style="font-size:0.78rem;color:var(--gold)">📎 Will upload when you Save</span><br><img src="'+e.target.result+'" style="width:80px;height:80px;border-radius:50%;object-fit:cover;margin-top:4px"/>';
   };
   reader.readAsDataURL(file);
   _uploadPending = true;
-}
-
-// Upload image to server + return URL
-async function uploadImageNow() {
-  const fileInput = document.getElementById('imageUpload');
-  const file = fileInput.files[0];
-  if (!file) return null;
-  
-  const preview = document.getElementById('imagePreview');
-  preview.innerHTML = '<div style="display:flex;align-items:center;gap:8px;font-size:0.82rem;color:var(--gold)"><span style="display:inline-block;width:14px;height:14px;border:2px solid var(--gold);border-top-color:transparent;border-radius:50%;animation:spin 0.8s linear infinite"></span> Uploading to GitHub...</div>';
-  showToast('📤 Uploading image to GitHub...', 'info');
-  
-  try {
-    const url = await uploadToServer(file, activePerson.name);
-    activePerson.image = url;
-    preview.innerHTML = '<span style="font-size:0.78rem;color:#22c55e">✅ Uploaded!</span><br><img src="'+url+'" style="width:80px;height:80px;border-radius:50%;object-fit:cover;margin-top:4px"/>';
-    _uploadPending = false;
-    fileInput.value = '';
-    showToast('✅ Image saved to GitHub!', 'success');
-    return url;
-  } catch(err) {
-    _uploadPending = false;
-    console.error('Upload error:', err);
-    showToast('⚠️ Upload failed: ' + err.message + ' — saving locally as fallback', 'error');
-    // Base64 fallback
-    return new Promise((resolve) => {
-      const reader = new FileReader();
-      reader.onload = function(e) {
-        const img = new Image();
-        img.onload = function() {
-          const canvas = document.createElement('canvas');
-          const maxW = 400, maxH = 400;
-          let w = img.width, h = img.height;
-          if (w > maxW || h > maxH) { const r = Math.min(maxW/w, maxH/h); w *= r; h *= r; }
-          canvas.width = w; canvas.height = h;
-          canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-          const dataUrl = canvas.toDataURL('image/jpeg', 0.7);
-          activePerson.image = dataUrl;
-          preview.innerHTML = '<span style="font-size:0.78rem;color:#f59e0b">⚠️ Saved locally only</span><br><img src="'+dataUrl+'" style="width:80px;height:80px;border-radius:50%;object-fit:cover;margin-top:4px"/>';
-          resolve(dataUrl);
-        };
-        img.src = e.target.result;
-      };
-      reader.readAsDataURL(file);
-    });
-  }
 }
 
 function addComment() {
