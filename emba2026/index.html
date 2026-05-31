@@ -870,7 +870,7 @@ ${currentUser ? `<div class="edit-toggle" onclick="toggleEdit()">${isEditing?'�
         ${isAdmin && isEditing ? `
              <div style="margin-top:12px">
                <div class="modal-section-title">Profile Photo (Admin)</div>
-               <input type="file" accept="image/*" id="imageUpload" onchange="uploadImage()" style="font-size:0.8rem"/>
+               <input type="file" accept="image/*" id="imageUpload" onchange="previewSelectedImage()" style="font-size:0.8rem"/>
                ${p.ig ? `<button class="btn btn-outline btn-sm" onclick="fetchIgPic()" style="margin-left:8px;font-size:0.75rem;color:#E1306C;border-color:#E1306C">📷 Fetch from IG</button>` : ''}
                <div id="imagePreview" style="margin-top:6px">${p.image ? `<img src="${p.image}" style="width:80px;height:80px;border-radius:50%;object-fit:cover"/>` : ''}</div>
              </div>
@@ -938,8 +938,16 @@ function toggleEdit() {
   renderModal();
 }
 
-function saveEdit() {
+async function saveEdit() {
   if (!currentUser) { alert('Please login first'); return; }
+  
+  // Upload image first if a file is selected
+  const fileInput = document.getElementById('imageUpload');
+  if (fileInput && fileInput.files[0]) {
+    showToast('📤 Uploading image...', 'info');
+    await uploadImageNow();
+  }
+  
   const notesEl = document.getElementById('editNotes');
   const nameEl = document.getElementById('editName');
   const workEl = document.getElementById('editWork');
@@ -987,33 +995,44 @@ function showToast(msg, type) {
 // Upload state tracker (so saveEdit can warn if upload is pending)
 let _uploadPending = false;
 
-function uploadImage() {
+// Preview selected image locally (upload happens on Save)
+function previewSelectedImage() {
   const fileInput = document.getElementById('imageUpload');
   const file = fileInput.files[0];
-  if (!file) { showToast('Please select an image file first', 'info'); return; }
-
+  if (!file) return;
   const preview = document.getElementById('imagePreview');
-  preview.innerHTML = '<div style="display:flex;align-items:center;gap:8px;font-size:0.82rem;color:var(--gold)"><span style="display:inline-block;width:14px;height:14px;border:2px solid var(--gold);border-top-color:transparent;border-radius:50%;animation:spin 0.8s linear infinite"></span> Uploading to server...</div>';
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    preview.innerHTML = '<span style="font-size:0.78rem;color:var(--gold)">📎 Ready to upload on Save</span><br><img src="'+e.target.result+'" style="width:80px;height:80px;border-radius:50%;object-fit:cover;margin-top:4px"/>';
+  };
+  reader.readAsDataURL(file);
   _uploadPending = true;
-  showToast('📤 Uploading image...', 'info');
+}
 
-  uploadToServer(file, activePerson.name)
-    .then(url => {
-      activePerson.image = url;
-      const idx = people.findIndex(p => p.name === activePerson.name);
-      if (idx >= 0) people[idx] = activePerson;
-      saveToStorage();
-      preview.innerHTML = '<span style="font-size:0.78rem;color:#22c55e">✅ Uploaded!</span><br><img src="'+url+'" style="width:80px;height:80px;border-radius:50%;object-fit:cover;margin-top:4px"/>';
-      renderModal();
-      renderRoster();
-      _uploadPending = false;
-      showToast('✅ Image saved to GitHub! Click Save to finish edits', 'success');
-      fileInput.value = ''; // reset so user can re-upload
-    })
-    .catch(err => {
-      _uploadPending = false;
-      showToast('❌ Upload failed: ' + err.message + ' — saving locally', 'error');
-      // Fallback: store as base64 in localStorage
+// Upload image to server + return URL
+async function uploadImageNow() {
+  const fileInput = document.getElementById('imageUpload');
+  const file = fileInput.files[0];
+  if (!file) return null;
+  
+  const preview = document.getElementById('imagePreview');
+  preview.innerHTML = '<div style="display:flex;align-items:center;gap:8px;font-size:0.82rem;color:var(--gold)"><span style="display:inline-block;width:14px;height:14px;border:2px solid var(--gold);border-top-color:transparent;border-radius:50%;animation:spin 0.8s linear infinite"></span> Uploading to GitHub...</div>';
+  showToast('📤 Uploading image to GitHub...', 'info');
+  
+  try {
+    const url = await uploadToServer(file, activePerson.name);
+    activePerson.image = url;
+    preview.innerHTML = '<span style="font-size:0.78rem;color:#22c55e">✅ Uploaded!</span><br><img src="'+url+'" style="width:80px;height:80px;border-radius:50%;object-fit:cover;margin-top:4px"/>';
+    _uploadPending = false;
+    fileInput.value = '';
+    showToast('✅ Image saved to GitHub!', 'success');
+    return url;
+  } catch(err) {
+    _uploadPending = false;
+    console.error('Upload error:', err);
+    showToast('⚠️ Upload failed: ' + err.message + ' — saving locally as fallback', 'error');
+    // Base64 fallback
+    return new Promise((resolve) => {
       const reader = new FileReader();
       reader.onload = function(e) {
         const img = new Image();
@@ -1024,18 +1043,16 @@ function uploadImage() {
           if (w > maxW || h > maxH) { const r = Math.min(maxW/w, maxH/h); w *= r; h *= r; }
           canvas.width = w; canvas.height = h;
           canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-          activePerson.image = canvas.toDataURL('image/jpeg', 0.7);
-          const idx = people.findIndex(p => p.name === activePerson.name);
-          if (idx >= 0) people[idx] = activePerson;
-          saveToStorage();
-          preview.innerHTML = '<span style="font-size:0.78rem;color:#f59e0b">⚠️ Local only</span><br><img src="'+activePerson.image+'" style="width:80px;height:80px;border-radius:50%;object-fit:cover;margin-top:4px"/>';
-          renderModal();
-          renderRoster();
+          const dataUrl = canvas.toDataURL('image/jpeg', 0.7);
+          activePerson.image = dataUrl;
+          preview.innerHTML = '<span style="font-size:0.78rem;color:#f59e0b">⚠️ Saved locally only</span><br><img src="'+dataUrl+'" style="width:80px;height:80px;border-radius:50%;object-fit:cover;margin-top:4px"/>';
+          resolve(dataUrl);
         };
         img.src = e.target.result;
       };
       reader.readAsDataURL(file);
     });
+  }
 }
 
 function addComment() {
