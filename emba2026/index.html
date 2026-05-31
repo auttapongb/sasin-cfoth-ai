@@ -153,16 +153,24 @@ body{font-family:'Inter',-apple-system,sans-serif;background:var(--cream);color:
 
 /* RESPONSIVE */
 @media(max-width:640px){
-  .header{padding:12px 16px}
-  .header-title{font-size:1rem}
+  .header{padding:10px 14px;gap:8px}
+  .header-title{font-size:0.95rem}
+  .header-back{font-size:0.75rem}
+  .header-count{font-size:0.7rem;padding:3px 8px}
+  .btn-sm{padding:5px 10px;font-size:0.7rem}
+  .user-name{font-size:0.75rem;max-width:80px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .user-avatar{width:28px;height:28px}
+  .login-area{gap:5px}
   .roster-grid{grid-template-columns:1fr}
   .gallery-grid{grid-template-columns:repeat(auto-fill,minmax(140px,1fr))}
   .modal{max-width:100%;border-radius:var(--radius-sm);max-height:90vh}
   .modal-header{padding:18px 20px}
   .modal-body{padding:20px}
-  .search-bar{top:57px;padding:12px 16px}
+  .search-bar{top:53px;padding:10px 14px}
   .search-inner{flex-direction:column;gap:8px}
-  .search-input{width:100%}
+  .search-input{width:100%;font-size:0.85rem}
+  .tab-nav{width:100%;justify-content:center}
+  .tab-btn{padding:8px 18px;font-size:0.8rem}
 }
 
 /* LOADING & GATE */
@@ -190,6 +198,11 @@ body{font-family:'Inter',-apple-system,sans-serif;background:var(--cream);color:
 .login-gate-loading{color:rgba(255,255,255,0.45);font-size:0.85rem;margin-top:18px;position:relative;z-index:1}
 .login-gate-error{color:#f87171;font-size:0.85rem;margin-top:10px;position:relative;z-index:1}
 .login-gate-footer{position:absolute;bottom:28px;color:rgba(255,255,255,0.25);font-size:0.75rem;z-index:1}
+@media(max-width:640px){
+  .login-gate h1{font-size:1.6rem}
+  .login-gate p{font-size:0.85rem}
+  .btn-login{padding:12px 20px;font-size:0.88rem}
+}
 .app-content{display:none}
 .app-content.visible{display:block;animation:fadeIn 0.4s ease}
 </style>
