@@ -218,7 +218,7 @@ const CONFIG = {
   githubRepo: 'auttapongb/sasin-cfoth-ai',
   dataPath: 'emba2026/data.json',
   commentsPath: 'emba2026/comments.json',
-  adminNames: ['auttapongb', 'Auttapong'], // LINE display names that can upload images
+  adminNames: ['ธารTeenAuttapong6915', 'auttapongb', 'Auttapong'], // LINE display names that can upload images
 };
 
 // ============================================================
@@ -302,6 +302,7 @@ async function initAuth() {
         provider: 'line'
       };
       localStorage.setItem('sasin_emba2026_user', JSON.stringify(currentUser));
+      syncLinePicture(profile);
     }
   } catch(e) { console.log('LINE LIFF init:', e.message); }
   
@@ -331,6 +332,7 @@ function doLineLogin() {
     liff.getProfile().then(profile => {
       currentUser = {id: profile.userId, name: profile.displayName, picture: profile.pictureUrl, provider: 'line'};
       localStorage.setItem('sasin_emba2026_user', JSON.stringify(currentUser));
+      syncLinePicture(profile);
       updateLoginUI();
       unlockApp();
     }).catch(err => {
@@ -385,14 +387,56 @@ function doGoogleLogin() {
 function updateLoginUI() {
   const area = document.getElementById('loginArea');
   if (currentUser) {
+    const hasProfile = people.some(p => currentUser.name && (p.name === currentUser.name || currentUser.name.includes(p.name)));
     area.innerHTML = `
       <img class="user-avatar" src="${currentUser.picture || ''}" onerror="this.style.display='none'" alt=""/>
       <span class="user-name">${currentUser.name}</span>
+      ${!hasProfile ? `<button class="btn btn-gold btn-sm" onclick="createMyProfile()">✨ Create My Profile</button>` : ''}
       <button class="btn btn-outline btn-sm" onclick="logout()">Logout</button>
     `;
   } else {
     area.innerHTML = `<button class="btn btn-outline btn-sm" onclick="doLineLogin()">🔐 Login</button>`;
   }
+}
+
+// Auto-match LINE login to a classmate and store their LINE picture
+function syncLinePicture(profile) {
+  const match = people.find(p => profile.displayName && (p.name === profile.displayName || profile.displayName.includes(p.name) || p.name.includes(profile.displayName)));
+  if (match && profile.pictureUrl) {
+    match.linePicture = profile.pictureUrl;
+    const idx = people.findIndex(p => p.name === match.name);
+    if (idx >= 0) people[idx] = match;
+    saveToStorage();
+    renderRoster();
+  }
+  updateLoginUI();
+}
+
+// Create a new profile from LINE login
+function createMyProfile() {
+  if (!currentUser) return;
+  const exists = people.find(p => currentUser.name && (p.name === currentUser.name || currentUser.name.includes(p.name)));
+  if (exists) {
+    alert('You already have a profile!');
+    openProfile(exists.name);
+    return;
+  }
+  const newPerson = {
+    name: currentUser.name,
+    work: '',
+    notes: [],
+    topics: [],
+    type: 'quick',
+    image: '',
+    linePicture: currentUser.picture || '',
+    lastEditor: currentUser.name,
+    createdBy: currentUser.name
+  };
+  people.push(newPerson);
+  saveToStorage();
+  renderRoster();
+  updateLoginUI();
+  openProfile(newPerson.name);
 }
 
 function logout() {
@@ -419,8 +463,9 @@ function renderRoster() {
   const grid = document.getElementById('rosterGrid');
   grid.innerHTML = filtered.map(p => {
     const initials = p.name.split(' ').map(w=>w[0]).join('').substring(0,2).toUpperCase();
-    const imgTag = p.image 
-      ? `<img class="person-avatar" src="${p.image}" alt="${p.name}" onerror="this.style.display='none'"/>`
+    const imgSrc = p.image || p.linePicture || '';
+    const imgTag = imgSrc 
+      ? `<img class="person-avatar" src="${imgSrc}" alt="${p.name}" onerror="this.style.display='none'"/>`
       : `<div class="person-avatar">${initials}</div>`;
     const tags = (p.topics || []).slice(0,3).map(t => `<span class="person-tag">${t}</span>`).join('');
     return `
@@ -467,9 +512,11 @@ function renderModal() {
   const initials = p.name.split(' ').map(w=>w[0]).join('').substring(0,2).toUpperCase();
   const isOwner = currentUser && (currentUser.name === p.name || currentUser.name.includes(p.name));
   const isAdmin = currentUser && CONFIG.adminNames.some(n => currentUser.name.toLowerCase().includes(n.toLowerCase()));
-  const imgTag = p.image
-    ? `<img class="modal-avatar" src="${p.image}" alt="${p.name}"/>`
+  const imgSrc = p.image || p.linePicture || '';
+  const imgTag = imgSrc
+    ? `<img class="modal-avatar" src="${imgSrc}" alt="${p.name}"/>`
     : `<div class="modal-avatar-placeholder">${initials}</div>`;
+  const linePicTag = p.linePicture && p.image ? `<img class="modal-avatar" src="${p.linePicture}" alt="LINE" style="width:48px;height:48px;margin-left:8px;border:2px solid #06C755" title="LINE profile picture"/>` : '';
   
   const personComments = comments[p.name] || [];
   const editHint = p.lastEditor ? `<div style="font-size:0.7rem;color:var(--text-light);margin-top:2px">Last edited by ${p.lastEditor}</div>` : '';
@@ -477,6 +524,7 @@ function renderModal() {
   document.getElementById('modalContent').innerHTML = `
     <div class="modal-header">
       ${imgTag}
+      ${linePicTag}
       <div class="modal-title">
         <div class="modal-name">${p.name}</div>
         <div class="modal-work">${p.work || ''}</div>
