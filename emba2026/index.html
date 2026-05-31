@@ -322,6 +322,16 @@ const CONFIG = {
   facebookAppId: 'YOUR_FACEBOOK_APP_ID',   // ← REPLACE: Facebook App ID
 };
 
+// GitHub token for image persistence — set on first upload
+function getGithubToken() {
+  let token = sessionStorage.getItem('sasin_gh_token');
+  if (!token && isUserAdmin()) {
+    token = prompt('Enter GitHub PAT (repo scope) for image storage:\n\nCreate one at: github.com/settings/tokens\nScope: repo\n\nLeave blank to use local storage only.');
+    if (token) sessionStorage.setItem('sasin_gh_token', token);
+  }
+  return token || '';
+}
+
 // ============================================================
 // DATA — Pre-loaded classmate profiles
 // ============================================================
@@ -869,11 +879,63 @@ function uploadImage() {
   if (!file) return;
   const reader = new FileReader();
   reader.onload = function(e) {
-    activePerson.image = e.target.result;
-    const idx = people.findIndex(p => p.name === activePerson.name);
-    if (idx >= 0) people[idx] = activePerson;
-    saveToStorage();
-    document.getElementById('imagePreview').innerHTML = `<img src="${e.target.result}" style="width:80px;height:80px;border-radius:50%;object-fit:cover"/>`;
+    // Compress then upload to GitHub for permanent storage
+    const img = new Image();
+    img.onload = async function() {
+      const canvas = document.createElement('canvas');
+      const maxW = 400, maxH = 400;
+      let w = img.width, h = img.height;
+      if (w > maxW || h > maxH) { const r = Math.min(maxW/w, maxH/h); w *= r; h *= r; }
+      canvas.width = w; canvas.height = h;
+      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+      const compressed = canvas.toDataURL('image/jpeg', 0.7);
+      
+      // Try uploading to GitHub
+      const token = getGithubToken();
+      if (!token) { activePerson.image = compressed; }
+      else {
+      const safeName = activePerson.name.replace(/[^a-zA-Z0-9ก-๙]/g, '_').toLowerCase();
+      const path = `emba2026/images/${safeName}.jpg`;
+      const base64Content = compressed.split(',')[1];
+      
+      try {
+        let sha = '';
+        try {
+          const getResp = await fetch(`https://api.github.com/repos/${CONFIG.githubRepo}/contents/${path}`, {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          if (getResp.ok) { const d = await getResp.json(); sha = d.sha; }
+        } catch(ex) {}
+        
+        const resp = await fetch(`https://api.github.com/repos/${CONFIG.githubRepo}/contents/${path}`, {
+          method: 'PUT',
+          headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            message: `Update profile image for ${activePerson.name}`,
+            content: base64Content,
+            sha: sha || undefined,
+            branch: 'main'
+          })
+        });
+        
+        if (resp.ok) {
+          const rawUrl = `https://raw.githubusercontent.com/${CONFIG.githubRepo}/main/${path}`;
+          activePerson.image = rawUrl;
+        }
+      } catch(ex) {
+        activePerson.image = compressed;
+        console.log('GitHub upload failed:', ex.message);
+      }
+      }
+      
+      const idx = people.findIndex(p => p.name === activePerson.name);
+      if (idx >= 0) people[idx] = activePerson;
+      saveToStorage();
+      document.getElementById('imagePreview').innerHTML = `<img src="${activePerson.image}" style="width:80px;height:80px;border-radius:50%;object-fit:cover"/>`;
+      renderModal();
+      renderRoster();
+    };
+    img.src = e.target.result;
   };
   reader.readAsDataURL(file);
 }
