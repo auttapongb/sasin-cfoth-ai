@@ -342,7 +342,7 @@ async function uploadToServer(file, nameHint) {
 }
 
 // Fetch Instagram profile picture via server
-async function fetchIgPic() {
+async function fetchIgPic(directUrl) {
   if (!activePerson || !activePerson.ig) return;
   const ig = activePerson.ig.trim();
   const username = ig.startsWith('http') ? ig.split('/').filter(Boolean).pop().replace('@','') : ig.replace('@','');
@@ -350,11 +350,13 @@ async function fetchIgPic() {
   const preview = document.getElementById('imagePreview');
   if (preview) preview.innerHTML = '<span style="font-size:0.8rem;color:#E1306C">Fetching from IG...</span>';
 
+  const body = directUrl ? { username, url: directUrl } : { username };
+
   try {
     const resp = await fetch(`${CONFIG.uploadServer}/ig-fetch`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username })
+      body: JSON.stringify(body)
     });
     const data = await resp.json();
     if (data.ok && data.url) {
@@ -365,6 +367,21 @@ async function fetchIgPic() {
       if (preview) preview.innerHTML = `<img src="${data.url}" style="width:80px;height:80px;border-radius:50%;object-fit:cover"/>`;
       renderModal();
       renderRoster();
+    } else if (!directUrl && data.error && data.error.includes('right-click')) {
+      // Username-based fetch failed — prompt for direct CDN URL
+      const cdnUrl = prompt(
+        'Instagram requires login for auto-fetch.\n\n' +
+        'Easy fix:\n' +
+        '1. Open your IG profile in a new tab\n' +
+        '2. Right-click your profile picture → "Copy Image Address"\n' +
+        '3. Paste the URL below\n\n' +
+        'Paste IG profile pic URL:'
+      );
+      if (cdnUrl && cdnUrl.trim()) {
+        fetchIgPic(cdnUrl.trim());
+      } else {
+        if (preview) preview.innerHTML = '<span style="font-size:0.75rem;color:var(--text-light)">IG fetch cancelled</span>';
+      }
     } else {
       throw new Error(data.error || 'IG fetch failed');
     }
