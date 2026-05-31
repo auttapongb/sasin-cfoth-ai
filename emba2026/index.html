@@ -521,7 +521,7 @@ function updateLoginUI() {
       <img class="user-avatar" src="${currentUser.picture || ''}" onerror="this.style.display='none'" alt=""/>
       <span class="user-name">${currentUser.name}</span>
       ${!hasProfile ? `<button class="btn btn-gold btn-sm" onclick="createMyProfile()">✨ Create My Profile</button>` : ''}
-      ${isAdm ? `<button class="btn btn-gold btn-sm" onclick="manualAddProfile()" title="Add anyone">＋ Add</button>` : ''}
+      ${isAdm ? `<button class="btn btn-gold btn-sm" onclick="manualAddProfile()" title="Add anyone">＋ Add</button><button class="btn btn-outline btn-sm" onclick="exportData()" title="Backup all data">💾</button><button class="btn btn-outline btn-sm" onclick="importData()" title="Restore from backup">📥</button>` : ''}
       <button class="btn btn-outline btn-sm" onclick="logout()">Logout</button>
     `;
   } else {
@@ -591,6 +591,38 @@ function manualAddProfile() {
   renderRoster();
   updateLoginUI();
   openProfile(newPerson.name);
+}
+
+// Admin: export/import data backup
+function exportData() {
+  const data = JSON.stringify({ people, comments, photos }, null, 2);
+  const blob = new Blob([data], {type:'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'sasin-emba2026-backup-' + new Date().toISOString().slice(0,10) + '.json';
+  a.click();
+}
+
+function importData() {
+  const input = document.createElement('input');
+  input.type = 'file'; input.accept = '.json';
+  input.onchange = function(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = function(ev) {
+      try {
+        const data = JSON.parse(ev.target.result);
+        if (data.people) { people = data.people; saveToStorage(); }
+        if (data.comments) { comments = data.comments; localStorage.setItem('sasin_emba2026_comments', JSON.stringify(data.comments)); }
+        if (data.photos) { photos = data.photos; savePhotos(); }
+        renderRoster(); renderGallery(); updateLoginUI();
+        alert('Restored! ' + people.length + ' profiles loaded.');
+      } catch(err) { alert('Invalid backup file.'); }
+    };
+    reader.readAsText(file);
+  };
+  input.click();
 }
 
 function logout() {
