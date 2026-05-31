@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Sasin EMBA 2026 — Classmate Roster</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:wght@600;700;800&display=swap" rel="stylesheet"/>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23C9A84C'/%3E%3Ctext x='16' y='22' text-anchor='middle' font-family='serif' font-size='18' font-weight='bold' fill='%231A1A2E'%3E26%3C/text%3E%3C/svg%3E"/>
+<style>
+:root {
+  --gold:#C9A84C;--gold-light:#E8D48B;--gold-dark:#A68B2E;
+  --cream:#FDF8F0;--dark:#1A1A2E;--mid:#2D2D44;
+  --text:#3D3D5C;--text-light:#6B6B8A;--white:#FFF;
+  --radius:16px;--radius-sm:10px;
+  --shadow:0 1px 3px rgba(0,0,0,0.08);
+  --shadow-md:0 4px 16px rgba(0,0,0,0.10);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Inter',sans-serif;background:var(--cream);color:var(--text);line-height:1.6}
+
+/* HEADER */
+.header{background:linear-gradient(135deg,var(--dark),var(--mid),#3A3A5C);color:var(--white);padding:24px 24px;position:sticky;top:0;z-index:100;display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+.header-back{color:var(--gold-light);text-decoration:none;font-size:0.85rem;font-weight:500}
+.header-back:hover{color:var(--gold)}
+.header-title{font-family:'Playfair Display',serif;font-size:1.3rem;font-weight:700;flex:1}
+.header-count{font-size:0.8rem;color:rgba(255,255,255,0.5);background:rgba(255,255,255,0.08);padding:4px 12px;border-radius:100px}
+.header-spacer{flex:1}
+
+/* LOGIN */
+.login-area{display:flex;align-items:center;gap:10px}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:8px 18px;border-radius:100px;font-size:0.82rem;font-weight:600;border:none;cursor:pointer;transition:all 0.2s;text-decoration:none}
+.btn-gold{background:var(--gold);color:var(--dark)}
+.btn-gold:hover{background:var(--gold-dark);color:var(--white)}
+.btn-outline{background:transparent;color:var(--white);border:1.5px solid rgba(255,255,255,0.3)}
+.btn-outline:hover{border-color:var(--gold);color:var(--gold)}
+.btn-sm{padding:5px 12px;font-size:0.75rem}
+.user-avatar{width:32px;height:32px;border-radius:50%;object-fit:cover;border:2px solid var(--gold)}
+.user-name{font-size:0.82rem;color:var(--white);font-weight:500}
+
+/* SEARCH */
+.search-bar{padding:16px 24px;background:var(--white);border-bottom:1px solid rgba(0,0,0,0.05);position:sticky;top:72px;z-index:50}
+.search-inner{max-width:1100px;margin:0 auto;display:flex;gap:12px;align-items:center}
+.search-input{flex:1;padding:10px 16px;border:1.5px solid rgba(0,0,0,0.1);border-radius:100px;font-size:0.9rem;font-family:inherit;outline:none}
+.search-input:focus{border-color:var(--gold)}
+.search-filter{display:flex;gap:6px;flex-wrap:wrap}
+
+/* ROSTER GRID */
+.container{max-width:1100px;margin:0 auto;padding:32px 24px}
+.roster-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px}
+.person-card{background:var(--white);border-radius:var(--radius-sm);box-shadow:var(--shadow);padding:20px;cursor:pointer;transition:all 0.2s;border:1px solid transparent;display:flex;gap:14px;align-items:flex-start}
+.person-card:hover{box-shadow:var(--shadow-md);border-color:var(--gold);transform:translateY(-2px)}
+.person-card.detailed{border-left:3px solid var(--gold)}
+.person-avatar{width:52px;height:52px;border-radius:50%;object-fit:cover;flex-shrink:0;background:var(--cream);display:flex;align-items:center;justify-content:center;font-size:1.3rem;font-weight:700;color:var(--gold-dark)}
+.person-info{flex:1;min-width:0}
+.person-name{font-weight:600;font-size:0.95rem;color:var(--dark);margin-bottom:2px}
+.person-work{font-size:0.8rem;color:var(--text-light);line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.person-topics{display:flex;gap:4px;flex-wrap:wrap;margin-top:6px}
+.person-tag{background:rgba(201,168,76,0.1);color:var(--gold-dark);font-size:0.65rem;padding:2px 8px;border-radius:100px;font-weight:500}
+
+/* MODAL */
+.modal-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:200;display:flex;align-items:center;justify-content:center;padding:20px;animation:fadeIn 0.2s}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.modal{background:var(--white);border-radius:var(--radius);max-width:600px;width:100%;max-height:85vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,0.2);animation:slideUp 0.3s}
+@keyframes slideUp{from{transform:translateY(30px);opacity:0}to{transform:translateY(0);opacity:1}}
+.modal-header{padding:24px;border-bottom:1px solid rgba(0,0,0,0.06);display:flex;align-items:center;gap:16px;position:sticky;top:0;background:var(--white);z-index:1}
+.modal-avatar{width:64px;height:64px;border-radius:50%;object-fit:cover;background:var(--cream);flex-shrink:0}
+.modal-avatar-placeholder{width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,var(--gold),var(--gold-dark));display:flex;align-items:center;justify-content:center;font-size:1.5rem;font-weight:700;color:var(--dark);flex-shrink:0}
+.modal-title{flex:1}
+.modal-name{font-family:'Playfair Display',serif;font-size:1.4rem;font-weight:700;color:var(--dark)}
+.modal-work{font-size:0.9rem;color:var(--text-light)}
+.modal-close{background:none;border:none;font-size:1.5rem;cursor:pointer;color:var(--text-light);padding:4px 8px}
+.modal-close:hover{color:var(--dark)}
+.modal-body{padding:24px}
+.modal-section{margin-bottom:24px}
+.modal-section-title{font-size:0.72rem;text-transform:uppercase;letter-spacing:1.5px;color:var(--text-light);margin-bottom:8px;font-weight:600}
+.modal-notes{font-size:0.9rem;color:var(--text);line-height:1.7}
+.modal-notes ul{padding-left:20px;margin:0}
+.modal-notes li{margin-bottom:4px}
+.modal-topics{display:flex;gap:6px;flex-wrap:wrap}
+.modal-topic{background:rgba(201,168,76,0.1);color:var(--gold-dark);font-size:0.8rem;padding:4px 12px;border-radius:100px;font-weight:500}
+
+/* EDIT MODE */
+.edit-toggle{font-size:0.78rem;color:var(--gold);cursor:pointer;font-weight:500;margin-top:8px;display:inline-block}
+.edit-toggle:hover{text-decoration:underline}
+.editable{background:rgba(201,168,76,0.05);border:1px dashed rgba(201,168,76,0.3);padding:12px;border-radius:var(--radius-sm);min-height:60px;font-size:0.9rem;font-family:inherit;color:var(--text)}
+.editable:focus{outline:none;border-color:var(--gold);background:rgba(201,168,76,0.08)}
+.edit-actions{display:flex;gap:8px;margin-top:8px}
+.edit-img{width:100px;height:100px;border-radius:50%;object-fit:cover;cursor:pointer;border:2px dashed var(--gold);display:flex;align-items:center;justify-content:center;font-size:0.7rem;color:var(--text-light);margin-bottom:12px}
+
+/* COMMENTS */
+.comment-box{border:1px solid rgba(0,0,0,0.08);border-radius:var(--radius-sm);padding:12px;margin-bottom:10px}
+.comment-header{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.comment-avatar{width:24px;height:24px;border-radius:50%;object-fit:cover}
+.comment-author{font-size:0.82rem;font-weight:600;color:var(--dark)}
+.comment-time{font-size:0.7rem;color:var(--text-light)}
+.comment-text{font-size:0.88rem;color:var(--text);line-height:1.5}
+.comment-input-area{display:flex;gap:8px;margin-top:16px}
+.comment-input{flex:1;padding:10px 14px;border:1.5px solid rgba(0,0,0,0.1);border-radius:100px;font-size:0.85rem;font-family:inherit;outline:none}
+.comment-input:focus{border-color:var(--gold)}
+
+/* EMPTY STATE */
+.empty-state{text-align:center;padding:40px;color:var(--text-light)}
+.empty-state .emoji{font-size:2rem;display:block;margin-bottom:8px}
+
+/* FOOTER */
+.footer{background:var(--dark);color:rgba(255,255,255,0.5);text-align:center;padding:32px 24px;font-size:0.8rem;margin-top:48px}
+.footer a{color:var(--gold-light);text-decoration:none}
+
+/* RESPONSIVE */
+@media(max-width:640px){
+  .header{padding:16px}
+  .roster-grid{grid-template-columns:1fr}
+  .modal{max-width:100%;border-radius:var(--radius-sm)}
+  .search-bar{top:60px}
+}
+
+/* LOADING */
+.loading{text-align:center;padding:40px;color:var(--text-light)}
+.spinner{width:32px;height:32px;border:3px solid rgba(0,0,0,0.1);border-top-color:var(--gold);border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto 12px}
+@keyframes spin{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="header">
+  <a class="header-back" href="../index.html">← Sasin EMBA</a>
+  <span class="header-title">Class of 2026</span>
+  <span class="header-count" id="headerCount">43 classmates</span>
+  <span class="header-spacer"></span>
+  <div class="login-area" id="loginArea">
+    <button class="btn btn-outline btn-sm" onclick="loginPrompt()">🔐 Login</button>
+  </div>
+</header>
+
+<!-- SEARCH -->
+<div class="search-bar">
+  <div class="search-inner">
+    <input class="search-input" id="searchInput" placeholder="🔍 Search by name, industry, or topic..." oninput="filterRoster()"/>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div class="container">
+  <div class="roster-grid" id="rosterGrid"></div>
+</div>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modalOverlay" style="display:none" onclick="if(event.target===this)closeModal()">
+  <div class="modal" id="modalContent"></div>
+</div>
+
+<!-- FOOTER -->
+<footer class="footer">
+  <p>Sasin EMBA 2026 · Classmate Roster</p>
+  <p style="margin-top:6px">Login with LINE or Google to edit your profile and comment</p>
+</footer>
+
+<!-- LINE LIFF SDK -->
+<script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+<!-- Google Identity -->
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+
+<script>
+// ============================================================
+// CONFIG — Replace with your own values
+// ============================================================
+const CONFIG = {
+  lineLiffId: 'YOUR_LINE_LIFF_ID',        // ← REPLACE: LINE LIFF ID
+  googleClientId: 'YOUR_GOOGLE_CLIENT_ID', // ← REPLACE: Google OAuth Client ID
+  githubToken: '',                        // ← REPLACE: GitHub PAT (repo scope)
+  githubRepo: 'auttapongb/sasin-cfoth-ai',
+  dataPath: 'emba2026/data.json',
+  commentsPath: 'emba2026/comments.json',
+};
+
+// ============================================================
+// DATA — Pre-loaded classmate profiles
+// ============================================================
+const INITIAL_DATA = [{"name":"Su","work":"Director of Data Analytics, Dentsu","notes":["Works with automotive and luxury brands"],"topics":["Data-driven marketing","AI in advertising","Luxury customer analytics"],"type":"detailed","image":""},{"name":"Cherman","work":"Cosmetic distribution business (Hong Kong)","notes":["Mentioned \"My Prompt\"","Morning routine/style"],"topics":["Cross-border distribution","Beauty industry trends","AI prompting & productivity"],"type":"detailed","image":""},{"name":"Aom","work":"Printing & paper packaging","notes":["Works with Unilever-related projects"],"topics":["Sustainable packaging","FMCG supply chain","ESG packaging trends"],"type":"detailed","image":""},{"name":"Nam","work":"Dermatologist","notes":["Jewelry business","Healthcare","Private teaching","Pilates"],"topics":["Healthcare entrepreneurship","Medical aesthetics","Personal branding","Wellness"],"type":"detailed","image":""},{"name":"Best","work":"Emergency Physician, Vimut Hospital","notes":["Family construction business","Plays tennis"],"topics":["Healthcare innovation","Construction industry","Tennis"],"type":"detailed","image":""},{"name":"Beaute","work":"Import & Export","notes":["Sonic Interface","Logistics","Dog lover"],"topics":["International trade","Logistics optimization","Pets / Dogs"],"type":"detailed","image":""},{"name":"Ohm","work":"Solar Cell Business","notes":["Interested in Wi-Fi cameras","Comfort food lover","Favorite food: Mo-Mo-Paradise"],"topics":["Renewable energy","Smart home","IoT","Buffet & restaurant recommendations"],"type":"detailed","image":""},{"name":"Nicky","work":"แป้ง compound มันสำปะหลัง ดัดแปลง","notes":[],"topics":[],"type":"quick","image":""},{"name":"Pol","work":"IT, Internet","notes":[],"topics":[],"type":"quick","image":""},{"name":"Jug","work":"Visual / Sound, SWS Group","notes":[],"topics":[],"type":"quick","image":""},{"name":"Pop","work":"SCB Bank - Platform Business (juristic), iSmart Platform Owner","notes":[],"topics":[],"type":"quick","image":""},{"name":"Su (SET)","work":"Strategy, ตลาดหลักทรัพย์ (SET), ETF","notes":[],"topics":[],"type":"quick","image":""},{"name":"อุ๋ม (Oom)","work":"Investment Banking, SCB","notes":[],"topics":[],"type":"quick","image":""},{"name":"Mos","work":"Trading Cards (Pokémon). Sister sells game cards","notes":[],"topics":[],"type":"quick","image":""},{"name":"Pit","work":"SCBX - E-commerce, Platform Promotion, UX/UI","notes":[],"topics":[],"type":"quick","image":""},{"name":"Pang","work":"Tuna Can Export to Costco UK","notes":[],"topics":[],"type":"quick","image":""},{"name":"Medium","work":"Hostel / บ้านจัดสรร (Real Estate Development)","notes":[],"topics":[],"type":"quick","image":""},{"name":"Nan (Bento)","work":"Corporate Strategy","notes":[],"topics":[],"type":"quick","image":""},{"name":"Mint","work":"ปลาเส้น (Dried Fish Snacks), AI Implementation","notes":[],"topics":[],"type":"quick","image":""},{"name":"Nud","work":"M&A, ex-CP","notes":[],"topics":[],"type":"quick","image":""},{"name":"Tae","work":"CP - Commodity Trading","notes":[],"topics":[],"type":"quick","image":""},{"name":"Jessica","work":"PwC - Indonesia","notes":[],"topics":[],"type":"quick","image":""},{"name":"Han","work":"Myanmar / Bank Vietnam","notes":[],"topics":[],"type":"quick","image":""},{"name":"Fluke","work":"Industrial Machinery","notes":[],"topics":[],"type":"quick","image":""},{"name":"Pin","work":"AI Transformation","notes":[],"topics":[],"type":"quick","image":""},{"name":"Sake","work":"Head of DataX, Founder","notes":[],"topics":[],"type":"quick","image":""},{"name":"Neen","work":"สำนักพิมพ์ (Publishing House), Books","notes":[],"topics":[],"type":"quick","image":""},{"name":"เต้ย (Toey)","work":"Buzz","notes":[],"topics":[],"type":"quick","image":""},{"name":"เต้ (Tae)","work":"เจียไต๋ (Chia Tai)","notes":[],"topics":[],"type":"quick","image":""},{"name":"Rin","work":"ลูก รพ.มนารมย์ (Manarom Hospital), วิศวะ (Engineering)","notes":[],"topics":[],"type":"quick","image":""},{"name":"Pond","work":"ลูก บริษัทสร้างถนน Human Made (Road Construction)","notes":[],"topics":[],"type":"quick","image":""},{"name":"Boom","work":"บริษัทลวด (Wire Company), brother studied EMBA","notes":[],"topics":[],"type":"quick","image":""},{"name":"Bi","work":"เรือ (Ship) Logistics","notes":[],"topics":[],"type":"quick","image":""},{"name":"Juang","work":"KBank Strategy","notes":[],"topics":[],"type":"quick","image":""},{"name":"G","work":"KPMG","notes":[],"topics":[],"type":"quick","image":""},{"name":"A","work":"TGM ไส้กรอก (Sausage)","notes":[],"topics":[],"type":"quick","image":""},{"name":"Jack","work":"Taiwan Company, Protector","notes":[],"topics":[],"type":"quick","image":""},{"name":"Liew","work":"Lazada, Shoes","notes":[],"topics":[],"type":"quick","image":""},{"name":"Aliya","work":"Biotech, PTT","notes":[],"topics":[],"type":"quick","image":""},{"name":"Ploy","work":"Unilever, Mining ลำปาง (Lampang)","notes":[],"topics":[],"type":"quick","image":""},{"name":"Ching Ching","work":"แพทย์ผิวหนัง (Dermatologist), A-Tier พระราม 9","notes":[],"topics":[],"type":"quick","image":""},{"name":"Max","work":"โรงงานยางยืด (Elastic Factory)","notes":[],"topics":[],"type":"quick","image":""},{"name":"Jate","work":"Outsource ก่อสร้าง (Construction), HR, พี่บ้าน","notes":[],"topics":[],"type":"quick","image":""}];
+
+// ============================================================
+// STATE
+// ============================================================
+let people = JSON.parse(JSON.stringify(INITIAL_DATA));
+let comments = {};
+let currentUser = null; // {id, name, picture, provider:'line'|'google'}
+let isEditing = false;
+let activePerson = null;
+
+// ============================================================
+// INIT
+// ============================================================
+function init() {
+  loadFromStorage();
+  renderRoster();
+  initAuth();
+}
+
+function loadFromStorage() {
+  try {
+    const saved = localStorage.getItem('sasin_emba2026_people');
+    if (saved) {
+      const savedData = JSON.parse(saved);
+      // Merge saved images into initial data
+      people = INITIAL_DATA.map(p => {
+        const saved = savedData.find(s => s.name === p.name);
+        return saved ? {...p, ...saved, notes: saved.notes || p.notes, topics: saved.topics || p.topics} : p;
+      });
+    }
+    const savedComments = localStorage.getItem('sasin_emba2026_comments');
+    if (savedComments) comments = JSON.parse(savedComments);
+    const savedUser = localStorage.getItem('sasin_emba2026_user');
+    if (savedUser) currentUser = JSON.parse(savedUser);
+  } catch(e) {}
+}
+
+function saveToStorage() {
+  localStorage.setItem('sasin_emba2026_people', JSON.stringify(people));
+  localStorage.setItem('sasin_emba2026_comments', JSON.stringify(comments));
+}
+
+// ============================================================
+// AUTH
+// ============================================================
+async function initAuth() {
+  // Try LINE LIFF first
+  if (CONFIG.lineLiffId !== 'YOUR_LINE_LIFF_ID') {
+    try {
+      await liff.init({liffId: CONFIG.lineLiffId});
+      if (liff.isLoggedIn()) {
+        const profile = await liff.getProfile();
+        currentUser = {
+          id: profile.userId,
+          name: profile.displayName,
+          picture: profile.pictureUrl,
+          provider: 'line'
+        };
+        localStorage.setItem('sasin_emba2026_user', JSON.stringify(currentUser));
+      }
+    } catch(e) { console.log('LINE LIFF not available:', e.message); }
+  }
+  
+  // Try Google session
+  if (!currentUser) {
+    const saved = localStorage.getItem('sasin_emba2026_user');
+    if (saved && JSON.parse(saved).provider === 'google') {
+      currentUser = JSON.parse(saved);
+    }
+  }
+  
+  updateLoginUI();
+}
+
+function updateLoginUI() {
+  const area = document.getElementById('loginArea');
+  if (currentUser) {
+    area.innerHTML = `
+      <img class="user-avatar" src="${currentUser.picture || ''}" onerror="this.style.display='none'" alt=""/>
+      <span class="user-name">${currentUser.name}</span>
+      <button class="btn btn-outline btn-sm" onclick="logout()">Logout</button>
+    `;
+  } else {
+    area.innerHTML = `<button class="btn btn-outline btn-sm" onclick="loginPrompt()">🔐 Login</button>`;
+  }
+}
+
+function loginPrompt() {
+  if (CONFIG.lineLiffId !== 'YOUR_LINE_LIFF_ID') {
+    // Try LINE login
+    liff.login();
+    return;
+  }
+  if (CONFIG.googleClientId !== 'YOUR_GOOGLE_CLIENT_ID') {
+    googleLogin();
+    return;
+  }
+  alert('Login not configured yet.\n\nPlease set up LINE LIFF or Google OAuth.\nFor now, you can browse the roster anonymously.');
+}
+
+function googleLogin() {
+  const client = google.accounts.oauth2.initTokenClient({
+    client_id: CONFIG.googleClientId,
+    scope: 'profile email',
+    callback: async (resp) => {
+      const userInfo = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+        headers: {Authorization: `Bearer ${resp.access_token}`}
+      }).then(r => r.json());
+      currentUser = {
+        id: userInfo.sub,
+        name: userInfo.name,
+        picture: userInfo.picture || '',
+        provider: 'google'
+      };
+      localStorage.setItem('sasin_emba2026_user', JSON.stringify(currentUser));
+      updateLoginUI();
+    }
+  });
+  client.requestAccessToken();
+}
+
+function logout() {
+  currentUser = null;
+  localStorage.removeItem('sasin_emba2026_user');
+  if (CONFIG.lineLiffId !== 'YOUR_LINE_LIFF_ID' && liff.isLoggedIn()) {
+    liff.logout();
+  }
+  updateLoginUI();
+  renderRoster();
+}
+
+// ============================================================
+// RENDER
+// ============================================================
+function renderRoster() {
+  const query = (document.getElementById('searchInput')?.value || '').toLowerCase();
+  const filtered = people.filter(p => {
+    if (!query) return true;
+    const haystack = [p.name, p.work, ...(p.notes||[]), ...(p.topics||[])].join(' ').toLowerCase();
+    return haystack.includes(query);
+  });
+  
+  document.getElementById('headerCount').textContent = `${filtered.length} classmate${filtered.length!==1?'s':''}`;
+  
+  const grid = document.getElementById('rosterGrid');
+  grid.innerHTML = filtered.map(p => {
+    const initials = p.name.split(' ').map(w=>w[0]).join('').substring(0,2).toUpperCase();
+    const imgTag = p.image 
+      ? `<img class="person-avatar" src="${p.image}" alt="${p.name}" onerror="this.style.display='none'"/>`
+      : `<div class="person-avatar">${initials}</div>`;
+    const tags = (p.topics || []).slice(0,3).map(t => `<span class="person-tag">${t}</span>`).join('');
+    return `
+      <div class="person-card ${p.type==='detailed'?'detailed':''}" onclick="openProfile('${p.name}')">
+        ${imgTag}
+        <div class="person-info">
+          <div class="person-name">${p.name}</div>
+          <div class="person-work">${p.work || '—'}</div>
+          ${tags ? `<div class="person-topics">${tags}</div>` : ''}
+        </div>
+      </div>
+    `;
+  }).join('');
+  
+  if (filtered.length === 0) {
+    grid.innerHTML = `<div class="empty-state"><span class="emoji">🔍</span>No classmates found matching "${query}"</div>`;
+  }
+}
+
+function filterRoster() {
+  renderRoster();
+}
+
+// ============================================================
+// PROFILE MODAL
+// ============================================================
+function openProfile(name) {
+  activePerson = people.find(p => p.name === name);
+  if (!activePerson) return;
+  isEditing = false;
+  renderModal();
+  document.getElementById('modalOverlay').style.display = 'flex';
+}
+
+function closeModal() {
+  document.getElementById('modalOverlay').style.display = 'none';
+  activePerson = null;
+  isEditing = false;
+  renderRoster();
+}
+
+function renderModal() {
+  const p = activePerson;
+  const initials = p.name.split(' ').map(w=>w[0]).join('').substring(0,2).toUpperCase();
+  const isOwner = currentUser && (currentUser.name === p.name || currentUser.name.includes(p.name));
+  const imgTag = p.image
+    ? `<img class="modal-avatar" src="${p.image}" alt="${p.name}"/>`
+    : `<div class="modal-avatar-placeholder">${initials}</div>`;
+  
+  const personComments = comments[p.name] || [];
+  
+  document.getElementById('modalContent').innerHTML = `
+    <div class="modal-header">
+      ${imgTag}
+      <div class="modal-title">
+        <div class="modal-name">${p.name}</div>
+        <div class="modal-work">${p.work || ''}</div>
+      </div>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      ${isOwner ? `<div class="edit-toggle" onclick="toggleEdit()">${isEditing?'💾 Save':'✏️ Edit Profile'}</div>` : ''}
+      
+      <div class="modal-section">
+        <div class="modal-section-title">About</div>
+        ${isEditing 
+          ? `<div class="editable" contenteditable="true" id="editNotes">${(p.notes||[]).join('\n')}</div>
+             <div class="edit-actions">
+               <button class="btn btn-gold btn-sm" onclick="saveEdit()">💾 Save</button>
+               <button class="btn btn-outline btn-sm" style="color:var(--text);border-color:rgba(0,0,0,0.2)" onclick="toggleEdit()">Cancel</button>
+             </div>
+             <div style="margin-top:12px">
+               <div class="modal-section-title">Profile Photo</div>
+               <input type="file" accept="image/*" id="imageUpload" onchange="uploadImage()" style="font-size:0.8rem"/>
+               <div id="imagePreview" style="margin-top:6px">${p.image ? `<img src="${p.image}" style="width:80px;height:80px;border-radius:50%;object-fit:cover"/>` : ''}</div>
+             </div>`
+          : `<div class="modal-notes">${p.notes && p.notes.length > 0 ? '<ul>'+p.notes.map(n=>`<li>${n}</li>`).join('')+'</ul>' : '<em style="color:var(--text-light)">No details yet</em>'}</div>`
+        }
+      </div>
+      
+      <div class="modal-section">
+        <div class="modal-section-title">Topics & Interests</div>
+        <div class="modal-topics">
+          ${(p.topics||[]).length > 0 ? p.topics.map(t=>`<span class="modal-topic">${t}</span>`).join('') : '<em style="color:var(--text-light);font-size:0.85rem">No topics listed</em>'}
+        </div>
+      </div>
+      
+      <div class="modal-section">
+        <div class="modal-section-title">Comments (${personComments.length})</div>
+        ${personComments.map(c => `
+          <div class="comment-box">
+            <div class="comment-header">
+              ${c.authorPicture ? `<img class="comment-avatar" src="${c.authorPicture}" onerror="this.style.display='none'"/>` : ''}
+              <span class="comment-author">${c.author}</span>
+              <span class="comment-time">${c.time}</span>
+            </div>
+            <div class="comment-text">${c.text}</div>
+          </div>
+        `).join('')}
+        ${personComments.length === 0 ? '<div class="empty-state" style="padding:20px"><span class="emoji">💬</span>No comments yet. Be the first!</div>' : ''}
+        
+        ${currentUser ? `
+          <div class="comment-input-area">
+            <input class="comment-input" id="commentInput" placeholder="Write a comment..." onkeydown="if(event.key==='Enter')addComment()"/>
+            <button class="btn btn-gold btn-sm" onclick="addComment()">Post</button>
+          </div>
+        ` : `<p style="font-size:0.8rem;color:var(--text-light);margin-top:8px">🔐 <a href="javascript:loginPrompt()" style="color:var(--gold)">Login</a> to comment</p>`}
+      </div>
+    </div>
+  `;
+}
+
+function toggleEdit() {
+  if (!currentUser) { alert('Please login first'); return; }
+  isEditing = !isEditing;
+  renderModal();
+}
+
+function saveEdit() {
+  const notesEl = document.getElementById('editNotes');
+  if (notesEl) {
+    const text = notesEl.innerText.trim();
+    activePerson.notes = text ? text.split('\n').filter(l=>l.trim()) : [];
+    // Update in people array
+    const idx = people.findIndex(p => p.name === activePerson.name);
+    if (idx >= 0) people[idx] = activePerson;
+    saveToStorage();
+    isEditing = false;
+    renderModal();
+    renderRoster();
+  }
+}
+
+function uploadImage() {
+  const file = document.getElementById('imageUpload').files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    activePerson.image = e.target.result;
+    const idx = people.findIndex(p => p.name === activePerson.name);
+    if (idx >= 0) people[idx] = activePerson;
+    saveToStorage();
+    document.getElementById('imagePreview').innerHTML = `<img src="${e.target.result}" style="width:80px;height:80px;border-radius:50%;object-fit:cover"/>`;
+  };
+  reader.readAsDataURL(file);
+}
+
+function addComment() {
+  if (!currentUser) { alert('Please login first'); return; }
+  const input = document.getElementById('commentInput');
+  const text = input.value.trim();
+  if (!text) return;
+  
+  if (!comments[activePerson.name]) comments[activePerson.name] = [];
+  comments[activePerson.name].push({
+    author: currentUser.name,
+    authorPicture: currentUser.picture || '',
+    text: text,
+    time: new Date().toLocaleString('en-GB', {day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'})
+  });
+  saveToStorage();
+  input.value = '';
+  renderModal();
+}
+
+// ============================================================
+// STARTUP
+// ============================================================
+document.addEventListener('DOMContentLoaded', init);
+
+// ESC to close modal
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') closeModal();
+});
+</script>
+</body>
+</html>
