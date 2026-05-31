@@ -218,6 +218,7 @@ const CONFIG = {
   githubRepo: 'auttapongb/sasin-cfoth-ai',
   dataPath: 'emba2026/data.json',
   commentsPath: 'emba2026/comments.json',
+  adminNames: ['auttapongb', 'Auttapong'], // LINE display names that can upload images
 };
 
 // ============================================================
@@ -465,11 +466,13 @@ function renderModal() {
   const p = activePerson;
   const initials = p.name.split(' ').map(w=>w[0]).join('').substring(0,2).toUpperCase();
   const isOwner = currentUser && (currentUser.name === p.name || currentUser.name.includes(p.name));
+  const isAdmin = currentUser && CONFIG.adminNames.some(n => currentUser.name.toLowerCase().includes(n.toLowerCase()));
   const imgTag = p.image
     ? `<img class="modal-avatar" src="${p.image}" alt="${p.name}"/>`
     : `<div class="modal-avatar-placeholder">${initials}</div>`;
   
   const personComments = comments[p.name] || [];
+  const editHint = p.lastEditor ? `<div style="font-size:0.7rem;color:var(--text-light);margin-top:2px">Last edited by ${p.lastEditor}</div>` : '';
   
   document.getElementById('modalContent').innerHTML = `
     <div class="modal-header">
@@ -481,23 +484,25 @@ function renderModal() {
       <button class="modal-close" onclick="closeModal()">✕</button>
     </div>
     <div class="modal-body">
-      ${isOwner ? `<div class="edit-toggle" onclick="toggleEdit()">${isEditing?'💾 Save':'✏️ Edit Profile'}</div>` : ''}
+${currentUser ? `<div class="edit-toggle" onclick="toggleEdit()">${isEditing?'💾 Save':'✏️ Edit Profile'}</div>` : ''}
+      ${editHint}
       
       <div class="modal-section">
         <div class="modal-section-title">About</div>
         ${isEditing 
-          ? `<div class="editable" contenteditable="true" id="editNotes">${(p.notes||[]).join('\n')}</div>
+          ? `<div class="editable" contenteditable="true" id="editNotes">${(p.notes||[]).join('\\n')}</div>
              <div class="edit-actions">
                <button class="btn btn-gold btn-sm" onclick="saveEdit()">💾 Save</button>
                <button class="btn btn-outline btn-sm" style="color:var(--text);border-color:rgba(0,0,0,0.2)" onclick="toggleEdit()">Cancel</button>
-             </div>
-             <div style="margin-top:12px">
-               <div class="modal-section-title">Profile Photo</div>
-               <input type="file" accept="image/*" id="imageUpload" onchange="uploadImage()" style="font-size:0.8rem"/>
-               <div id="imagePreview" style="margin-top:6px">${p.image ? `<img src="${p.image}" style="width:80px;height:80px;border-radius:50%;object-fit:cover"/>` : ''}</div>
              </div>`
           : `<div class="modal-notes">${p.notes && p.notes.length > 0 ? '<ul>'+p.notes.map(n=>`<li>${n}</li>`).join('')+'</ul>' : '<em style="color:var(--text-light)">No details yet</em>'}</div>`
         }
+        ${isAdmin && isEditing ? `
+             <div style="margin-top:12px">
+               <div class="modal-section-title">Profile Photo (Admin)</div>
+               <input type="file" accept="image/*" id="imageUpload" onchange="uploadImage()" style="font-size:0.8rem"/>
+               <div id="imagePreview" style="margin-top:6px">${p.image ? `<img src="${p.image}" style="width:80px;height:80px;border-radius:50%;object-fit:cover"/>` : ''}</div>
+             </div>` : ''}
       </div>
       
       <div class="modal-section">
@@ -538,12 +543,17 @@ function toggleEdit() {
   renderModal();
 }
 
+function isUserAdmin() {
+  return currentUser && CONFIG.adminNames.some(n => currentUser.name.toLowerCase().includes(n.toLowerCase()));
+}
+
 function saveEdit() {
+  if (!currentUser) { alert('Please login first'); return; }
   const notesEl = document.getElementById('editNotes');
   if (notesEl) {
     const text = notesEl.innerText.trim();
     activePerson.notes = text ? text.split('\n').filter(l=>l.trim()) : [];
-    // Update in people array
+    activePerson.lastEditor = currentUser.name;
     const idx = people.findIndex(p => p.name === activePerson.name);
     if (idx >= 0) people[idx] = activePerson;
     saveToStorage();
