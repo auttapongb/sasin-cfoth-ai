@@ -341,6 +341,39 @@ async function uploadToServer(file, nameHint) {
   }
 }
 
+// Fetch Instagram profile picture via server
+async function fetchIgPic() {
+  if (!activePerson || !activePerson.ig) return;
+  const ig = activePerson.ig.trim();
+  const username = ig.startsWith('http') ? ig.split('/').filter(Boolean).pop().replace('@','') : ig.replace('@','');
+
+  const preview = document.getElementById('imagePreview');
+  if (preview) preview.innerHTML = '<span style="font-size:0.8rem;color:#E1306C">Fetching from IG...</span>';
+
+  try {
+    const resp = await fetch(`${CONFIG.uploadServer}/ig-fetch`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username })
+    });
+    const data = await resp.json();
+    if (data.ok && data.url) {
+      activePerson.image = data.url;
+      const idx = people.findIndex(p => p === activePerson || p.name === activePerson.name);
+      if (idx >= 0) people[idx] = activePerson;
+      saveToStorage();
+      if (preview) preview.innerHTML = `<img src="${data.url}" style="width:80px;height:80px;border-radius:50%;object-fit:cover"/>`;
+      renderModal();
+      renderRoster();
+    } else {
+      throw new Error(data.error || 'IG fetch failed');
+    }
+  } catch(e) {
+    if (preview) preview.innerHTML = `<span style="font-size:0.75rem;color:#dc2626">IG fetch failed: ${e.message}</span>`;
+    console.error('fetchIgPic:', e);
+  }
+}
+
 // ============================================================
 // DATA — Pre-loaded classmate profiles
 // ============================================================
@@ -387,16 +420,27 @@ function loadFromStorage() {
   try {
     const saved = localStorage.getItem('sasin_emba2026_people');
     if (saved) {
-      const savedData = JSON.parse(saved);
-      // Merge saved data into initial data (preserving edits + images)
-      const merged = INITIAL_DATA.map(p => {
-        const saved = savedData.find(s => s.name === p.name);
-        return saved ? {...p, ...saved, notes: saved.notes || p.notes, topics: saved.topics || p.topics} : p;
-      });
-      // Add NEW profiles (not in INITIAL_DATA) from savedData
-      const existingNames = new Set(merged.map(p => p.name));
-      const newProfiles = savedData.filter(s => !existingNames.has(s.name));
-      people = [...merged, ...newProfiles];
+      // localStorage is the master — user edits are preserved
+      people = JSON.parse(saved);
+
+      // Merge in any NEW profiles from INITIAL_DATA that don't exist in saved
+      // (for newly deployed classmates added to the code)
+      const savedNames = new Set(people.map(p => p.name));
+      for (const p of INITIAL_DATA) {
+        if (!savedNames.has(p.name)) {
+          people.push(p);
+        }
+      }
+      // Also keep INITIAL_DATA structural fields for matching profiles
+      for (const seeded of INITIAL_DATA) {
+        const existing = people.find(ep => ep.name === seeded.name);
+        if (existing) {
+          // Preserve user edits but add missing INITIAL_DATA fields
+          for (const key of Object.keys(seeded)) {
+            if (!(key in existing)) existing[key] = seeded[key];
+          }
+        }
+      }
     }
     const savedComments = localStorage.getItem('sasin_emba2026_comments');
     if (savedComments) comments = JSON.parse(savedComments);
@@ -772,6 +816,7 @@ function renderModal() {
       <div class="modal-title">
         <div class="modal-name">${p.name} ${roleBadge}</div>
         <div class="modal-work">${p.work || ''}</div>
+        ${p.ig ? `<div style="margin-top:4px"><a href="${p.ig.startsWith('http') ? p.ig : 'https://instagram.com/' + p.ig.replace('@','')}" target="_blank" style="font-size:0.82rem;color:#E1306C;text-decoration:none;display:inline-flex;align-items:center;gap:4px">📷 ${p.ig.startsWith('http') ? p.ig : '@' + p.ig.replace('@','')}</a></div>` : ''}
       </div>
       <button class="modal-close" onclick="closeModal()">✕</button>
     </div>
@@ -786,6 +831,8 @@ ${currentUser ? `<div class="edit-toggle" onclick="toggleEdit()">${isEditing?'�
              <input class="editable" id="editName" value="${p.name.replace(/"/g,'&quot;')}" style="width:100%;padding:8px 12px;font-size:0.9rem"/></div>
              <div style="margin-bottom:10px"><label style="font-size:0.78rem;color:var(--text-light)">Work / Industry</label>
              <input class="editable" id="editWork" value="${(p.work||'').replace(/"/g,'&quot;')}" style="width:100%;padding:8px 12px;font-size:0.9rem"/></div>
+             <div style="margin-bottom:10px"><label style="font-size:0.78rem;color:var(--text-light)">Instagram</label>
+             <input class="editable" id="editIg" value="${(p.ig||'').replace(/"/g,'&quot;')}" placeholder="@username or full URL" style="width:100%;padding:8px 12px;font-size:0.9rem"/></div>
              <div class="editable" contenteditable="true" id="editNotes">${(p.notes||[]).join('\\n')}</div>
              <div class="edit-actions">
                <button class="btn btn-gold btn-sm" onclick="saveEdit()">💾 Save</button>
@@ -797,6 +844,7 @@ ${currentUser ? `<div class="edit-toggle" onclick="toggleEdit()">${isEditing?'�
              <div style="margin-top:12px">
                <div class="modal-section-title">Profile Photo (Admin)</div>
                <input type="file" accept="image/*" id="imageUpload" onchange="uploadImage()" style="font-size:0.8rem"/>
+               ${p.ig ? `<button class="btn btn-outline btn-sm" onclick="fetchIgPic()" style="margin-left:8px;font-size:0.75rem;color:#E1306C;border-color:#E1306C">📷 Fetch from IG</button>` : ''}
                <div id="imagePreview" style="margin-top:6px">${p.image ? `<img src="${p.image}" style="width:80px;height:80px;border-radius:50%;object-fit:cover"/>` : ''}</div>
              </div>
              <div class="modal-role-select">
@@ -870,6 +918,7 @@ function saveEdit() {
   const workEl = document.getElementById('editWork');
   const roleEl = document.getElementById('editRole');
   const topicsEl = document.getElementById('editTopics');
+  const igEl = document.getElementById('editIg');
   if (notesEl) {
     const oldName = activePerson.name; // capture BEFORE name change
     const text = notesEl.innerText.trim();
@@ -878,6 +927,7 @@ function saveEdit() {
     if (workEl) activePerson.work = workEl.value.trim();
     if (roleEl) activePerson.role = roleEl.value || null;
     if (topicsEl) activePerson.topics = topicsEl.innerText.trim().split(',').map(t=>t.trim()).filter(Boolean);
+    if (igEl) activePerson.ig = igEl.value.trim() || null;
     activePerson.lastEditor = currentUser.name;
     // Find by old name (in case name was changed)
     const idx = people.findIndex(p => p.name === oldName || p === activePerson);
@@ -887,6 +937,11 @@ function saveEdit() {
     renderModal();
     renderRoster();
     updateLoginUI();
+
+    // Auto-fetch IG profile pic if no image but IG was just set
+    if (activePerson.ig && !activePerson.image) {
+      fetchIgPic().catch(() => {}); // silent background fetch
+    }
   }
 }
 
