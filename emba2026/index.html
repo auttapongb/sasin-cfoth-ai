@@ -62,6 +62,15 @@ body{font-family:'Inter',-apple-system,sans-serif;background:var(--cream);color:
 .person-info{flex:1;min-width:0}
 .person-name{font-weight:600;font-size:0.93rem;color:var(--dark);margin-bottom:2px;letter-spacing:-0.1px}
 .person-work{font-size:0.78rem;color:var(--text-light);line-height:1.4}
+
+/* TOAST */
+#toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);z-index:500;display:flex;flex-direction:column;gap:8px;pointer-events:none}
+.toast-item{background:var(--dark);color:#fff;padding:12px 20px;border-radius:12px;font-size:0.82rem;font-weight:500;box-shadow:0 8px 32px rgba(0,0,0,0.25);animation:slideUp 0.3s ease-out;pointer-events:auto;max-width:360px;text-align:center}
+.toast-item.success{border-left:3px solid #22c55e}
+.toast-item.error{border-left:3px solid #ef4444}
+.toast-item.info{border-left:3px solid var(--gold)}
+@keyframes slideUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
 .person-topics{display:flex;gap:4px;flex-wrap:wrap;margin-top:6px}
 .person-tag{background:var(--gold-bg);color:var(--gold-dark);font-size:0.63rem;padding:3px 9px;border-radius:100px;font-weight:500;letter-spacing:-0.1px}
 .person-role{display:inline-block;font-size:0.58rem;padding:2px 8px;border-radius:100px;font-weight:700;text-transform:uppercase;letter-spacing:0.4px;margin-left:5px;vertical-align:middle}
@@ -262,6 +271,7 @@ body{font-family:'Inter',-apple-system,sans-serif;background:var(--cream);color:
 
 <!-- MAIN -->
 <div class="container">
+  <div id="toast"></div>
   <!-- ROSTER TAB -->
   <div class="tab-panel active" id="panelRoster">
     <div class="roster-grid" id="rosterGrid"></div>
@@ -946,7 +956,6 @@ function saveEdit() {
     if (topicsEl) activePerson.topics = topicsEl.innerText.trim().split(',').map(t=>t.trim()).filter(Boolean);
     if (igEl) activePerson.ig = igEl.value.trim() || null;
     activePerson.lastEditor = currentUser.name;
-    // Find by old name (in case name was changed)
     const idx = people.findIndex(p => p.name === oldName || p === activePerson);
     if (idx >= 0) people[idx] = activePerson;
     saveToStorage();
@@ -954,35 +963,57 @@ function saveEdit() {
     renderModal();
     renderRoster();
     updateLoginUI();
+    showToast('Profile saved ✓', 'success');
 
-    // Auto-fetch IG profile pic if no image but IG was just set
     if (activePerson.ig && !activePerson.image) {
-      fetchIgPic().catch(() => {}); // silent background fetch
+      fetchIgPic().catch(() => {});
     }
   }
 }
 
+// ============================================================
+// TOAST NOTIFICATIONS
+// ============================================================
+function showToast(msg, type) {
+  type = type || 'info';
+  const container = document.getElementById('toast');
+  const el = document.createElement('div');
+  el.className = 'toast-item ' + type;
+  el.textContent = msg;
+  container.appendChild(el);
+  setTimeout(function(){ el.style.opacity='0'; el.style.transition='opacity 0.3s'; setTimeout(function(){ el.remove(); },300); }, 3500);
+}
+
+// Upload state tracker (so saveEdit can warn if upload is pending)
+let _uploadPending = false;
+
 function uploadImage() {
-  const file = document.getElementById('imageUpload').files[0];
-  if (!file) return;
-  
-  // Show loading state
+  const fileInput = document.getElementById('imageUpload');
+  const file = fileInput.files[0];
+  if (!file) { showToast('Please select an image file first', 'info'); return; }
+
   const preview = document.getElementById('imagePreview');
-  preview.innerHTML = '<span style="font-size:0.8rem;color:var(--text-light)">Uploading...</span>';
-  
+  preview.innerHTML = '<div style="display:flex;align-items:center;gap:8px;font-size:0.82rem;color:var(--gold)"><span style="display:inline-block;width:14px;height:14px;border:2px solid var(--gold);border-top-color:transparent;border-radius:50%;animation:spin 0.8s linear infinite"></span> Uploading to server...</div>';
+  _uploadPending = true;
+  showToast('📤 Uploading image...', 'info');
+
   uploadToServer(file, activePerson.name)
     .then(url => {
       activePerson.image = url;
       const idx = people.findIndex(p => p.name === activePerson.name);
       if (idx >= 0) people[idx] = activePerson;
       saveToStorage();
-      preview.innerHTML = `<img src="${url}" style="width:80px;height:80px;border-radius:50%;object-fit:cover"/>`;
+      preview.innerHTML = '<span style="font-size:0.78rem;color:#22c55e">✅ Uploaded!</span><br><img src="'+url+'" style="width:80px;height:80px;border-radius:50%;object-fit:cover;margin-top:4px"/>';
       renderModal();
       renderRoster();
+      _uploadPending = false;
+      showToast('✅ Image saved to GitHub! Click Save to finish edits', 'success');
+      fileInput.value = ''; // reset so user can re-upload
     })
     .catch(err => {
-      alert('Upload failed: ' + err.message + '\n\nFalling back to local storage.');
-      // Fallback: store as base64
+      _uploadPending = false;
+      showToast('❌ Upload failed: ' + err.message + ' — saving locally', 'error');
+      // Fallback: store as base64 in localStorage
       const reader = new FileReader();
       reader.onload = function(e) {
         const img = new Image();
@@ -997,7 +1028,7 @@ function uploadImage() {
           const idx = people.findIndex(p => p.name === activePerson.name);
           if (idx >= 0) people[idx] = activePerson;
           saveToStorage();
-          preview.innerHTML = `<img src="${activePerson.image}" style="width:80px;height:80px;border-radius:50%;object-fit:cover"/>`;
+          preview.innerHTML = '<span style="font-size:0.78rem;color:#f59e0b">⚠️ Local only</span><br><img src="'+activePerson.image+'" style="width:80px;height:80px;border-radius:50%;object-fit:cover;margin-top:4px"/>';
           renderModal();
           renderRoster();
         };
