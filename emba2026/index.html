@@ -733,8 +733,22 @@ ${currentUser ? `<div class="edit-toggle" onclick="toggleEdit()">${isEditing?'�
           </div>
         ` : `<p style="font-size:0.8rem;color:var(--text-light);margin-top:8px">🔐 <a href="javascript:loginPrompt()" style="color:var(--gold)">Login</a> to comment</p>`}
       </div>
+      ${isAdmin ? `
+      <div style="margin-top:20px;padding-top:16px;border-top:1px solid rgba(239,68,68,0.15)">
+        <button class="btn btn-outline btn-sm" style="color:#dc2626;border-color:rgba(239,68,68,0.3)" onclick="deleteProfile()">🗑 Delete Profile</button>
+      </div>` : ''}
     </div>
   `;
+}
+
+function deleteProfile() {
+  if (!isUserAdmin() || !activePerson) return;
+  if (!confirm(`Delete "${activePerson.name}" permanently? This cannot be undone.`)) return;
+  people = people.filter(p => p.name !== activePerson.name);
+  saveToStorage();
+  closeModal();
+  renderRoster();
+  updateLoginUI();
 }
 
 function toggleEdit() {
