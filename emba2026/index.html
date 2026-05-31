@@ -502,11 +502,13 @@ function doFacebookLogin() {
 function updateLoginUI() {
   const area = document.getElementById('loginArea');
   if (currentUser) {
-    const hasProfile = people.some(p => currentUser.name && (p.name === currentUser.name || currentUser.name.includes(p.name)));
+    const hasProfile = people.some(p => currentUser.name && (p.name === currentUser.name || currentUser.name.includes(p.name) || p.name.includes(currentUser.name)));
+    const isAdm = isUserAdmin();
     area.innerHTML = `
       <img class="user-avatar" src="${currentUser.picture || ''}" onerror="this.style.display='none'" alt=""/>
       <span class="user-name">${currentUser.name}</span>
       ${!hasProfile ? `<button class="btn btn-gold btn-sm" onclick="createMyProfile()">✨ Create My Profile</button>` : ''}
+      ${isAdm ? `<button class="btn btn-gold btn-sm" onclick="manualAddProfile()" title="Add anyone">＋ Add</button>` : ''}
       <button class="btn btn-outline btn-sm" onclick="logout()">Logout</button>
     `;
   } else {
@@ -554,6 +556,30 @@ function createMyProfile() {
   openProfile(newPerson.name);
 }
 
+// Admin: manually add any profile
+function manualAddProfile() {
+  const name = prompt('Enter name for new profile:');
+  if (!name || !name.trim()) return;
+  const exists = people.find(p => p.name.toLowerCase() === name.trim().toLowerCase());
+  if (exists) { alert('Profile already exists!'); openProfile(exists.name); return; }
+  const newPerson = {
+    name: name.trim(),
+    work: prompt('Work / Industry (optional):') || '',
+    notes: [],
+    topics: [],
+    type: 'quick',
+    image: '',
+    linePicture: '',
+    lastEditor: currentUser.name,
+    createdBy: currentUser.name
+  };
+  people.push(newPerson);
+  saveToStorage();
+  renderRoster();
+  updateLoginUI();
+  openProfile(newPerson.name);
+}
+
 function logout() {
   currentUser = null;
   localStorage.removeItem('sasin_emba2026_user');
@@ -580,7 +606,8 @@ function renderRoster() {
   
   // Show "Create My Profile" card at top if logged in and not in roster
   if (currentUser && !query) {
-    const hasProfile = people.some(p => currentUser.name && (p.name === currentUser.name || currentUser.name.includes(p.name)));
+    const hasProfile = people.some(p => currentUser.name && (p.name === currentUser.name || currentUser.name.includes(p.name) || p.name.includes(currentUser.name)));
+    const isAdm = isUserAdmin();
     if (!hasProfile) {
       cards += `
         <div class="person-card" style="border:2px dashed var(--gold);background:rgba(201,168,76,0.05);cursor:pointer" onclick="createMyProfile()">
@@ -588,6 +615,16 @@ function renderRoster() {
           <div class="person-info">
             <div class="person-name" style="color:var(--gold-dark)">Create Your Profile</div>
             <div class="person-work">Tap here to add yourself to the roster</div>
+          </div>
+        </div>`;
+    }
+    if (isAdm) {
+      cards += `
+        <div class="person-card" style="border:2px dashed rgba(139,92,246,0.4);background:rgba(139,92,246,0.03);cursor:pointer" onclick="manualAddProfile()">
+          <div class="person-avatar" style="background:linear-gradient(135deg,#7c3aed,#a78bfa);font-size:1.5rem">＋</div>
+          <div class="person-info">
+            <div class="person-name" style="color:#7c3aed">Add New Profile</div>
+            <div class="person-work">Admin: manually add anyone to roster</div>
           </div>
         </div>`;
     }
