@@ -327,10 +327,18 @@ async function uploadToServer(file, nameHint) {
   const fd = new FormData();
   fd.append('image', file, file.name);
   fd.append('name', nameHint || file.name);
-  const resp = await fetch(`${CONFIG.uploadServer}/upload`, { method: 'POST', body: fd });
-  const data = await resp.json();
-  if (data.ok && data.url) return data.url;
-  throw new Error(data.error || 'Upload failed');
+  try {
+    const resp = await fetch(`${CONFIG.uploadServer}/upload`, { method: 'POST', body: fd });
+    if (!resp.ok) throw new Error(`Server error ${resp.status}`);
+    const data = await resp.json();
+    if (data.ok && data.url) return data.url;
+    throw new Error(data.error || 'Upload failed');
+  } catch(e) {
+    if (e.message.includes('Failed to fetch') || e.message.includes('NetworkError')) {
+      throw new Error('Upload server unreachable. Check if image server is running.');
+    }
+    throw e;
+  }
 }
 
 // ============================================================
@@ -380,17 +388,22 @@ function loadFromStorage() {
     const saved = localStorage.getItem('sasin_emba2026_people');
     if (saved) {
       const savedData = JSON.parse(saved);
-      // Merge saved images into initial data
-      people = INITIAL_DATA.map(p => {
+      // Merge saved data into initial data (preserving edits + images)
+      const merged = INITIAL_DATA.map(p => {
         const saved = savedData.find(s => s.name === p.name);
         return saved ? {...p, ...saved, notes: saved.notes || p.notes, topics: saved.topics || p.topics} : p;
       });
+      // Add NEW profiles (not in INITIAL_DATA) from savedData
+      const existingNames = new Set(merged.map(p => p.name));
+      const newProfiles = savedData.filter(s => !existingNames.has(s.name));
+      people = [...merged, ...newProfiles];
     }
     const savedComments = localStorage.getItem('sasin_emba2026_comments');
     if (savedComments) comments = JSON.parse(savedComments);
     const savedUser = localStorage.getItem('sasin_emba2026_user');
     if (savedUser) currentUser = JSON.parse(savedUser);
-  } catch(e) {}
+    loadPhotos();
+  } catch(e) { console.error('loadFromStorage error:', e); }
 }
 
 function saveToStorage() {
@@ -858,6 +871,7 @@ function saveEdit() {
   const roleEl = document.getElementById('editRole');
   const topicsEl = document.getElementById('editTopics');
   if (notesEl) {
+    const oldName = activePerson.name; // capture BEFORE name change
     const text = notesEl.innerText.trim();
     activePerson.notes = text ? text.split('\n').filter(l=>l.trim()) : [];
     if (nameEl) activePerson.name = nameEl.value.trim() || activePerson.name;
@@ -865,7 +879,8 @@ function saveEdit() {
     if (roleEl) activePerson.role = roleEl.value || null;
     if (topicsEl) activePerson.topics = topicsEl.innerText.trim().split(',').map(t=>t.trim()).filter(Boolean);
     activePerson.lastEditor = currentUser.name;
-    const idx = people.findIndex(p => p.name === activePerson.name);
+    // Find by old name (in case name was changed)
+    const idx = people.findIndex(p => p.name === oldName || p === activePerson);
     if (idx >= 0) people[idx] = activePerson;
     saveToStorage();
     isEditing = false;
