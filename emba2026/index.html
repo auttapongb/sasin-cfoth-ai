@@ -552,7 +552,7 @@ function renderRoster() {
     if (!query) return true;
     const haystack = [p.name, p.work, ...(p.notes||[]), ...(p.topics||[])].join(' ').toLowerCase();
     return haystack.includes(query);
-  });
+  }).sort((a,b) => a.name.localeCompare(b.name));
   
   document.getElementById('headerCount').textContent = `${filtered.length} classmate${filtered.length!==1?'s':''}`;
   
@@ -870,9 +870,8 @@ document.getElementById('photoModal').addEventListener('click', function(e) {
 
 function showTagSuggestions(cx, cy, px, py) {
   const el = document.getElementById('tagSuggestions');
-  const query = '';
-  const matches = people.filter(p => true).slice(0, 10);
-  el.innerHTML = matches.map(p => 
+  const sorted = [...people].sort((a,b) => a.name.localeCompare(b.name));
+  el.innerHTML = sorted.map(p => 
     `<div class="tag-suggestion" onclick="addTag(${px},${py},'${p.name.replace(/'/g,"\\'")}')">${p.name}</div>`
   ).join('');
   el.style.left = cx + 'px';
