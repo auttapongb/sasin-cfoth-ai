@@ -678,6 +678,8 @@ ${currentUser ? `<div class="edit-toggle" onclick="toggleEdit()">${isEditing?'ðŸ
         ${isEditing 
           ? `<div style="margin-bottom:10px"><label style="font-size:0.78rem;color:var(--text-light)">Name</label>
              <input class="editable" id="editName" value="${p.name.replace(/"/g,'&quot;')}" style="width:100%;padding:8px 12px;font-size:0.9rem"/></div>
+             <div style="margin-bottom:10px"><label style="font-size:0.78rem;color:var(--text-light)">Work / Industry</label>
+             <input class="editable" id="editWork" value="${(p.work||'').replace(/"/g,'&quot;')}" style="width:100%;padding:8px 12px;font-size:0.9rem"/></div>
              <div class="editable" contenteditable="true" id="editNotes">${(p.notes||[]).join('\\n')}</div>
              <div class="edit-actions">
                <button class="btn btn-gold btn-sm" onclick="saveEdit()">ðŸ’¾ Save</button>
@@ -745,12 +747,14 @@ function saveEdit() {
   if (!currentUser) { alert('Please login first'); return; }
   const notesEl = document.getElementById('editNotes');
   const nameEl = document.getElementById('editName');
+  const workEl = document.getElementById('editWork');
   const roleEl = document.getElementById('editRole');
   const topicsEl = document.getElementById('editTopics');
   if (notesEl) {
     const text = notesEl.innerText.trim();
     activePerson.notes = text ? text.split('\n').filter(l=>l.trim()) : [];
     if (nameEl) activePerson.name = nameEl.value.trim() || activePerson.name;
+    if (workEl) activePerson.work = workEl.value.trim();
     if (roleEl) activePerson.role = roleEl.value || null;
     if (topicsEl) activePerson.topics = topicsEl.innerText.trim().split(',').map(t=>t.trim()).filter(Boolean);
     activePerson.lastEditor = currentUser.name;
