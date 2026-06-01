@@ -132,7 +132,7 @@ source: Sasin Capture Server
 
         try:
             # Upload to DeepTutor
-            url = f"{DEEPTUTOR_API}/api/knowledge/{KB_NAME}/upload"
+            url = f"{DEEPTUTOR_API}/api/v1/knowledge/{KB_NAME}/upload"
             log.info(f"Uploading to DeepTutor: {path.name} ({metadata['size_bytes']} bytes)")
 
             with open(enriched_path, "rb") as f:
