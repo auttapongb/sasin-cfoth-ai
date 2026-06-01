@@ -108,6 +108,113 @@
             .nav-inner { height: 50px; }
         }
 
+        /* ===== DASHBOARD ===== */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+            margin-bottom: 0;
+        }
+
+        .dash-card, .dash-card-mini {
+            background: var(--sasin-white);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow-sm);
+            padding: 24px;
+            display: flex;
+            align-items: flex-start;
+            gap: 16px;
+            text-decoration: none;
+            color: inherit;
+            transition: all 0.25s ease;
+            cursor: pointer;
+            border: 2px solid transparent;
+            position: relative;
+            overflow: hidden;
+        }
+        .dash-card:hover, .dash-card-mini:hover {
+            transform: translateY(-3px);
+            box-shadow: var(--shadow-lg);
+            border-color: var(--sasin-gold);
+        }
+        .dash-card.live { border-left: 4px solid #4CAF50; }
+        .dash-card.capture { border-left: 4px solid #E85D3A; }
+        .dash-card.learn { border-left: 4px solid #8B5CF6; }
+        .dash-card.classroom { border-left: 4px solid #4A90D9; }
+        .dash-card-mini {
+            flex: 1;
+            min-width: 280px;
+            padding: 18px 20px;
+        }
+        .dash-card-icon {
+            font-size: 2rem;
+            flex-shrink: 0;
+            line-height: 1;
+            margin-top: 2px;
+        }
+        .dash-card-mini .dash-card-icon { font-size: 1.6rem; }
+        .dash-card-content { flex: 1; min-width: 0; }
+        .dash-card-content h3 {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.15rem;
+            font-weight: 700;
+            color: var(--sasin-dark);
+            margin-bottom: 4px;
+        }
+        .dash-card-mini .dash-card-content h3 { font-size: 1.05rem; }
+        .dash-card-url {
+            font-size: 0.75rem;
+            font-weight: 500;
+            color: var(--sasin-gold-dark);
+            font-family: 'SF Mono', 'Fira Code', monospace;
+            margin-bottom: 8px;
+            opacity: 0.85;
+        }
+        .dash-card-content p {
+            font-size: 0.88rem;
+            color: var(--sasin-text-light);
+            line-height: 1.5;
+            margin-bottom: 10px;
+        }
+        .dash-card-mini .dash-card-content p { font-size: 0.82rem; }
+        .dash-card-tag {
+            display: inline-block;
+            font-size: 0.7rem;
+            font-weight: 600;
+            padding: 3px 10px;
+            border-radius: 100px;
+            margin-right: 6px;
+            margin-bottom: 4px;
+            background: rgba(201,168,76,0.12);
+            color: var(--sasin-gold-dark);
+        }
+        .dash-card-tag.tag-hot {
+            background: rgba(232,93,58,0.12);
+            color: var(--sasin-accent);
+            animation: pulse-tag 2s ease-in-out infinite;
+        }
+        @keyframes pulse-tag {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+        .dash-card-arrow {
+            font-size: 1.3rem;
+            color: var(--sasin-gold);
+            flex-shrink: 0;
+            align-self: center;
+            transition: transform 0.25s ease;
+        }
+        .dash-card:hover .dash-card-arrow,
+        .dash-card-mini:hover .dash-card-arrow {
+            transform: translateX(4px);
+        }
+
+        @media (max-width: 640px) {
+            .dashboard-grid { grid-template-columns: 1fr; }
+            .dash-card { padding: 16px; }
+            .dash-card-mini { min-width: 100%; }
+        }
+
         /* ===== HERO ===== */
         .hero {
             background: linear-gradient(135deg, var(--sasin-dark) 0%, var(--sasin-mid) 50%, #3A3A5C 100%);
@@ -524,6 +631,93 @@
                 <div class="value">Bangkok</div>
                 <div class="label">Location</div>
             </div>
+        </div>
+    </div>
+</section>
+
+<!-- ===== AI TOOLS DASHBOARD ===== -->
+<section class="section" style="padding: 48px 0 0;">
+    <div class="container">
+        <h2 class="section-title">⚡ AI Learning Toolkit</h2>
+        <div class="divider"></div>
+        <p class="section-subtitle">Your EMBA AI companion ecosystem — every tool one click away.</p>
+
+        <div class="dashboard-grid">
+            <!-- Live Assistant -->
+            <a href="https://live.sasin.cfoth.ai" target="_blank" class="dash-card live">
+                <div class="dash-card-icon">🟢</div>
+                <div class="dash-card-content">
+                    <h3>Live Assistant</h3>
+                    <div class="dash-card-url">live.sasin.cfoth.ai</div>
+                    <p>Real-time lecture companion. Listens during class, answers instantly with course‑aware AI — under 500ms latency.</p>
+                    <span class="dash-card-tag tag-hot">⚡ &lt;500ms</span>
+                    <span class="dash-card-tag">Groq LPU</span>
+                </div>
+                <div class="dash-card-arrow">→</div>
+            </a>
+
+            <!-- Capture -->
+            <a href="https://capture.sasin.cfoth.ai" target="_blank" class="dash-card capture">
+                <div class="dash-card-icon">🎙️</div>
+                <div class="dash-card-content">
+                    <h3>Lecture Capture</h3>
+                    <div class="dash-card-url">capture.sasin.cfoth.ai</div>
+                    <p>Record &amp; transcribe lectures in real time. Upload PDFs, images, audio — auto‑indexed into your knowledge base.</p>
+                    <span class="dash-card-tag">Whisper</span>
+                    <span class="dash-card-tag">OCR</span>
+                    <span class="dash-card-tag">RAG</span>
+                </div>
+                <div class="dash-card-arrow">→</div>
+            </a>
+
+            <!-- DeepTutor -->
+            <a href="https://learn.sasin.cfoth.ai" target="_blank" class="dash-card learn">
+                <div class="dash-card-icon">🧠</div>
+                <div class="dash-card-content">
+                    <h3>DeepTutor</h3>
+                    <div class="dash-card-url">learn.sasin.cfoth.ai</div>
+                    <p>RAG-powered study assistant. Ask anything across all your course materials, generate quizzes, compile study guides.</p>
+                    <span class="dash-card-tag">RAG</span>
+                    <span class="dash-card-tag">Quiz Gen</span>
+                    <span class="dash-card-tag">Book Compiler</span>
+                </div>
+                <div class="dash-card-arrow">→</div>
+            </a>
+
+            <!-- AI Classroom -->
+            <a href="https://classroom.sasin.cfoth.ai" target="_blank" class="dash-card classroom">
+                <div class="dash-card-icon">🏫</div>
+                <div class="dash-card-content">
+                    <h3>AI Classroom</h3>
+                    <div class="dash-card-url">classroom.sasin.cfoth.ai</div>
+                    <p>Multi-agent debate &amp; discussion environment. Simulate expert panels, run case study role‑plays, explore topics from every angle.</p>
+                    <span class="dash-card-tag">Multi-Agent</span>
+                    <span class="dash-card-tag">OpenMAIC</span>
+                </div>
+                <div class="dash-card-arrow">→</div>
+            </a>
+        </div>
+
+        <!-- Internal pages -->
+        <div style="display:flex; gap:16px; margin-top: 16px; flex-wrap: wrap;">
+            <a href="agritech.html" class="dash-card-mini">
+                <div class="dash-card-icon">🌾</div>
+                <div class="dash-card-content">
+                    <h3>AgriTech Research Brief</h3>
+                    <div class="dash-card-url">/agritech.html</div>
+                    <p>Prof. Harry Jay Cavite — ESG, SWOT, PESTLE, 24 references</p>
+                </div>
+                <div class="dash-card-arrow">→</div>
+            </a>
+            <a href="emba2026/" class="dash-card-mini">
+                <div class="dash-card-icon">👥</div>
+                <div class="dash-card-content">
+                    <h3>Classmate Roster</h3>
+                    <div class="dash-card-url">/emba2026/</div>
+                    <p>43 classmates — profiles, interests, industries</p>
+                </div>
+                <div class="dash-card-arrow">→</div>
+            </a>
         </div>
     </div>
 </section>

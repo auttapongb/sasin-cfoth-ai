@@ -101,8 +101,15 @@
         let recognition = null, groqApiKey = '';
         let conversationHistory = [];
 
-        // Try to load saved key
-        try { groqApiKey = localStorage.getItem('groq_key') || ''; if (groqApiKey) { document.getElementById('groqKeyInput').value = groqApiKey; document.getElementById('keyStatus').textContent = '✅ Ready'; } } catch(e) {}
+        // Load saved key from localStorage
+        try {
+            const saved = localStorage.getItem('groq_key');
+            if (saved) {
+                groqApiKey = saved;
+                document.getElementById('groqKeyInput').value = groqApiKey;
+                document.getElementById('keyStatus').textContent = '✅ Ready';
+            }
+        } catch(e) {}
 
         function saveApiKey() {
             groqApiKey = document.getElementById('groqKeyInput').value.trim();
