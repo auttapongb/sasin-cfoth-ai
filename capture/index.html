@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+    <title>Sasin Lecture Capture</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:wght@600;700;800&display=swap" rel="stylesheet" />
+    <style>
+        :root {
+            --sasin-gold: #C9A84C;
+            --sasin-gold-light: #E8D48B;
+            --sasin-dark: #1A1A2E;
+            --sasin-mid: #2D2D44;
+            --sasin-text: #E0E0E8;
+            --sasin-dim: #8A8AA0;
+            --bg: #0F0F1A;
+            --card: #1A1A2E;
+            --border: #2A2A44;
+            --recording: #E85D3A;
+            --success: #4CAF50;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--sasin-text);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+        .container { max-width: 800px; margin: 0 auto; padding: 16px; }
+
+        /* Header */
+        .header {
+            display: flex; align-items: center; gap: 12px;
+            padding: 16px 0; border-bottom: 1px solid var(--border);
+            margin-bottom: 20px;
+        }
+        .logo { font-family: 'Playfair Display', serif; font-size: 1.3rem; color: var(--sasin-gold); }
+        .logo span { color: var(--sasin-text); font-size: 0.8rem; font-family: 'Inter', sans-serif; font-weight: 300; }
+
+        /* Status bar */
+        .status-bar {
+            display: flex; align-items: center; gap: 12px;
+            padding: 12px 16px; background: var(--card);
+            border-radius: 12px; border: 1px solid var(--border);
+            margin-bottom: 16px;
+        }
+        .status-dot {
+            width: 10px; height: 10px; border-radius: 50%;
+            background: var(--sasin-dim); transition: background 0.3s;
+        }
+        .status-dot.recording { background: var(--recording); animation: pulse 1.2s infinite; }
+        .status-dot.connected { background: var(--success); }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.4; transform: scale(1.5); }
+        }
+        .status-text { font-size: 0.85rem; font-weight: 500; }
+        .timer { font-family: 'Inter', monospace; font-size: 1.4rem; font-weight: 700; margin-left: auto; }
+
+        /* Controls */
+        .controls {
+            display: flex; gap: 12px; margin-bottom: 16px;
+        }
+        .btn {
+            flex: 1; padding: 16px 24px; border: none; border-radius: 14px;
+            font-family: 'Inter', sans-serif; font-size: 1rem; font-weight: 700;
+            cursor: pointer; transition: all 0.2s; display: flex;
+            align-items: center; justify-content: center; gap: 8px;
+        }
+        .btn-record {
+            background: var(--recording); color: white;
+            box-shadow: 0 4px 20px rgba(232,93,58,0.3);
+        }
+        .btn-record:hover { transform: translateY(-1px); box-shadow: 0 6px 24px rgba(232,93,58,0.4); }
+        .btn-record:active { transform: scale(0.97); }
+        .btn-record.recording {
+            background: #1A1A2E; border: 2px solid var(--recording); color: var(--recording);
+            box-shadow: none; animation: borderPulse 1.5s infinite;
+        }
+        @keyframes borderPulse {
+            0%, 100% { border-color: var(--recording); }
+            50% { border-color: rgba(232,93,58,0.3); }
+        }
+        .btn-stop { background: var(--card); color: var(--sasin-text); border: 1px solid var(--border); display: none; }
+        .btn-stop.visible { display: flex; }
+        .btn-download { background: var(--card); color: var(--sasin-gold); border: 1px solid var(--sasin-gold); display: none; }
+        .btn-download.visible { display: flex; }
+
+        /* Info cards */
+        .info-row {
+            display: grid; grid-template-columns: 1fr 1fr 1fr;
+            gap: 10px; margin-bottom: 16px;
+        }
+        .info-card {
+            background: var(--card); border: 1px solid var(--border);
+            border-radius: 12px; padding: 12px; text-align: center;
+        }
+        .info-card .value { font-size: 1.5rem; font-weight: 700; color: var(--sasin-gold); }
+        .info-card .label { font-size: 0.7rem; color: var(--sasin-dim); text-transform: uppercase; letter-spacing: 0.5px; margin-top: 4px; }
+
+        /* Transcript */
+        .transcript-area {
+            background: var(--card); border: 1px solid var(--border);
+            border-radius: 12px; padding: 16px; min-height: 300px;
+            max-height: 60vh; overflow-y: auto; position: relative;
+        }
+        .transcript-placeholder {
+            color: var(--sasin-dim); text-align: center;
+            padding-top: 100px; font-size: 0.95rem;
+        }
+        .transcript-segment {
+            padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.04);
+            animation: fadeIn 0.3s ease;
+        }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+        .segment-time {
+            font-size: 0.65rem; color: var(--sasin-dim);
+            margin-bottom: 2px; font-family: monospace;
+        }
+        .segment-text { font-size: 0.95rem; line-height: 1.5; color: var(--sasin-text); }
+        .segment-latest { border-left: 2px solid var(--sasin-gold); padding-left: 12px; }
+        .segment-latest .segment-text { color: white; }
+
+        /* Errors */
+        .error-toast {
+            position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+            background: var(--recording); color: white; padding: 12px 20px;
+            border-radius: 10px; font-size: 0.85rem; font-weight: 500;
+            z-index: 100; animation: slideUp 0.3s ease;
+            max-width: 90vw; text-align: center;
+        }
+        @keyframes slideUp { from { opacity: 0; transform: translateX(-50%) translateY(20px); } to { opacity: 1; transform: translateX(-50%) translateY(0); } }
+
+        /* Info banner */
+        .info-banner {
+            background: rgba(201,168,76,0.08); border: 1px solid rgba(201,168,76,0.2);
+            border-radius: 10px; padding: 10px 14px; margin-bottom: 16px;
+            font-size: 0.75rem; color: var(--sasin-dim);
+        }
+        .info-banner strong { color: var(--sasin-gold); }
+
+        @media (max-width: 480px) {
+            .info-row { grid-template-columns: 1fr 1fr; }
+            .container { padding: 12px; }
+            .btn { padding: 14px 18px; font-size: 0.9rem; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo">Sasin <span>EMBA 2026</span></div>
+        </div>
+        <div class="info-banner">
+            <strong>🎙️ Lecture Capture</strong> — Open this on your phone during class. Hit record. The transcript appears here in near real-time. Everything is saved.
+        </div>
+
+        <!-- Status -->
+        <div class="status-bar">
+            <div class="status-dot" id="statusDot"></div>
+            <span class="status-text" id="statusText">Ready</span>
+            <span class="timer" id="timer">00:00</span>
+        </div>
+
+        <!-- Buttons -->
+        <div class="controls">
+            <button class="btn btn-record" id="btnRecord" onclick="toggleRecording()">
+                <span id="btnIcon">🎙️</span> <span id="btnLabel">Start Recording</span>
+            </button>
+            <button class="btn btn-stop" id="btnStop" onclick="stopAndSave()">
+                ⏹️ Stop & Save
+            </button>
+            <button class="btn btn-download" id="btnDownload" onclick="downloadTranscript()">
+                📥 Download
+            </button>
+        </div>
+
+        <!-- Stats -->
+        <div class="info-row">
+            <div class="info-card">
+                <div class="value" id="wordCount">0</div>
+                <div class="label">Words Captured</div>
+            </div>
+            <div class="info-card">
+                <div class="value" id="chunkCount">0</div>
+                <div class="label">Chunks Processed</div>
+            </div>
+            <div class="info-card">
+                <div class="value" id="avgLatency">--</div>
+                <div class="label">Avg Latency</div>
+            </div>
+        </div>
+
+        <!-- Transcript -->
+        <div class="transcript-area" id="transcriptArea">
+            <div class="transcript-placeholder" id="placeholder">
+                🎤 Press <strong>Start Recording</strong> when the professor begins speaking.<br>
+                <span style="font-size:0.8rem;color:var(--sasin-dim)">Transcript will appear here in near real-time.</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'https://capture.sasin.cfoth.ai';
+        let mediaRecorder = null;
+        let chunks = [];
+        let isRecording = false;
+        let startTime = 0;
+        let timerInterval = null;
+        let totalWords = 0;
+        let chunkNumber = 0;
+        let latencies = [];
+        let fullTranscript = [];
+        let currentChunkIndex = 0;
+
+        async function toggleRecording() {
+            if (isRecording) return;
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ 
+                    audio: { 
+                        sampleRate: 16000, 
+                        channelCount: 1,
+                        echoCancellation: true,
+                        noiseSuppression: true 
+                    } 
+                });
+                startRecording(stream);
+            } catch (err) {
+                showError('Microphone access denied. Please allow microphone permissions.');
+                console.error(err);
+            }
+        }
+
+        function startRecording(stream) {
+            const mimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus') 
+                ? 'audio/webm;codecs=opus' 
+                : 'audio/webm';
+            
+            mediaRecorder = new MediaRecorder(stream, { mimeType, audioBitsPerSecond: 32000 });
+            isRecording = true;
+            startTime = Date.now();
+            chunkNumber = 0;
+            totalWords = 0;
+            latencies = [];
+            fullTranscript = [];
+
+            // Clear transcript
+            document.getElementById('transcriptArea').innerHTML = '<div class="transcript-placeholder">Listening...</div>';
+            document.getElementById('wordCount').textContent = '0';
+            document.getElementById('chunkCount').textContent = '0';
+            document.getElementById('avgLatency').textContent = '--';
+
+            // Send chunks every 8 seconds
+            mediaRecorder.ondataavailable = async (e) => {
+                if (e.data.size > 0) {
+                    chunks.push(e.data);
+                    // Send chunk for transcription
+                    const chunk = new Blob([e.data], { type: mimeType });
+                    const idx = ++currentChunkIndex;
+                    sendChunk(chunk, idx);
+                }
+            };
+
+            mediaRecorder.start(8000); // 8-second chunks
+            updateUI(true);
+            timerInterval = setInterval(updateTimer, 1000);
+        }
+
+        async function sendChunk(blob, idx) {
+            const sendTime = Date.now();
+            chunkNumber++;
+            document.getElementById('chunkCount').textContent = chunkNumber;
+
+            try {
+                const formData = new FormData();
+                formData.append('audio', blob, `chunk_${idx}.webm`);
+                formData.append('chunk_index', idx);
+
+                const resp = await fetch(`${API_URL}/transcribe`, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!resp.ok) throw new Error(`Server error: ${resp.status}`);
+
+                const data = await resp.json();
+                const latency = (Date.now() - sendTime) / 1000;
+                latencies.push(latency);
+                document.getElementById('avgLatency').textContent = 
+                    (latencies.reduce((a,b) => a+b, 0) / latencies.length).toFixed(1) + 's';
+
+                if (data.text && data.text.trim()) {
+                    fullTranscript.push(data.text.trim());
+                    totalWords += data.text.trim().split(/\s+/).length;
+                    document.getElementById('wordCount').textContent = totalWords;
+                    appendTranscript(data.text.trim(), idx, latency);
+                }
+            } catch (err) {
+                console.error('Chunk upload failed:', err);
+                // Queue for retry
+                appendTranscript('[transcription pending...]', idx, 0);
+            }
+        }
+
+        function appendTranscript(text, idx, latency) {
+            const area = document.getElementById('transcriptArea');
+            // Remove placeholder on first text
+            const placeholder = document.getElementById('placeholder');
+            if (placeholder) placeholder.remove();
+
+            // Remove "latest" class from all segments
+            area.querySelectorAll('.segment-latest').forEach(el => el.classList.remove('segment-latest'));
+
+            const div = document.createElement('div');
+            div.className = 'transcript-segment segment-latest';
+            const mins = Math.floor((Date.now() - startTime) / 60000);
+            const secs = Math.floor(((Date.now() - startTime) % 60000) / 1000);
+            div.innerHTML = `
+                <div class="segment-time">${String(mins).padStart(2,'0')}:${String(secs).padStart(2,'0')} · ${latency.toFixed(1)}s latency</div>
+                <div class="segment-text">${escapeHtml(text)}</div>
+            `;
+            area.appendChild(div);
+            area.scrollTop = area.scrollHeight;
+        }
+
+        async function stopAndSave() {
+            if (!isRecording || !mediaRecorder) return;
+            
+            // Collect any remaining data
+            mediaRecorder.requestData();
+            await new Promise(r => setTimeout(r, 500));
+
+            mediaRecorder.stop();
+            mediaRecorder.stream.getTracks().forEach(t => t.stop());
+            isRecording = false;
+            clearInterval(timerInterval);
+
+            // Save full transcript
+            try {
+                await fetch(`${API_URL}/save`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        transcript: fullTranscript.join('\n\n'),
+                        word_count: totalWords,
+                        duration: Math.floor((Date.now() - startTime) / 1000),
+                        chunks: chunkNumber,
+                        timestamp: new Date().toISOString()
+                    })
+                });
+            } catch (err) {
+                console.error('Save failed:', err);
+            }
+
+            updateUI(false);
+        }
+
+        function downloadTranscript() {
+            const text = fullTranscript.join('\n\n');
+            const blob = new Blob([text], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `lecture-${new Date().toISOString().slice(0,10)}.txt`;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function updateUI(recording) {
+            const dot = document.getElementById('statusDot');
+            const text = document.getElementById('statusText');
+            const recordBtn = document.getElementById('btnRecord');
+            const stopBtn = document.getElementById('btnStop');
+            const downloadBtn = document.getElementById('btnDownload');
+            const icon = document.getElementById('btnIcon');
+            const label = document.getElementById('btnLabel');
+
+            if (recording) {
+                dot.className = 'status-dot recording';
+                text.textContent = 'Recording';
+                recordBtn.classList.add('recording');
+                stopBtn.classList.add('visible');
+                downloadBtn.classList.remove('visible');
+                icon.textContent = '⏺️';
+                label.textContent = 'Recording...';
+            } else {
+                dot.className = 'status-dot connected';
+                text.textContent = 'Session saved';
+                recordBtn.classList.remove('recording');
+                stopBtn.classList.remove('visible');
+                downloadBtn.classList.add('visible');
+                icon.textContent = '🎙️';
+                label.textContent = 'New Recording';
+            }
+        }
+
+        function updateTimer() {
+            const elapsed = Math.floor((Date.now() - startTime) / 1000);
+            const mins = Math.floor(elapsed / 60);
+            const secs = elapsed % 60;
+            document.getElementById('timer').textContent = 
+                `${String(mins).padStart(2,'0')}:${String(secs).padStart(2,'0')}`;
+        }
+
+        function showError(msg) {
+            const toast = document.createElement('div');
+            toast.className = 'error-toast';
+            toast.textContent = msg;
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), 4000);
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+    </script>
+</body>
+</html>
