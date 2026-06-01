@@ -34,6 +34,78 @@
             color: var(--sasin-text);
             line-height: 1.6;
             overflow-x: hidden;
+            padding-top: 56px; /* offset for sticky nav */
+        }
+
+        /* ===== NAVIGATION ===== */
+        .nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            background: rgba(26, 26, 46, 0.94);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            z-index: 1000;
+            border-bottom: 1px solid rgba(201,168,76,0.12);
+            padding: 0 24px;
+        }
+        .nav-inner {
+            max-width: 900px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            height: 56px;
+            gap: 6px;
+        }
+        .nav-logo {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--sasin-white);
+            text-decoration: none;
+            letter-spacing: -0.3px;
+            margin-right: auto;
+            transition: color 0.2s;
+        }
+        .nav-logo span { color: var(--sasin-gold); }
+        .nav-logo:hover { color: var(--sasin-gold-light); }
+        .nav-link {
+            color: rgba(255,255,255,0.65);
+            text-decoration: none;
+            font-size: 0.82rem;
+            font-weight: 500;
+            padding: 8px 14px;
+            border-radius: 100px;
+            transition: all 0.2s ease;
+            white-space: nowrap;
+            letter-spacing: -0.1px;
+        }
+        .nav-link:hover {
+            color: var(--sasin-white);
+            background: rgba(201,168,76,0.12);
+        }
+        .nav-link.active {
+            color: var(--sasin-gold);
+            background: rgba(201,168,76,0.1);
+            font-weight: 600;
+        }
+        .nav-link.cta {
+            background: var(--sasin-gold);
+            color: var(--sasin-dark) !important;
+            font-weight: 600;
+        }
+        .nav-link.cta:hover {
+            background: var(--sasin-gold-dark);
+            color: var(--sasin-white) !important;
+            transform: translateY(-1px);
+        }
+        @media (max-width: 640px) {
+            .nav-link { font-size: 0.75rem; padding: 6px 10px; }
+            .nav-inner { gap: 2px; }
+            body { padding-top: 50px; }
+            .nav { padding: 0 12px; }
+            .nav-inner { height: 50px; }
         }
 
         /* ===== HERO ===== */
@@ -417,6 +489,16 @@
     </style>
 </head>
 <body>
+
+<!-- ===== NAVIGATION ===== -->
+<nav class="nav">
+    <div class="nav-inner">
+        <a href="index.html" class="nav-logo">Sasin <span>EMBA</span></a>
+        <a href="index.html" class="nav-link active">🏠 Home</a>
+        <a href="agritech.html" class="nav-link">🌾 AgriTech</a>
+        <a href="emba2026/" class="nav-link cta">👥 Roster</a>
+    </div>
+</nav>
 
 <!-- ===== HERO ===== -->
 <section class="hero">
