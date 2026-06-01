@@ -35,6 +35,13 @@ from db import (
     get_user, list_users, upsert_user,
     record_usage, get_usage, get_usage_summary,
 )
+from sso import (
+    generate_state, get_google_auth_url, handle_google_callback,
+    get_microsoft_auth_url, handle_microsoft_callback,
+    GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET,
+    MICROSOFT_CLIENT_ID, MICROSOFT_CLIENT_SECRET,
+    ALLOWED_DOMAINS, SSO_BASE_URL,
+)
 
 # ── Config ──
 STRIPE_SECRET_KEY = os.environ.get("STRIPE_SECRET_KEY", "")
@@ -405,6 +412,81 @@ async def dashboard():
     load();
     </script></body></html>
     """)
+
+
+# ── SSO / OAuth ──
+
+@app.get("/sso/login")
+async def sso_login(
+    provider: str = Query(...),
+    redirect_after: str = Query("/"),
+    org_id: str = Query("default"),
+):
+    """Initiate SSO login flow."""
+    state = generate_state(provider, redirect_after, org_id)
+
+    if provider == "google":
+        url = get_google_auth_url(state)
+    elif provider == "microsoft":
+        url = get_microsoft_auth_url(state)
+    else:
+        raise HTTPException(400, f"Unknown provider: {provider}")
+
+    return {"url": url}
+
+
+@app.get("/sso/google/callback")
+async def sso_google_callback(code: str, state: str):
+    """Google OAuth callback."""
+    result = handle_google_callback(code, state)
+    if result and "error" in result:
+        raise HTTPException(400, result["error"])
+
+    # Redirect to frontend with token
+    redirect_url = result.get("redirect_after", "/")
+    token = result.get("token", "")
+    return HTMLResponse(f"""
+    <html><body>
+    <script>
+        document.cookie = "dt_token={token};path=/;max-age=86400;SameSite=Lax";
+        window.location.href = "{redirect_url}";
+    </script>
+    <p>Signing in... <a href="{redirect_url}">Click here if not redirected</a></p>
+    </body></html>
+    """)
+
+
+@app.get("/sso/microsoft/callback")
+async def sso_microsoft_callback(code: str, state: str):
+    """Microsoft OAuth callback."""
+    result = handle_microsoft_callback(code, state)
+    if result and "error" in result:
+        raise HTTPException(400, result["error"])
+
+    redirect_url = result.get("redirect_after", "/")
+    token = result.get("token", "")
+    return HTMLResponse(f"""
+    <html><body>
+    <script>
+        document.cookie = "dt_token={token};path=/;max-age=86400;SameSite=Lax";
+        window.location.href = "{redirect_url}";
+    </script>
+    <p>Signing in... <a href="{redirect_url}">Click here if not redirected</a></p>
+    </body></html>
+    """)
+
+
+@app.get("/sso/config")
+async def sso_config():
+    """Return SSO configuration for frontend."""
+    return {
+        "providers": {
+            "google": bool(GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET),
+            "microsoft": bool(MICROSOFT_CLIENT_ID and MICROSOFT_CLIENT_SECRET),
+        },
+        "allowed_domains": ALLOWED_DOMAINS or None,
+        "login_url": f"{SSO_BASE_URL}/sso/login",
+    }
 
 
 # ── Main ──
