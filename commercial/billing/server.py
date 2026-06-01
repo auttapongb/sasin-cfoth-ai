@@ -489,6 +489,78 @@ async def sso_config():
     }
 
 
+# ── White-Label / Branding ──
+
+from branding import (
+    BrandingConfig, DEFAULT_BRANDING,
+    get_branding, save_branding,
+    get_org_by_domain, generate_css, verify_domain,
+)
+
+
+@app.get("/branding/{org_id}")
+async def api_get_branding(org_id: str):
+    """Get branding config for an org."""
+    return get_branding(org_id).model_dump()
+
+
+@app.put("/branding/{org_id}")
+async def api_update_branding(org_id: str, branding: BrandingConfig):
+    """Update branding config."""
+    org = get_org(org_id)
+    if not org:
+        raise HTTPException(404, "Organization not found")
+    save_branding(org_id, branding)
+    return {"status": "saved", "org_id": org_id}
+
+
+@app.get("/branding/{org_id}/css", response_class=HTMLResponse)
+async def api_branding_css(org_id: str):
+    """Serve branded CSS for an org."""
+    branding = get_branding(org_id)
+    css = generate_css(branding)
+    from fastapi.responses import Response
+    return Response(content=css, media_type="text/css")
+
+
+@app.post("/branding/{org_id}/domain/verify")
+async def api_verify_domain(org_id: str, domain: str = Query(...)):
+    """Start domain verification."""
+    org = get_org(org_id)
+    if not org:
+        raise HTTPException(404, "Organization not found")
+    result = verify_domain(org_id, domain)
+
+    # Save domain to branding (pending verification)
+    branding = get_branding(org_id)
+    branding.custom_domain = domain
+    branding.custom_domain_verified = False
+    save_branding(org_id, branding)
+
+    return result
+
+
+@app.post("/branding/{org_id}/domain/check")
+async def api_check_domain(org_id: str):
+    """Check domain verification status."""
+    branding = get_branding(org_id)
+    return {
+        "domain": branding.custom_domain,
+        "verified": branding.custom_domain_verified,
+    }
+
+
+@app.get("/branding/resolve")
+async def api_resolve_domain(host: str = Query(...)):
+    """Resolve custom domain to org_id."""
+    host = host.split(":")[0]  # Strip port
+    org_id = get_org_by_domain(host)
+    if not org_id:
+        raise HTTPException(404, f"No org found for domain: {host}")
+    branding = get_branding(org_id)
+    return {"org_id": org_id, "branding": branding.model_dump()}
+
+
 # ── Main ──
 
 if __name__ == "__main__":
