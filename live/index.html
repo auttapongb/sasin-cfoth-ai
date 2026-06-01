@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+    <title>Sasin Live Assistant</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:wght@600;700;800&display=swap" rel="stylesheet" />
+    <style>
+        :root {
+            --gold: #C9A84C; --gold-light: #E8D48B;
+            --dark: #0F0F1A; --card: #1A1A2E; --border: #2A2A44;
+            --text: #E0E0E8; --dim: #8A8AA0;
+            --recording: #E85D3A; --success: #4CAF50;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Inter', sans-serif; background: var(--dark);
+            color: var(--text); min-height: 100vh;
+        }
+        .container { max-width: 900px; margin: 0 auto; padding: 12px; }
+
+        /* Header */
+        .header { display: flex; align-items: center; gap: 10px; padding: 12px 0; border-bottom: 1px solid var(--border); margin-bottom: 12px; }
+        .logo { font-family: 'Playfair Display', serif; font-size: 1.1rem; color: var(--gold); }
+        #connectionDot { width: 8px; height: 8px; border-radius: 50%; background: var(--dim); transition: background 0.3s; margin-left: auto; }
+        #connectionDot.connected { background: var(--success); }
+        #connectionDot.disconnected { background: var(--recording); }
+
+        /* Control bar */
+        .controls { display: flex; gap: 8px; margin-bottom: 12px; align-items: center; flex-wrap: wrap; }
+        .btn {
+            padding: 12px 20px; border: none; border-radius: 10px;
+            font-family: 'Inter', sans-serif; font-size: 0.9rem; font-weight: 600;
+            cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 6px;
+        }
+        .btn-record { background: var(--recording); color: white; flex: 1; min-width: 140px; }
+        .btn-record.recording { background: var(--card); border: 2px solid var(--recording); color: var(--recording); }
+        .btn-mode { background: var(--card); color: var(--text); border: 1px solid var(--border); padding: 10px 14px; }
+        .btn-mode.active { border-color: var(--gold); color: var(--gold); }
+        .btn-small { background: var(--card); color: var(--text); border: 1px solid var(--border); padding: 6px 12px; font-size: 0.75rem; }
+        .timer { font-family: monospace; font-size: 1.1rem; color: var(--gold); margin-left: auto; }
+
+        /* Stats */
+        .stats { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 8px; margin-bottom: 12px; }
+        .stat { background: var(--card); border-radius: 8px; padding: 10px; text-align: center; }
+        .stat .val { font-size: 1.2rem; font-weight: 700; color: var(--gold); }
+        .stat .lbl { font-size: 0.65rem; color: var(--dim); text-transform: uppercase; margin-top: 2px; }
+
+        /* Transcript */
+        .transcript-box {
+            background: var(--card); border: 1px solid var(--border);
+            border-radius: 10px; padding: 12px; min-height: 150px;
+            max-height: 40vh; overflow-y: auto; margin-bottom: 10px;
+            font-size: 0.85rem; line-height: 1.5;
+        }
+        .transcript-line { padding: 3px 0; animation: fadeIn 0.3s; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(3px); } to { opacity: 1; transform: translateY(0); } }
+        .transcript-line.user { color: var(--dim); }
+        .transcript-line.answer { color: white; background: rgba(201,168,76,0.08); padding: 6px 8px; border-radius: 6px; margin: 4px 0; border-left: 2px solid var(--gold); }
+        .transcript-line.status { color: var(--gold); font-style: italic; font-size: 0.8rem; }
+        .placeholder { color: var(--dim); text-align: center; padding-top: 50px; }
+
+        /* Mode info */
+        .mode-info {
+            background: rgba(201,168,76,0.08); border: 1px solid rgba(201,168,76,0.2);
+            border-radius: 8px; padding: 8px 12px; font-size: 0.7rem; color: var(--dim); margin-bottom: 10px;
+        }
+        .mode-info strong { color: var(--gold); }
+
+        @media (max-width: 480px) {
+            .stats { grid-template-columns: 1fr 1fr; }
+            .controls { flex-direction: column; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo">Sasin <span style="font-family:Inter;font-weight:300;font-size:0.75rem;color:var(--dim)">Live Assistant</span></div>
+            <div id="connectionDot" title="Connection status"></div>
+        </div>
+
+        <div class="mode-info" id="modeInfo">
+            <strong>🎯 Lecture Mode</strong> — Listens to the professor. When a question or key point is detected, instantly surfaces relevant frameworks and course context from your knowledge base.
+        </div>
+
+        <div class="controls">
+            <button class="btn btn-record" id="btnRecord" onclick="toggleRecording()">
+                <span id="btnIcon">🎙️</span> <span id="btnLabel">Start Listening</span>
+            </button>
+            <button class="btn btn-mode active" onclick="setMode('lecture')" id="modeLecture">📖 Lecture</button>
+            <button class="btn btn-mode" onclick="setMode('discussion')" id="modeDiscussion">💬 Discussion</button>
+            <button class="btn btn-mode" onclick="setMode('qa')" id="modeQA">❓ Q&A</button>
+            <span class="timer" id="timer">00:00</span>
+        </div>
+
+        <div class="stats">
+            <div class="stat"><div class="val" id="wordsCount">0</div><div class="lbl">Words Heard</div></div>
+            <div class="stat"><div class="val" id="answersCount">0</div><div class="lbl">Answers</div></div>
+            <div class="stat"><div class="val" id="latencyAvg">--</div><div class="lbl">Avg Latency</div></div>
+            <div class="stat"><div class="val" id="questionsCount">0</div><div class="lbl">Questions</div></div>
+        </div>
+
+        <div class="transcript-box" id="transcriptBox">
+            <div class="placeholder" id="placeholder">🎤 Press <strong>Start Listening</strong> — the professor's words will appear here. When a question or key point is detected, the AI surfaces relevant answers instantly.</div>
+        </div>
+    </div>
+
+    <script>
+        // ─── Config ────────────────────────────────────────────────────────
+        const WS_URL = 'wss://live.sasin.cfoth.ai/ws';
+        let ws = null;
+        let mediaRecorder = null;
+        let isRecording = false;
+        let startTime = 0;
+        let timerInterval = null;
+        let mode = 'lecture';
+        let wordsTotal = 0;
+        let answersTotal = 0;
+        let questionsTotal = 0;
+        let latencies = [];
+
+        // ─── Mode Selection ─────────────────────────────────────────────────
+        const MODE_PROMPTS = {
+            'lecture': "You are a Sasin EMBA teaching assistant. Listen to the professor and provide concise context, frameworks, and data points.",
+            'discussion': "You are a Sasin EMBA peer. Listen to student discussions and provide counterarguments, data points, and alternative perspectives.",
+            'qa': "You are a Sasin EMBA tutor. Answer questions directly with frameworks, examples, and citations from course materials."
+        };
+
+        function setMode(m) {
+            mode = m;
+            document.querySelectorAll('.btn-mode').forEach(b => b.classList.remove('active'));
+            document.getElementById('mode' + m.charAt(0).toUpperCase() + m.slice(1)).classList.add('active');
+            const info = document.getElementById('modeInfo');
+            const labels = {
+                'lecture': '<strong>🎯 Lecture Mode</strong> — Surfaces frameworks and course context when professor mentions key concepts.',
+                'discussion': '<strong>💬 Discussion Mode</strong> — Provides counterarguments and data points during case discussions.',
+                'qa': '<strong>❓ Q&A Mode</strong> — Answers questions directly with frameworks and citations.'
+            };
+            info.innerHTML = labels[m];
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify({ type: 'mode', mode: m }));
+            }
+        }
+
+        // ─── Recording ──────────────────────────────────────────────────────
+        let recognition = null;
+        let serverHasSTT = false;
+
+        async function toggleRecording() {
+            if (isRecording) {
+                stopRecording();
+                return;
+            }
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({
+                    audio: { sampleRate: 16000, channelCount: 1, echoCancellation: false, noiseSuppression: true }
+                });
+                startRecording(stream);
+                connectWebSocket();
+                
+                // Try browser STT as fallback
+                if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+                    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+                    recognition = new SR();
+                    recognition.continuous = true;
+                    recognition.interimResults = true;
+                    recognition.lang = 'en-US';
+                    recognition.onresult = (event) => {
+                        let final = '';
+                        for (let i = event.resultIndex; i < event.results.length; i++) {
+                            if (event.results[i].isFinal) {
+                                final += event.results[i][0].transcript + ' ';
+                            }
+                        }
+                        if (final.trim() && ws && ws.readyState === WebSocket.OPEN && !serverHasSTT) {
+                            ws.send(JSON.stringify({ type: 'transcript', text: final.trim() }));
+                        }
+                    };
+                    recognition.start();
+                }
+            } catch (err) {
+                alert('Microphone access required: ' + err.message);
+            }
+        }
+
+        function startRecording(stream) {
+            const mimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus') 
+                ? 'audio/webm;codecs=opus' : 'audio/webm';
+            mediaRecorder = new MediaRecorder(stream, { mimeType, audioBitsPerSecond: 32000 });
+            isRecording = true;
+            startTime = Date.now();
+            wordsTotal = 0; answersTotal = 0; questionsTotal = 0; latencies = [];
+            document.getElementById('transcriptBox').innerHTML = '';
+
+            mediaRecorder.ondataavailable = (e) => {
+                if (e.data.size > 0 && ws && ws.readyState === WebSocket.OPEN) {
+                    const reader = new FileReader();
+                    reader.onload = () => {
+                        const base64 = reader.result.split(',')[1];
+                        ws.send(JSON.stringify({
+                            type: 'audio',
+                            data: base64,
+                            format: 'webm'
+                        }));
+                    };
+                    reader.readAsDataURL(e.data);
+                }
+            };
+
+            mediaRecorder.start(4000); // 4-second chunks for lower latency
+            updateUI(true);
+            timerInterval = setInterval(updateTimer, 1000);
+        }
+
+        function stopRecording() {
+            if (mediaRecorder) {
+                mediaRecorder.stop();
+                mediaRecorder.stream.getTracks().forEach(t => t.stop());
+            }
+            if (recognition) {
+                recognition.stop();
+                recognition = null;
+            }
+            isRecording = false;
+            clearInterval(timerInterval);
+            updateUI(false);
+        }
+
+        // ─── WebSocket ──────────────────────────────────────────────────────
+        function connectWebSocket() {
+            ws = new WebSocket(WS_URL);
+            
+            ws.onopen = () => {
+                document.getElementById('connectionDot').className = 'connected';
+                ws.send(JSON.stringify({ type: 'mode', mode: mode }));
+            };
+            
+            ws.onmessage = (event) => {
+                const msg = JSON.parse(event.data);
+                const type = msg.type;
+
+                if (type === 'config') {
+                    const sttOk = msg.stt_ready;
+                    const llmOk = msg.llm_ready;
+                    serverHasSTT = sttOk;
+                    if (!sttOk) showStatus('⚠️ Using browser speech recognition (free, Chrome-only). For best accuracy, add Deepgram key.');
+                    if (!llmOk) showStatus('⚠️ LLM not configured — answers disabled');
+                }
+
+                if (type === 'transcript') {
+                    appendLine(msg.text, 'user');
+                    wordsTotal += msg.text.split(/\s+/).length;
+                    document.getElementById('wordsCount').textContent = wordsTotal;
+                }
+
+                if (type === 'answer') {
+                    appendLine(msg.text, 'answer');
+                    answersTotal++;
+                    document.getElementById('answersCount').textContent = answersTotal;
+                    if (msg.timestamp) {
+                        const latency = (Date.now() / 1000 - msg.timestamp) * 1000;
+                        latencies.push(latency);
+                        document.getElementById('latencyAvg').textContent = 
+                            Math.round(latencies.reduce((a,b)=>a+b,0) / latencies.length) + 'ms';
+                    }
+                    questionsTotal++;
+                    document.getElementById('questionsCount').textContent = questionsTotal;
+                }
+
+                if (type === 'status') {
+                    appendLine(msg.text, 'status');
+                }
+
+                if (type === 'error') {
+                    appendLine('Error: ' + msg.text, 'status');
+                }
+            };
+            
+            ws.onclose = () => {
+                document.getElementById('connectionDot').className = 'disconnected';
+                if (isRecording) {
+                    setTimeout(connectWebSocket, 2000);
+                }
+            };
+        }
+
+        // ─── UI ─────────────────────────────────────────────────────────────
+        function updateUI(recording) {
+            const btn = document.getElementById('btnRecord');
+            const icon = document.getElementById('btnIcon');
+            const label = document.getElementById('btnLabel');
+            if (recording) {
+                btn.classList.add('recording');
+                icon.textContent = '⏺️';
+                label.textContent = 'Listening...';
+            } else {
+                btn.classList.remove('recording');
+                icon.textContent = '🎙️';
+                label.textContent = 'Start Listening';
+            }
+        }
+
+        function updateTimer() {
+            const elapsed = Math.floor((Date.now() - startTime) / 1000);
+            document.getElementById('timer').textContent = 
+                `${String(Math.floor(elapsed/60)).padStart(2,'0')}:${String(elapsed%60).padStart(2,'0')}`;
+        }
+
+        function appendLine(text, cls) {
+            const box = document.getElementById('transcriptBox');
+            const placeholder = document.getElementById('placeholder');
+            if (placeholder) placeholder.remove();
+            
+            const div = document.createElement('div');
+            div.className = 'transcript-line ' + cls;
+            const prefix = cls === 'answer' ? '💡 ' : cls === 'status' ? '⏳ ' : '';
+            div.textContent = prefix + text;
+            box.appendChild(div);
+            box.scrollTop = box.scrollHeight;
+        }
+
+        function showStatus(text) {
+            appendLine(text, 'status');
+        }
+    </script>
+</body>
+</html>
