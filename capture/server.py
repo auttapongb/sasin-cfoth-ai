@@ -12,6 +12,7 @@ from pathlib import Path
 
 from fastapi import FastAPI, UploadFile, File, Form, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 import uvicorn
 
@@ -166,6 +167,15 @@ async def get_session(filename: str):
 
 
 if __name__ == "__main__":
+    # Serve the capture HTML page
+    import os as _os
+    _html_path = "/root/capture-index.html"
+    if _os.path.exists(_html_path):
+        from fastapi.responses import FileResponse
+        @app.get("/")
+        async def serve_capture():
+            return FileResponse(_html_path)
+    
     # Warm up model on startup
     print(f"Loading faster-whisper model '{MODEL_SIZE}'...")
     get_model()
