@@ -200,6 +200,33 @@
                 <span style="font-size:0.8rem;color:var(--sasin-dim)">Transcript will appear here in near real-time.</span>
             </div>
         </div>
+
+        <!-- Materials Upload -->
+        <div style="margin-top: 24px; padding-top: 24px; border-top: 1px solid var(--border);">
+            <h3 style="font-family: 'Playfair Display', serif; font-size: 1.1rem; margin-bottom: 4px; color: var(--sasin-gold);">🧠 Second Brain</h3>
+            <p style="font-size: 0.75rem; color: var(--sasin-dim); margin-bottom: 16px;">Upload PDFs, slides, whiteboard photos — auto-extracted and connected to your transcripts in DeepTutor.</p>
+
+            <div id="uploadZone" style="
+                border: 2px dashed var(--border); border-radius: 12px; padding: 30px 20px;
+                text-align: center; cursor: pointer; transition: all 0.2s;
+                background: var(--card);
+            " onclick="document.getElementById('fileInput').click()">
+                <div style="font-size: 2rem; margin-bottom: 8px;">📎</div>
+                <div style="font-weight: 600; color: var(--sasin-text);">Drop files here or click to browse</div>
+                <div style="font-size: 0.7rem; color: var(--sasin-dim); margin-top: 6px;">PDF · Images (JPG/PNG) · Audio (MP3/WAV) — up to 50MB</div>
+            </div>
+            <input type="file" id="fileInput" multiple accept=".pdf,.jpg,.jpeg,.png,.webp,.gif,.bmp,.mp3,.wav,.m4a,.ogg" style="display:none" onchange="handleFiles(this.files)" />
+
+            <div style="margin-top: 8px; display: flex; gap: 8px; align-items: center;">
+                <input type="text" id="tagInput" placeholder="Tags: lecture-3, finance, slides..." style="
+                    flex:1; background: var(--bg); border: 1px solid var(--border); color: var(--sasin-text);
+                    padding: 8px 12px; border-radius: 8px; font-size: 0.8rem; font-family: Inter, sans-serif;
+                " />
+                <span id="ingestStatus" style="font-size: 0.75rem; color: var(--sasin-dim); white-space: nowrap;"></span>
+            </div>
+
+            <div id="uploadResults" style="margin-top: 8px;"></div>
+        </div>
     </div>
 
     <script>
@@ -417,6 +444,61 @@
             div.textContent = text;
             return div.innerHTML;
         }
+
+        // ─── Second Brain Upload ────────────────────────────────────────
+        const BRAIN_URL = 'https://capture.sasin.cfoth.ai';
+
+        async function handleFiles(fileList) {
+            const results = document.getElementById('uploadResults');
+            const status = document.getElementById('ingestStatus');
+            const files = Array.from(fileList);
+
+            if (files.length === 0) return;
+
+            status.textContent = `Processing ${files.length} file(s)...`;
+            results.innerHTML = '';
+
+            for (const file of files) {
+                const card = document.createElement('div');
+                card.style.cssText = 'padding: 10px 12px; margin-bottom: 6px; background: var(--card); border-radius: 8px; font-size: 0.8rem; display: flex; align-items: center; gap: 8px;';
+                card.innerHTML = `<span>⏳</span> <span>${file.name}</span> <span style="color:var(--sasin-dim);margin-left:auto;">processing...</span>`;
+                results.appendChild(card);
+
+                try {
+                    const formData = new FormData();
+                    formData.append('file', file);
+                    formData.append('tags', document.getElementById('tagInput').value);
+                    formData.append('title', file.name);
+
+                    const resp = await fetch(`${BRAIN_URL}/ingest`, {
+                        method: 'POST',
+                        body: formData
+                    });
+
+                    const data = await resp.json();
+                    const icon = data.error ? '❌' : '✅';
+                    const detail = data.error 
+                        ? data.error 
+                        : `${data.word_count || 0} words · ${data.type}${data.deep_tutor_uploaded ? ' · indexed in DeepTutor' : ''}`;
+                    card.innerHTML = `<span>${icon}</span> <span>${file.name}</span> <span style="color:var(--sasin-dim);margin-left:auto;">${detail}</span>`;
+                } catch (err) {
+                    card.innerHTML = `<span>❌</span> <span>${file.name}</span> <span style="color:var(--sasin-dim);margin-left:auto;">${err.message}</span>`;
+                }
+            }
+
+            status.textContent = `Done — ${files.length} file(s) sent to DeepTutor`;
+            setTimeout(() => { status.textContent = ''; }, 5000);
+        }
+
+        // Drag and drop
+        const zone = document.getElementById('uploadZone');
+        zone.addEventListener('dragover', e => { e.preventDefault(); zone.style.borderColor = 'var(--sasin-gold)'; });
+        zone.addEventListener('dragleave', () => { zone.style.borderColor = 'var(--border)'; });
+        zone.addEventListener('drop', e => {
+            e.preventDefault();
+            zone.style.borderColor = 'var(--border)';
+            handleFiles(e.dataTransfer.files);
+        });
     </script>
 </body>
 </html>
