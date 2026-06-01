@@ -489,6 +489,52 @@ async def sso_config():
     }
 
 
+# ── Analytics ──
+
+from analytics import calculate_costs, org_analytics, global_analytics
+
+
+@app.get("/analytics/org/{org_id}")
+async def api_org_analytics(org_id: str):
+    return org_analytics(org_id)
+
+
+@app.get("/analytics/global")
+async def api_global_analytics():
+    return global_analytics()
+
+
+@app.get("/analytics/costs/{org_id}")
+async def api_org_costs(org_id: str, days: int = 30):
+    return calculate_costs(org_id, days=days)
+
+
+# ── LMS Integrations ──
+
+@app.post("/lms/canvas/webhook")
+async def lms_canvas_webhook(request: Request):
+    body = await request.json()
+    org_id = request.headers.get("X-Org-ID", "default")
+    record_usage(org_id, "lms_canvas_events", 1)
+    return {"status": "received", "event": body.get("event_type", "unknown"), "org_id": org_id}
+
+
+@app.post("/lms/moodle/webhook")
+async def lms_moodle_webhook(request: Request):
+    body = await request.json()
+    org_id = request.headers.get("X-Org-ID", "default")
+    record_usage(org_id, "lms_moodle_events", 1)
+    return {"status": "received", "event": body.get("eventname", "unknown"), "org_id": org_id}
+
+
+@app.post("/lms/blackboard/webhook")
+async def lms_blackboard_webhook(request: Request):
+    body = await request.json()
+    org_id = request.headers.get("X-Org-ID", "default")
+    record_usage(org_id, "lms_blackboard_events", 1)
+    return {"status": "received", "org_id": org_id}
+
+
 # ── White-Label / Branding ──
 
 from branding import (
