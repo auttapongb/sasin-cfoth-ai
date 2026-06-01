@@ -19,6 +19,7 @@
             --border: #2A2A44;
             --recording: #E85D3A;
             --success: #4CAF50;
+            --slide: #3B82F6;
         }
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
@@ -48,29 +49,24 @@
         }
         .status-dot {
             width: 10px; height: 10px; border-radius: 50%;
-            background: var(--sasin-dim); transition: background 0.3s;
+            background: var(--success); flex-shrink: 0;
         }
-        .status-dot.recording { background: var(--recording); animation: pulse 1.2s infinite; }
+        .status-dot.recording { background: var(--recording); animation: dotPulse 1s infinite; }
         .status-dot.connected { background: var(--success); }
-        @keyframes pulse {
-            0%, 100% { opacity: 1; transform: scale(1); }
-            50% { opacity: 0.4; transform: scale(1.5); }
-        }
-        .status-text { font-size: 0.85rem; font-weight: 500; }
-        .timer { font-family: 'Inter', monospace; font-size: 1.4rem; font-weight: 700; margin-left: auto; }
+        @keyframes dotPulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+        .status-text { font-size: 0.85rem; color: var(--sasin-text); }
+        .timer { margin-left: auto; font-family: monospace; font-size: 1rem; color: var(--sasin-gold); }
 
         /* Controls */
-        .controls {
-            display: flex; gap: 12px; margin-bottom: 16px;
-        }
+        .controls { display: flex; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; }
         .btn {
-            flex: 1; padding: 16px 24px; border: none; border-radius: 14px;
-            font-family: 'Inter', sans-serif; font-size: 1rem; font-weight: 700;
-            cursor: pointer; transition: all 0.2s; display: flex;
-            align-items: center; justify-content: center; gap: 8px;
+            height: 52px; padding: 0 24px; border-radius: 26px; border: none;
+            font-size: 0.95rem; font-weight: 600; cursor: pointer; font-family: 'Inter', sans-serif;
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+            transition: all 0.2s; white-space: nowrap;
         }
         .btn-record {
-            background: var(--recording); color: white;
+            background: var(--recording); color: white; flex: 1;
             box-shadow: 0 4px 20px rgba(232,93,58,0.3);
         }
         .btn-record:hover { transform: translateY(-1px); box-shadow: 0 6px 24px rgba(232,93,58,0.4); }
@@ -83,6 +79,13 @@
             0%, 100% { border-color: var(--recording); }
             50% { border-color: rgba(232,93,58,0.3); }
         }
+        .btn-slide {
+            background: var(--card); color: var(--slide); border: 1px solid var(--slide);
+            flex: 0 0 52px; width: 52px; padding: 0;
+            box-shadow: 0 2px 12px rgba(59,130,246,0.15);
+        }
+        .btn-slide:hover { background: rgba(59,130,246,0.1); }
+        .btn-slide:active { transform: scale(0.94); }
         .btn-stop { background: var(--card); color: var(--sasin-text); border: 1px solid var(--border); display: none; }
         .btn-stop.visible { display: flex; }
         .btn-download { background: var(--card); color: var(--sasin-gold); border: 1px solid var(--sasin-gold); display: none; }
@@ -103,12 +106,12 @@
         /* Transcript */
         .transcript-area {
             background: var(--card); border: 1px solid var(--border);
-            border-radius: 12px; padding: 16px; min-height: 300px;
-            max-height: 60vh; overflow-y: auto; position: relative;
+            border-radius: 12px; padding: 16px; min-height: 250px;
+            max-height: 50vh; overflow-y: auto; position: relative;
         }
         .transcript-placeholder {
             color: var(--sasin-dim); text-align: center;
-            padding-top: 100px; font-size: 0.95rem;
+            padding-top: 90px; font-size: 0.95rem;
         }
         .transcript-segment {
             padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.04);
@@ -122,6 +125,46 @@
         .segment-text { font-size: 0.95rem; line-height: 1.5; color: var(--sasin-text); }
         .segment-latest { border-left: 2px solid var(--sasin-gold); padding-left: 12px; }
         .segment-latest .segment-text { color: white; }
+
+        /* Slide strip */
+        .slide-strip {
+            margin-top: 12px; display: flex; gap: 8px; overflow-x: auto;
+            padding: 8px 0; min-height: 70px; align-items: center;
+        }
+        .slide-strip:empty { min-height: 0; padding: 0; }
+        .slide-thumb {
+            flex-shrink: 0; width: 60px; height: 60px; border-radius: 8px;
+            background-size: cover; background-position: center;
+            border: 1px solid var(--border); cursor: pointer; position: relative;
+            transition: all 0.2s;
+        }
+        .slide-thumb:hover { border-color: var(--slide); transform: scale(1.05); }
+        .slide-thumb .badge {
+            position: absolute; top: -6px; right: -6px;
+            background: var(--slide); color: white; font-size: 0.55rem;
+            font-weight: 700; padding: 2px 6px; border-radius: 10px;
+        }
+        .slide-thumb .analyze-btn {
+            position: absolute; bottom: -8px; left: 50%; transform: translateX(-50%);
+            background: var(--card); color: var(--sasin-gold); border: 1px solid var(--sasin-gold);
+            font-size: 0.5rem; padding: 2px 8px; border-radius: 10px; cursor: pointer;
+            white-space: nowrap; font-family: Inter, sans-serif; font-weight: 600;
+            opacity: 0; transition: opacity 0.2s;
+        }
+        .slide-thumb:hover .analyze-btn { opacity: 1; }
+        .slide-thumb.processing { opacity: 0.5; animation: shimmer 1s infinite; }
+        @keyframes shimmer { 0%, 100% { opacity: 0.4; } 50% { opacity: 0.8; } }
+
+        /* Slide analysis result */
+        .slide-result {
+            background: var(--card); border: 1px solid var(--sasin-gold);
+            border-radius: 10px; padding: 12px; margin-top: 6px;
+            font-size: 0.8rem; animation: fadeIn 0.3s ease;
+            max-height: 300px; overflow-y: auto;
+        }
+        .slide-result .q { color: var(--sasin-gold); font-weight: 600; margin-top: 8px; }
+        .slide-result .a { color: var(--sasin-text); margin-bottom: 6px; padding-left: 12px; border-left: 2px solid var(--border); }
+        .slide-result .summary { color: var(--sasin-dim); font-style: italic; margin-top: 6px; padding-top: 6px; border-top: 1px solid var(--border); }
 
         /* Errors */
         .error-toast {
@@ -145,6 +188,7 @@
             .info-row { grid-template-columns: 1fr 1fr; }
             .container { padding: 12px; }
             .btn { padding: 14px 18px; font-size: 0.9rem; }
+            .btn-slide { width: 52px; padding: 0; }
         }
     </style>
 </head>
@@ -154,12 +198,12 @@
             <div class="logo">Sasin <span>EMBA 2026</span></div>
         </div>
         <div class="info-banner">
-            <strong>🎙️ Lecture Capture</strong> — Open this on your phone during class. Hit record. The transcript appears here in near real-time. Everything is saved.
+            <strong>🎙️ Lecture Capture</strong> — Record audio for real-time transcription. Tap <strong>📸</strong> to snap slides. Everything auto-saves to your Second Brain.
         </div>
 
         <!-- Status -->
         <div class="status-bar">
-            <div class="status-dot" id="statusDot"></div>
+            <div class="status-dot connected" id="statusDot"></div>
             <span class="status-text" id="statusText">Ready</span>
             <span class="timer" id="timer">00:00</span>
         </div>
@@ -168,6 +212,9 @@
         <div class="controls">
             <button class="btn btn-record" id="btnRecord" onclick="toggleRecording()">
                 <span id="btnIcon">🎙️</span> <span id="btnLabel">Start Recording</span>
+            </button>
+            <button class="btn btn-slide" id="btnSlide" onclick="captureSlide()" title="Capture slide from camera">
+                📸
             </button>
             <button class="btn btn-stop" id="btnStop" onclick="stopAndSave()">
                 ⏹️ Stop & Save
@@ -197,9 +244,12 @@
         <div class="transcript-area" id="transcriptArea">
             <div class="transcript-placeholder" id="placeholder">
                 🎤 Press <strong>Start Recording</strong> when the professor begins speaking.<br>
-                <span style="font-size:0.8rem;color:var(--sasin-dim)">Transcript will appear here in near real-time.</span>
+                <span style="font-size:0.8rem;color:var(--sasin-dim)">Transcript appears in real-time. Tap 📸 to capture slides.</span>
             </div>
         </div>
+
+        <!-- Slide strip -->
+        <div class="slide-strip" id="slideStrip"></div>
 
         <!-- Materials Upload -->
         <div style="margin-top: 24px; padding-top: 24px; border-top: 1px solid var(--border);">
@@ -216,6 +266,7 @@
                 <div style="font-size: 0.7rem; color: var(--sasin-dim); margin-top: 6px;">PDF · Images (JPG/PNG) · Audio (MP3/WAV) — up to 50MB</div>
             </div>
             <input type="file" id="fileInput" multiple accept=".pdf,.jpg,.jpeg,.png,.webp,.gif,.bmp,.mp3,.wav,.m4a,.ogg" style="display:none" onchange="handleFiles(this.files)" />
+            <input type="file" id="slideInput" accept="image/*" capture="environment" style="display:none" onchange="handleSlideCapture(this)" />
 
             <div style="margin-top: 8px; display: flex; gap: 8px; align-items: center;">
                 <input type="text" id="tagInput" placeholder="Tags: lecture-3, finance, slides..." style="
@@ -232,7 +283,6 @@
     <script>
         const API_URL = 'https://capture.sasin.cfoth.ai';
         let mediaRecorder = null;
-        let chunks = [];
         let isRecording = false;
         let startTime = 0;
         let timerInterval = null;
@@ -241,7 +291,9 @@
         let latencies = [];
         let fullTranscript = [];
         let currentChunkIndex = 0;
+        let slideCount = 0;
 
+        // ─── Recording ────────────────────────────────────────
         async function toggleRecording() {
             if (isRecording) return;
             try {
@@ -273,24 +325,20 @@
             latencies = [];
             fullTranscript = [];
 
-            // Clear transcript
             document.getElementById('transcriptArea').innerHTML = '<div class="transcript-placeholder">Listening...</div>';
             document.getElementById('wordCount').textContent = '0';
             document.getElementById('chunkCount').textContent = '0';
             document.getElementById('avgLatency').textContent = '--';
 
-            // Send chunks every 8 seconds
             mediaRecorder.ondataavailable = async (e) => {
                 if (e.data.size > 0) {
-                    chunks.push(e.data);
-                    // Send chunk for transcription
                     const chunk = new Blob([e.data], { type: mimeType });
                     const idx = ++currentChunkIndex;
                     sendChunk(chunk, idx);
                 }
             };
 
-            mediaRecorder.start(8000); // 8-second chunks
+            mediaRecorder.start(5000);
             updateUI(true);
             timerInterval = setInterval(updateTimer, 1000);
         }
@@ -326,18 +374,15 @@
                 }
             } catch (err) {
                 console.error('Chunk upload failed:', err);
-                // Queue for retry
                 appendTranscript('[transcription pending...]', idx, 0);
             }
         }
 
         function appendTranscript(text, idx, latency) {
             const area = document.getElementById('transcriptArea');
-            // Remove placeholder on first text
             const placeholder = document.getElementById('placeholder');
             if (placeholder) placeholder.remove();
 
-            // Remove "latest" class from all segments
             area.querySelectorAll('.segment-latest').forEach(el => el.classList.remove('segment-latest'));
 
             const div = document.createElement('div');
@@ -345,7 +390,7 @@
             const mins = Math.floor((Date.now() - startTime) / 60000);
             const secs = Math.floor(((Date.now() - startTime) % 60000) / 1000);
             div.innerHTML = `
-                <div class="segment-time">${String(mins).padStart(2,'0')}:${String(secs).padStart(2,'0')} · ${latency.toFixed(1)}s latency</div>
+                <div class="segment-time">${String(mins).padStart(2,'0')}:${String(secs).padStart(2,'0')} · ${latency.toFixed(1)}s</div>
                 <div class="segment-text">${escapeHtml(text)}</div>
             `;
             area.appendChild(div);
@@ -355,7 +400,6 @@
         async function stopAndSave() {
             if (!isRecording || !mediaRecorder) return;
             
-            // Collect any remaining data
             mediaRecorder.requestData();
             await new Promise(r => setTimeout(r, 500));
 
@@ -364,7 +408,6 @@
             isRecording = false;
             clearInterval(timerInterval);
 
-            // Save full transcript
             try {
                 await fetch(`${API_URL}/save`, {
                     method: 'POST',
@@ -374,7 +417,8 @@
                         word_count: totalWords,
                         duration: Math.floor((Date.now() - startTime) / 1000),
                         chunks: chunkNumber,
-                        timestamp: new Date().toISOString()
+                        timestamp: new Date().toISOString(),
+                        tags: document.getElementById('tagInput').value
                     })
                 });
             } catch (err) {
@@ -431,23 +475,147 @@
                 `${String(mins).padStart(2,'0')}:${String(secs).padStart(2,'0')}`;
         }
 
-        function showError(msg) {
-            const toast = document.createElement('div');
-            toast.className = 'error-toast';
-            toast.textContent = msg;
-            document.body.appendChild(toast);
-            setTimeout(() => toast.remove(), 4000);
+        // ─── Slide Capture ──────────────────────────────────
+        function captureSlide() {
+            // Prefer camera on mobile, fall back to file picker
+            const input = document.getElementById('slideInput');
+            input.click();
         }
 
-        function escapeHtml(text) {
-            const div = document.createElement('div');
-            div.textContent = text;
-            return div.innerHTML;
+        async function handleSlideCapture(input) {
+            if (!input.files || !input.files[0]) return;
+
+            const file = input.files[0];
+            slideCount++;
+
+            // Add thumbnail immediately (processing state)
+            const strip = document.getElementById('slideStrip');
+            const reader = new FileReader();
+            const thumb = document.createElement('div');
+            thumb.className = 'slide-thumb processing';
+            thumb.id = `slide-${slideCount}`;
+            thumb.innerHTML = `<span class="badge">⏳</span>`;
+            strip.prepend(thumb);
+
+            reader.onload = (e) => {
+                thumb.style.backgroundImage = `url(${e.target.result})`;
+            };
+            reader.readAsDataURL(file);
+
+            // Upload to Second Brain
+            try {
+                const formData = new FormData();
+                formData.append('file', file);
+                formData.append('tags', document.getElementById('tagInput').value || 'lecture-slide');
+                formData.append('title', `slide-${slideCount}-${new Date().toISOString().slice(0,19)}`);
+
+                const resp = await fetch(`${API_URL}/ingest`, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await resp.json();
+
+                // Update thumbnail
+                thumb.classList.remove('processing');
+                const badge = thumb.querySelector('.badge');
+                if (data.error) {
+                    badge.textContent = '❌';
+                    badge.style.background = 'var(--recording)';
+                } else {
+                    badge.textContent = '✓';
+                    badge.style.background = 'var(--success)';
+                    thumb.title = data.word_count ? `${data.word_count} words extracted` : 'Slide saved';
+                    // Add AI analyze button
+                    const analyzeBtn = document.createElement('button');
+                    analyzeBtn.className = 'analyze-btn';
+                    analyzeBtn.textContent = '🔍 AI Analyze';
+                    analyzeBtn.onclick = (ev) => { ev.stopPropagation(); analyzeSlide(thumb, file); };
+                    thumb.appendChild(analyzeBtn);
+                    // Store file reference for later analysis
+                    thumb._file = file;
+                }
+
+                // Update tag field status
+                document.getElementById('ingestStatus').textContent = 
+                    `Slide #${slideCount} stored → DeepTutor`;
+                setTimeout(() => {
+                    if (document.getElementById('ingestStatus').textContent.startsWith('Slide #')) {
+                        document.getElementById('ingestStatus').textContent = '';
+                    }
+                }, 3000);
+
+            } catch (err) {
+                console.error('Slide upload failed:', err);
+                thumb.classList.remove('processing');
+                const badge = thumb.querySelector('.badge');
+                badge.textContent = '⚠️';
+                badge.style.background = 'var(--recording)';
+            }
+
+            // Reset input so same file can be re-selected (camera retake)
+            input.value = '';
         }
 
-        // ─── Second Brain Upload ────────────────────────────────────────
-        const BRAIN_URL = 'https://capture.sasin.cfoth.ai';
+        // ─── AI Slide Analysis ─────────────────────────────
+        async function analyzeSlide(thumb, file) {
+            // Remove any existing result
+            const existing = thumb.parentElement.querySelector('.slide-result');
+            if (existing) existing.remove();
 
+            // Show loading
+            const btn = thumb.querySelector('.analyze-btn');
+            btn.textContent = '⏳ Analyzing...';
+            btn.disabled = true;
+
+            // Create result placeholder
+            const result = document.createElement('div');
+            result.className = 'slide-result';
+            result.innerHTML = '<span style="color:var(--sasin-dim)">🔍 AI analyzing slide...</span>';
+            thumb.parentElement.insertBefore(result, thumb.nextSibling);
+
+            try {
+                const formData = new FormData();
+                formData.append('image', file);
+
+                const resp = await fetch(`${API_URL}/analyze-slide`, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await resp.json();
+
+                if (data.error) {
+                    result.innerHTML = `<span style="color:var(--recording)">❌ ${escapeHtml(data.error)}</span>`;
+                } else {
+                    let html = '';
+                    if (data.summary) {
+                        html += `<div class="summary">📌 ${escapeHtml(data.summary)}</div>`;
+                    }
+                    if (data.questions && data.questions.length > 0) {
+                        html += '<div style="margin-top:6px;font-weight:600;color:var(--sasin-gold)">❓ Questions found:</div>';
+                        data.questions.forEach((q, i) => {
+                            html += `<div class="q">Q: ${escapeHtml(q)}</div>`;
+                            if (data.answers && data.answers[i]) {
+                                html += `<div class="a">A: ${escapeHtml(data.answers[i])}</div>`;
+                            }
+                        });
+                    }
+                    if (data.text && !data.summary) {
+                        html += `<div style="color:var(--sasin-dim);font-size:0.75rem">${escapeHtml(data.text.substring(0, 300))}${data.text.length > 300 ? '...' : ''}</div>`;
+                    }
+                    if (!html) html = '<span style="color:var(--sasin-dim)">No content detected</span>';
+                    result.innerHTML = html;
+                }
+            } catch (err) {
+                result.innerHTML = `<span style="color:var(--recording)">❌ ${escapeHtml(err.message)}</span>`;
+            }
+
+            btn.textContent = '🔍 AI Analyze';
+            btn.disabled = false;
+        }
+
+        // ─── Second Brain Upload ────────────────────────────
         async function handleFiles(fileList) {
             const results = document.getElementById('uploadResults');
             const status = document.getElementById('ingestStatus');
@@ -470,7 +638,7 @@
                     formData.append('tags', document.getElementById('tagInput').value);
                     formData.append('title', file.name);
 
-                    const resp = await fetch(`${BRAIN_URL}/ingest`, {
+                    const resp = await fetch(`${API_URL}/ingest`, {
                         method: 'POST',
                         body: formData
                     });
@@ -488,6 +656,20 @@
 
             status.textContent = `Done — ${files.length} file(s) sent to DeepTutor`;
             setTimeout(() => { status.textContent = ''; }, 5000);
+        }
+
+        function showError(msg) {
+            const toast = document.createElement('div');
+            toast.className = 'error-toast';
+            toast.textContent = msg;
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), 4000);
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
         }
 
         // Drag and drop
