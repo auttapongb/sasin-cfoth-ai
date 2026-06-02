@@ -445,36 +445,62 @@ function renderSavedEntry(e) {
 // ─── Recording ────────────────────────────────────
 async function toggleRecording() {
     if (isRecording) return;
-    if (!sessionId) await startSession();
+    if (!sessionId) await startSession('Untitled Lecture');
     try {
         const stream = await navigator.mediaDevices.getUserMedia({
             audio: { sampleRate: 16000, channelCount: 1, echoCancellation: true }
         });
-        mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm;codecs=opus' });
-        mediaRecorder.ondataavailable = async (e) => {
-            if (e.data.size < 1000) return;
-            const form = new FormData();
-            form.append('audio', e.data, 'chunk.webm');
-            form.append('chunk_index', chunkIndex);
-            form.append('session_id', sessionId);
-            form.append('elapsed_sec', (Date.now() - startTime) / 1000);
-            const t0 = Date.now();
-            try {
-                const resp = await fetch(`${API}/transcribe`, { method: 'POST', body: form });
-                const data = await resp.json();
-                const lat = Date.now() - t0;
-                if (data.text && data.text.trim()) {
-                    addToBox1(data.text.trim(), data.timestamp_iso, data.elapsed_sec || ((Date.now()-startTime)/1000));
-                    totalWords += data.text.split(/\s+/).length;
-                    lastTranscript = data.text.trim();
-                    // Trigger co-learner (with cooldown)
-                    triggerCoLearner(data.text.trim(), '', (Date.now() - startTime) / 1000);
-                }
-                chunkIndex++;
-            } catch(err) {
-                console.error('Transcribe error:', err);
+                let mimeType = 'audio/webm;codecs=opus';
+        if (!MediaRecorder.isTypeSupported(mimeType)) {
+            mimeType = 'audio/webm';
+            if (!MediaRecorder.isTypeSupported(mimeType)) {
+                mimeType = 'audio/mp4';
             }
+        }
+        mediaRecorder = new MediaRecorder(stream, { mimeType });
+        
+        // Chunk queue — processes one at a time, prevents race conditions
+        const chunkQueue = [];
+        let processing = false;
+        
+        async function processQueue() {
+            if (processing || chunkQueue.length === 0) return;
+            processing = true;
+            while (chunkQueue.length > 0) {
+                const chunk = chunkQueue.shift();
+                const form = new FormData();
+                form.append('audio', chunk.blob, 'chunk.webm');
+                form.append('chunk_index', chunk.index);
+                form.append('session_id', sessionId);
+                form.append('elapsed_sec', (Date.now() - startTime) / 1000);
+                const t0 = Date.now();
+                try {
+                    const resp = await fetch(`${API}/transcribe`, { method: 'POST', body: form });
+                    const data = await resp.json();
+                    const lat = Date.now() - t0;
+                    if (data.text && data.text.trim()) {
+                        addToBox1(data.text.trim(), data.timestamp_iso, data.elapsed_sec || ((Date.now()-startTime)/1000));
+                        totalWords += data.text.split(/\s+/).filter(w=>w).length;
+                        lastTranscript = data.text.trim();
+                        triggerCoLearner(data.text.trim(), '', (Date.now() - startTime) / 1000);
+                        document.getElementById('statusText').textContent = `Recording (${chunk.index + 1} chunks)`;
+                    } else if (data.error) {
+                        console.warn('Chunk', chunk.index, 'STT error:', data.error);
+                    }
+                } catch(err) {
+                    console.error('Chunk', chunk.index, 'failed:', err);
+                }
+            }
+            processing = false;
+        }
+        
+        mediaRecorder.ondataavailable = (e) => {
+            if (!isRecording) return;
+            if (e.data.size < 100) return; // lowered from 1000 — quiet audio makes small chunks
+            chunkQueue.push({ blob: e.data, index: chunkIndex++ });
+            processQueue();
         };
+        
         mediaRecorder.start(5000);
         isRecording = true;
         startTime = Date.now();
@@ -485,13 +511,13 @@ async function toggleRecording() {
         document.getElementById('btnIcon').textContent = '⏺️';
         document.getElementById('btnLabel').textContent = 'Recording...';
         document.getElementById('statusDot').className = 'status-dot recording';
-        document.getElementById('statusText').textContent = 'Recording';
+        document.getElementById('statusText').textContent = 'Recording (0 chunks)';
         document.getElementById('btnStop').style.display = 'inline-flex';
         document.getElementById('btnDownload').style.display = 'none';
         mediaRecorder._stream = stream;
-        toast('Recording started — 5s chunks', 'info');
+        toast('Recording — 5s chunks', 'info');
     } catch(e) {
-        toast('Microphone access denied: ' + e.message, 'error');
+        toast('Microphone denied: ' + e.message, 'error');
     }
 }
 
