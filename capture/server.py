@@ -60,10 +60,10 @@ GEMINI_API_KEY = os.environ["GEMINI_API_KEY"]
 GEMINI_MODEL = "gemini-2.5-flash"
 GEMINI_URL = f"https://generativelanguage.googleapis.com/v1beta/models/{GEMINI_MODEL}:generateContent"
 
-# AI Co-Learner: use DeepSeek via OpenRouter
-COLEARNER_API_KEY = os.environ.get("OPENROUTER_API_KEY", os.environ.get("OPENAI_API_KEY", ""))
-COLEARNER_MODEL = os.environ.get("COLEARNER_MODEL", "deepseek/deepseek-chat")
-COLEARNER_URL = os.environ.get("COLEARNER_URL", "https://openrouter.ai/api/v1/chat/completions")
+# AI Co-Learner: uses DeepSeek direct API
+COLEARNER_API_KEY = os.environ.get("DEEPSEEK_API_KEY", "")
+COLEARNER_MODEL = os.environ.get("COLEARNER_MODEL", "deepseek-chat")
+COLEARNER_URL = os.environ.get("COLEARNER_URL", "https://api.deepseek.com/v1/chat/completions")
 
 TRANSCRIBE_TIMEOUT = 25
 COLEARNER_TIMEOUT = 15
@@ -150,6 +150,8 @@ def add_entry(session_id: str, box: str, content: str, content_type: str = "text
               linked_entry_id: int | None = None, metadata: dict | None = None) -> int:
     if not timestamp_iso:
         timestamp_iso = datetime.now(timezone.utc).isoformat()
+    # Auto-create session if needed
+    create_session(session_id)
     entry_id = db_execute(
         """INSERT INTO entries (session_id, box, content, content_type, timestamp_iso,
            elapsed_sec, linked_entry_id, metadata)
