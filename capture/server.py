@@ -387,7 +387,13 @@ async def save_transcript(req: SaveRequest):
     txt_path = filepath.with_suffix(".txt")
     with open(txt_path, "w") as f:
         f.write(req.transcript)
-    return {"saved": str(filepath), "text_file": str(txt_path)}
+    # Also save to pipeline watch directory for auto-ingest
+    pipeline_dir = Path("/docker/hermes-bot/data/sasin-cfoth-ai/capture/transcripts")
+    pipeline_dir.mkdir(parents=True, exist_ok=True)
+    pipeline_path = pipeline_dir / txt_path.name
+    with open(pipeline_path, "w") as f:
+        f.write(req.transcript)
+    return {"saved": str(filepath), "text_file": str(txt_path), "pipeline_copy": str(pipeline_path)}
 
 
 # ── Slide Analysis → routes to Box 1 or Box 2 ──

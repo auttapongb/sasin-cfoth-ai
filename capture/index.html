@@ -47,6 +47,9 @@ body {
 .btn-sm.primary { background: var(--recording); border-color: var(--recording); color: white; }
 .btn-sm.primary:hover { opacity: 0.9; }
 .btn-sm.save { border-color: var(--gold); color: var(--gold); }
+.btn-sm.second-brain { border-color: #7C3AED; color: #A78BFA; }
+.btn-sm.second-brain:hover { border-color: #A78BFA; background: rgba(124,58,237,0.1); }
+.btn-sm.second-brain.uploading { opacity: 0.6; pointer-events: none; animation: dotPulse 1s infinite; }
 
 /* ── Main Two-Panel ── */
 .main-panels {
@@ -248,6 +251,7 @@ body {
     <button class="btn-sm" onclick="loadSessions()" title="Load past session">📂 Load</button>
     <button class="btn-sm save" onclick="saveCurrentSession()">💾 Save</button>
     <button class="btn-sm" onclick="newSession()">✨ New</button>
+    <button class="btn-sm second-brain" id="btnSecondBrain" onclick="pushToSecondBrain()" title="Upload transcript to Second Brain">🧠 2nd Brain</button>
 </div>
 
 <!-- ═══ TWO-PANEL ═══ -->
@@ -784,6 +788,53 @@ function toast(msg, type) {
     el.textContent = msg;
     document.body.appendChild(el);
     setTimeout(() => { el.style.opacity = '0'; setTimeout(() => el.remove(), 300); }, 3000);
+}
+
+// ─── Second Brain ─────────────────────────────────
+async function pushToSecondBrain() {
+    if (!sessionId) { toast('No active session', 'error'); return; }
+    
+    const allText = [];
+    document.getElementById('box1Body').querySelectorAll('.entry-text').forEach(e => allText.push(e.textContent));
+    if (!allText.length) { toast('Nothing to upload — record first', 'error'); return; }
+    
+    const fullTranscript = allText.join('\n\n');
+    const title = document.getElementById('sessionTitle').textContent || 'Untitled';
+    const btn = document.getElementById('btnSecondBrain');
+    btn.classList.add('uploading');
+    btn.textContent = '⏳ Uploading...';
+    
+    try {
+        // Create a text file blob and send to second brain
+        const blob = new Blob([fullTranscript], {type: 'text/plain'});
+        const form = new FormData();
+        form.append('file', blob, title.replace(/[^a-zA-Z0-9ก-๙\s]/g, '_') + '.txt');
+        form.append('file_type', 'text');
+        form.append('title', title);
+        form.append('tags', 'lecture,capture');
+        
+        const resp = await fetch(`${API}/ingest`, {
+            method: 'POST',
+            body: form
+        });
+        const data = await resp.json();
+        
+        btn.classList.remove('uploading');
+        btn.textContent = '🧠 2nd Brain';
+        
+        if (data.deep_tutor_uploaded) {
+            const words = data.word_count || 0;
+            toast(`Sent to Second Brain — ${words} words indexed`, 'info');
+        } else if (data.error) {
+            toast('Upload failed: ' + data.error, 'error');
+        } else {
+            toast('Text extracted but KB upload failed — check DeepTutor', 'error');
+        }
+    } catch(e) {
+        btn.classList.remove('uploading');
+        btn.textContent = '🧠 2nd Brain';
+        toast('Second Brain unreachable: ' + e.message, 'error');
+    }
 }
 
 // ─── Download ─────────────────────────────────────
