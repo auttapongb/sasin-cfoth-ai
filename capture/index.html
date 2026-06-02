@@ -322,9 +322,10 @@ body {
     display: none; flex-direction: column; flex: 1; min-height: 0; overflow-y: auto;
 }
 .tab-view.active { display: flex; }
-#briefsView, #flashcardsView, #quizzesView, #audioView, #casesView {
+#brainView, #briefsView, #flashcardsView, #quizzesView, #audioView, #casesView {
     background: var(--bg);
 }
+#brainGraph { min-height: 500px; min-width: 100%; }
 
 /* ── Flashcards ── */
 #flashcardCard {
@@ -2716,7 +2717,10 @@ function switchTab(tab) {
     document.getElementById('slideStrip').style.display = isCapture ? '' : 'none';
     document.querySelector('.bottombar').style.display = isCapture ? '' : 'none';
     if (tab === 'chat') document.getElementById('chatInput').focus();
-    if (tab === 'brain' && !window._brainGraphInited) { window._brainGraphInited = true; initBrainGraph(); }
+    if (tab === 'brain') { 
+        document.getElementById('brainView').style.display = 'flex';
+        if (!window._brainGraphInited) { window._brainGraphInited = true; requestAnimationFrame(() => requestAnimationFrame(() => initBrainGraph())); }
+    }
     if (tab === 'briefs') loadBriefs();
     if (tab === 'flashcards') { loadFlashcardStats(); loadFlashcardsList(); }
     if (tab === 'quizzes') loadQuizzes();
@@ -2800,7 +2804,12 @@ function initBrainGraph() {
 function renderBrainGraph(data) {
     const svg = d3.select('#brainGraph');
     svg.selectAll('*').remove();
-    const W = svg.node().clientWidth, H = svg.node().clientHeight;
+    let W = svg.node().clientWidth || 900;
+    let H = svg.node().clientHeight || 600;
+    // Force minimum dimensions for the SVG
+    if (W < 100) W = 900;
+    if (H < 100) H = 600;
+    svg.attr('viewBox', `0 0 ${W} ${H}`).attr('preserveAspectRatio', 'xMidYMid meet');
     const g = svg.append('g');
     svg.call(d3.zoom().scaleExtent([0.1, 4]).on('zoom', (e) => g.attr('transform', e.transform)));
 
