@@ -367,8 +367,14 @@ async function loadSessions() {
                 const title = s.title || s.id;
                 const date = new Date(s.updated_at).toLocaleDateString('en-GB', {day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'});
                 const count = s.entry_count || 0;
-                return `<div class="session-list-item" onclick="selectSession('${s.id}','${title.replace(/'/g, "\'")}')">
-                    <div><div class="sli-title">${escapeHtml(title)}</div>
+                // Content type icon
+                let icon = '📝';
+                const ti = (s.tags || '') + ' ' + (s.title || '');
+                if (/pdf/i.test(ti) || /\.pdf$/i.test(s.title||'')) icon = '📄';
+                else if (/slide/i.test(ti)) icon = '📸';
+                else if (/live/i.test(s.tags||'') || count > 5) icon = '🎙️';
+                return `<div class="session-list-item" onclick="selectSession('${s.id}','${title.replace(/'/g, "\\'")}')">
+                    <div><div class="sli-title">${icon} ${escapeHtml(title)}</div>
                     <div class="sli-meta">${date}</div></div>
                     <div class="sli-count">${count} entries</div>
                 </div>`;
@@ -743,13 +749,15 @@ async function handlePDFUpload(input) {
     const btn = document.getElementById('btnPDF');
     btn.classList.add('uploading');
     
-    if (!sessionId) await startSession('PDF Upload');
+    if (!sessionId) await startSession(files[0].name.replace('.pdf',''));
     
     let success = 0, fail = 0;
     const now = new Date().toISOString();
     
     for (const file of files) {
-        btn.textContent = '⏳';
+        const shortName = file.name.length > 20 ? file.name.substring(0,17)+'...' : file.name;
+        btn.textContent = '⏳ ' + shortName;
+        document.getElementById('statusText').textContent = 'Uploading PDF...';
         const form = new FormData();
         form.append('file', file);
         form.append('file_type', 'pdf');
@@ -787,6 +795,7 @@ async function handlePDFUpload(input) {
     
     btn.classList.remove('uploading');
     btn.textContent = '📄';
+    document.getElementById('statusText').textContent = isRecording ? 'Recording' : 'Ready';
     input.value = '';
 }
 
@@ -798,6 +807,8 @@ function captureSlide() {
 async function handleSlideCapture(input) {
     if (!input.files || !input.files[0]) return;
     const file = input.files[0];
+    if (!sessionId) await startSession('Slide Capture');
+    document.getElementById('sessionTitle').textContent = '📸 Slide Capture';
     const elapsedSec = isRecording ? (Date.now() - startTime) / 1000 : 0;
     const form = new FormData();
     form.append('image', file);
@@ -808,6 +819,9 @@ async function handleSlideCapture(input) {
     const imgUrl = URL.createObjectURL(file);
     const thumbDiv = addSlideThumb(imgUrl, 'processing');
     thumbDiv.classList.add('processing');
+    document.getElementById('btnSlide').textContent = '🔍';
+    document.getElementById('btnSlide').classList.add('uploading');
+    document.getElementById('statusText').textContent = 'Analyzing slide...';
 
     try {
         const resp = await fetch(`${API}/analyze-slide`, { method: 'POST', body: form });
@@ -816,6 +830,10 @@ async function handleSlideCapture(input) {
         // Remove processing thumb
         thumbDiv.remove();
 
+        document.getElementById('btnSlide').textContent = '📸';
+        document.getElementById('btnSlide').classList.remove('uploading');
+        document.getElementById('statusText').textContent = isRecording ? 'Recording' : 'Ready';
+        
         if (data.box === 'colearner' && data.analysis) {
             // Useful info → Box 2
             addSlideThumb(`${API}${data.image_url}`, 'useful');
@@ -832,6 +850,8 @@ async function handleSlideCapture(input) {
         }
     } catch(e) {
         console.error('Slide analysis error:', e);
+        document.getElementById('btnSlide').textContent = '📸';
+        document.getElementById('btnSlide').classList.remove('uploading');
         toast('Slide analysis failed', 'error');
     }
 
