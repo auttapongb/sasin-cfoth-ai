@@ -706,7 +706,7 @@ async def load_entries(session_id: str, box: str | None = None):
 
 @app.get("/sessions")
 async def list_sessions():
-    sessions = db_fetch("SELECT * FROM sessions ORDER BY updated_at DESC LIMIT 50")
+    sessions = db_fetch("SELECT * FROM sessions ORDER BY updated_at DESC LIMIT 500")
     for s in sessions:
         s["entry_count"] = db_fetch(
             "SELECT COUNT(*) as cnt FROM entries WHERE session_id = ?", (s["id"],)

@@ -180,6 +180,13 @@ body {
 @keyframes slideUp { from { opacity:0; transform:translateX(-50%) translateY(15px) } to { opacity:1; transform:translateX(-50%) translateY(0) } }
 
 /* Mobile responsive */
+.month-badge {
+    font-size: 0.6rem; color: var(--gold); font-weight: 700;
+    padding: 4px 0; margin-top: 10px; border-top: 1px solid var(--border);
+    letter-spacing: 0.5px;
+}
+.month-badge:first-child { margin-top: 0; border-top: none; }
+#sessionSearch:focus { border-color: var(--gold) !important; }
 @media (max-width: 768px) {
     .main-panels { flex-direction: column; }
     .panel { flex: none; height: 50%; }
@@ -236,6 +243,13 @@ body {
     padding: 3px 8px; border-radius: 10px; white-space: nowrap;
 }
 
+.month-badge {
+    font-size: 0.6rem; color: var(--gold); font-weight: 700;
+    padding: 4px 0; margin-top: 10px; border-top: 1px solid var(--border);
+    letter-spacing: 0.5px;
+}
+.month-badge:first-child { margin-top: 0; border-top: none; }
+#sessionSearch:focus { border-color: var(--gold) !important; }
 @media (max-width: 768px) {
     .modal-card { width: 95vw; max-height: 80vh; }
     .session-title { max-width: 120px; font-size: 0.7rem; }
@@ -357,37 +371,40 @@ async function loadSessions() {
     try {
         const resp = await fetch(`${API}/sessions`);
         const data = await resp.json();
-        const sessions = data.sessions || [];
+        window._allSessions = data.sessions || []; const sessions = window._allSessions;
         const body = document.getElementById('loadModalBody');
 
         if (sessions.length === 0) {
             body.innerHTML = '<div class="empty-state"><div class="big-icon">📭</div>No saved sessions yet.<br><span style="font-size:0.7rem">Record a lecture first!</span></div>';
         } else {
+            let currentMonth = '';
             body.innerHTML = sessions.map(s => {
                 const title = s.title || s.id;
-                const date = new Date(s.updated_at).toLocaleDateString('en-GB', {day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'});
+                const d = new Date(s.updated_at);
+                const date = d.toLocaleDateString('en-GB', {day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'});
+                const month = d.toLocaleDateString('en-GB', {month:'long',year:'numeric'});
                 const count = s.entry_count || 0;
                 const preview = (s.preview || '').substring(0, 80);
-                // Content type icon
                 let icon = '📝';
                 const ti = (s.tags || '') + ' ' + (s.title || '');
                 if (/pdf/i.test(ti) || /\.pdf$/i.test(s.title||'')) icon = '📄';
                 else if (/slide/i.test(ti)) icon = '📸';
                 else if (/live/i.test(s.tags||'') || count > 5) icon = '🎙️';
                 const escTitle = escapeHtml(title).replace(/'/g, "&#39;");
-                return `<div class="session-list-item">
-                    <div style="flex:1;min-width:0" onclick="selectSession('${s.id}','${title.replace(/'/g, "\\'")}')">
-                        <div class="sli-title">${icon} ${escapeHtml(title)}</div>
-                        <div class="sli-meta">${date}${preview ? ' — ' + escapeHtml(preview) : ''}</div>
-                    </div>
-                    <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
-                        <div class="sli-count">${count}</div>
-                        <button class="modal-close" onclick="event.stopPropagation();downloadSession('${s.id}','${escTitle}')" title="Download as .txt" style="font-size:0.9rem;padding:2px 6px">📥</button>
-                    </div>
-                </div>`;
+                const monthHeader = month !== currentMonth ? (currentMonth = month, '<div class="month-badge">' + month + '</div>') : '';
+                return monthHeader + '<div class="session-list-item">'
+                    + '<div style="flex:1;min-width:0" onclick="selectSession(\'' + s.id + '\',\'' + title.replace(/'/g, "\\'") + '\')">'
+                    + '<div class="sli-title">' + icon + ' ' + escapeHtml(title) + '</div>'
+                    + '<div class="sli-meta">' + date + (preview ? ' — ' + escapeHtml(preview) : '') + '</div></div>'
+                    + '<div style="display:flex;align-items:center;gap:6px;flex-shrink:0">'
+                    + '<div class="sli-count">' + count + '</div>'
+                    + '<button class="modal-close" onclick="event.stopPropagation();downloadSession(\'' + s.id + '\',\'' + escTitle + '\')" title="Download" style="font-size:0.9rem;padding:2px 6px">📥</button>'
+                    + '</div></div>';
             }).join('');
         }
         document.getElementById('loadModal').style.display = 'flex';
+    const searchEl = document.getElementById('sessionSearch');
+    if (searchEl) searchEl.value = '';
     } catch(e) {
         toast('Failed to load sessions: ' + e.message, 'error');
     }
@@ -420,6 +437,40 @@ async function downloadSession(sid, title) {
     a.download = (title || 'session').replace(/[^a-zA-Z0-9ก-๙ \-]/g, '_') + '.txt';
     a.click();
     toast('Downloading: ' + (title || sid), 'info');
+}
+
+function filterSessions() {
+    const q = (document.getElementById('sessionSearch').value || '').toLowerCase();
+    const body = document.getElementById('loadModalBody');
+    const sessions = window._allSessions || [];
+    if (!q) {
+        // Re-render all
+        const all = body.querySelectorAll('.session-list-item, .month-badge');
+        all.forEach(el => el.style.display = '');
+        return;
+    }
+    // Show/hide items
+    let visibleMonth = '';
+    const items = body.querySelectorAll('.session-list-item');
+    const badges = body.querySelectorAll('.month-badge');
+    items.forEach((item, i) => {
+        const text = item.textContent.toLowerCase();
+        const show = text.includes(q);
+        item.style.display = show ? '' : 'none';
+    });
+    // Hide empty month badges
+    badges.forEach(badge => {
+        let next = badge.nextElementSibling;
+        let hasVisible = false;
+        while (next && !next.classList.contains('month-badge')) {
+            if (next.classList.contains('session-list-item') && next.style.display !== 'none') {
+                hasVisible = true;
+                break;
+            }
+            next = next.nextElementSibling;
+        }
+        badge.style.display = hasVisible ? '' : 'none';
+    });
 }
 
 function closeLoadModal() {
@@ -1002,7 +1053,12 @@ document.addEventListener('DOMContentLoaded', () => {
 <div class="modal-overlay" id="loadModal" style="display:none" onclick="if(event.target===this)closeLoadModal()">
   <div class="modal-card">
     <div class="modal-header">
-      <span>📂 Load Past Session</span>
+      <span>📂 Sessions</span>
+      <input type="text" id="sessionSearch" placeholder="Search..." 
+        oninput="filterSessions()"
+        style="background:var(--bg);border:1px solid var(--border);border-radius:8px;
+        padding:4px 10px;color:var(--text);font-size:0.75rem;width:140px;
+        font-family:Inter,sans-serif;outline:none">
       <button class="modal-close" onclick="closeLoadModal()">✕</button>
     </div>
     <div class="modal-body" id="loadModalBody">
