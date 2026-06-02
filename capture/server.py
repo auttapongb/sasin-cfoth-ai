@@ -805,6 +805,96 @@ async def download_session(session_id: str):
     )
 
 
+# ── AI Chat (session-aware + KB) ──
+
+CHAT_SYSTEM_PROMPT = """You are a helpful AI assistant for a Sasin EMBA student. You have access to:
+1. The current lecture session's transcripts and AI insights
+2. Uploaded knowledge base (PDFs, slides)
+
+Answer questions concisely using the provided context. If the answer is not in the context, say so and offer to help with what you know.
+Format: Use plain text, keep answers under 4 sentences unless detail is requested. Use the same language as the question."""
+
+class ChatRequest(BaseModel):
+    session_id: str = ""
+    question: str
+
+@app.post("/chat")
+async def chat(req: ChatRequest):
+    """Answer questions using current session context + KB."""
+    if not req.question.strip():
+        return {"answer": "", "error": "Empty question"}
+    
+    # Gather session context
+    context_parts = []
+    if req.session_id:
+        entries = get_entries(req.session_id)
+        transcript_entries = [e for e in entries if e["box"] == "transcript" and e.get("content_type") != "slide_image"]
+        insight_entries = [e for e in entries if e["box"] == "colearner"]
+        
+        if transcript_entries:
+            # Last 2000 chars of transcript
+            transcript_text = " ".join(e["content"] for e in transcript_entries[-10:])
+            context_parts.append(f"RECENT TRANSCRIPT:\n{transcript_text[-2000:]}")
+        
+        if insight_entries:
+            insight_text = " ".join(e["content"] for e in insight_entries[-5:])
+            context_parts.append(f"AI INSIGHTS:\n{insight_text[-1000:]}")
+    
+    # Try DeepTutor KB search
+    kb_context = ""
+    try:
+        global _http_client
+        if _http_client is None:
+            _http_client = httpx.AsyncClient(timeout=httpx.Timeout(15.0))
+        # Use DeepTutor tutorbot chat for KB search
+        kb_resp = await _http_client.post(
+            "http://localhost:8001/api/v1/tutorbot",
+            json={"kb_name": "emba-2026", "question": req.question},
+            timeout=10.0
+        )
+        if kb_resp.status_code == 200:
+            kb_data = kb_resp.json()
+            kb_answer = kb_data.get("answer", "") or kb_data.get("response", "")
+            if kb_answer:
+                kb_context = f"KNOWLEDGE BASE:\n{kb_answer[:1000]}"
+    except Exception:
+        pass  # KB unavailable — proceed with session context only
+    
+    if kb_context:
+        context_parts.append(kb_context)
+    
+    context = "\n\n---\n\n".join(context_parts) if context_parts else "No session context available yet. Start recording or upload materials."
+    
+    # Call DeepSeek
+    if not COLEARNER_API_KEY:
+        return {"answer": "Chat API not configured. Set DEEPSEEK_API_KEY.", "error": "no_key"}
+    
+    try:
+        resp = await _http_client.post(
+            COLEARNER_URL,
+            headers={"Authorization": f"Bearer {COLEARNER_API_KEY}", "Content-Type": "application/json"},
+            json={
+                "model": COLEARNER_MODEL,
+                "messages": [
+                    {"role": "system", "content": CHAT_SYSTEM_PROMPT},
+                    {"role": "user", "content": f"CONTEXT:\n{context}\n\nQUESTION: {req.question}"}
+                ],
+                "max_tokens": 400,
+                "temperature": 0.5,
+            },
+            timeout=20.0,
+        )
+        if resp.status_code != 200:
+            return {"answer": f"AI error: {resp.status_code}", "error": str(resp.status_code)}
+        
+        data = resp.json()
+        answer = data["choices"][0]["message"]["content"].strip()
+        return {"answer": answer, "session_id": req.session_id, "model": COLEARNER_MODEL}
+    
+    except Exception as e:
+        return {"answer": f"Error: {str(e)[:200]}", "error": str(e)[:200]}
+
+
 # ── Legacy endpoints ──
 
 @app.get("/sessions_legacy")
