@@ -702,7 +702,10 @@ async function handlePDFUpload(input) {
     const btn = document.getElementById('btnPDF');
     btn.classList.add('uploading');
     
+    if (!sessionId) await startSession('PDF Upload');
+    
     let success = 0, fail = 0;
+    const now = new Date().toISOString();
     
     for (const file of files) {
         btn.textContent = '⏳';
@@ -715,27 +718,35 @@ async function handlePDFUpload(input) {
         try {
             const resp = await fetch(`${API}/ingest`, { method: 'POST', body: form });
             const data = await resp.json();
-            if (data.deep_tutor_uploaded) {
+            
+            if (data.deep_tutor_uploaded && data.text_extracted) {
                 success++;
+                const title = file.name.replace('.pdf','');
+                
+                // Box 1: Show extracted text as a transcript entry
+                const preview = data.text_extracted.substring(0, 500);
+                const fullText = data.text_extracted;
+                addToBox1('📄 ' + title + '\n\n' + preview + (fullText.length > 500 ? '\n\n... (full text in Second Brain)' : ''), now, 0);
+                
+                // Box 2: AI analyzes the PDF content
+                triggerCoLearner(fullText.substring(0, 2000), 'Document: ' + title, 0);
+                
+                toast(title + ' — ' + data.word_count + ' words indexed', 'info');
             } else {
                 fail++;
                 console.error('PDF upload failed:', file.name, data.error || data);
+                toast(file.name + ' failed', 'error');
             }
         } catch(e) {
             fail++;
             console.error('PDF upload error:', file.name, e);
+            toast(file.name + ' error: ' + e.message, 'error');
         }
     }
     
     btn.classList.remove('uploading');
     btn.textContent = '📄';
     input.value = '';
-    
-    if (fail === 0) {
-        toast(`Uploaded ${success} PDF${success>1?'s':''} to Second Brain`, 'info');
-    } else {
-        toast(`${success} uploaded, ${fail} failed`, 'error');
-    }
 }
 
 // ─── Slide Capture ────────────────────────────────
