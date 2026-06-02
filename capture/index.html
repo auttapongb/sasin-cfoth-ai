@@ -312,6 +312,7 @@ body {
 <script>
 const API = 'https://capture.sasin.cfoth.ai';
 let isRecording = false, mediaRecorder = null, startTime = 0, timerInterval = null;
+let chunkQueue = [], queueProcessing = false;
 let chunkIndex = 0, sessionId = '', totalWords = 0;
 let box1Entries = 0, box2Entries = 0;
 let lastTranscript = ''; // for co-learner context
@@ -459,13 +460,13 @@ async function toggleRecording() {
         }
         mediaRecorder = new MediaRecorder(stream, { mimeType });
         
-        // Chunk queue — processes one at a time, prevents race conditions
-        const chunkQueue = [];
-        let processing = false;
+        // Reset queue for new recording
+        chunkQueue = [];
+        queueProcessing = false;
         
         async function processQueue() {
-            if (processing || chunkQueue.length === 0) return;
-            processing = true;
+            if (queueProcessing || chunkQueue.length === 0) return;
+            queueProcessing = true;
             while (chunkQueue.length > 0) {
                 const chunk = chunkQueue.shift();
                 const form = new FormData();
@@ -491,7 +492,7 @@ async function toggleRecording() {
                     console.error('Chunk', chunk.index, 'failed:', err);
                 }
             }
-            processing = false;
+            queueProcessing = false;
         }
         
         mediaRecorder.ondataavailable = (e) => {
@@ -521,22 +522,36 @@ async function toggleRecording() {
     }
 }
 
-function stopAndSave() {
+async function stopAndSave() {
     if (!isRecording) return;
+    isRecording = false;
     if (mediaRecorder) {
         mediaRecorder.stop();
         if (mediaRecorder._stream) mediaRecorder._stream.getTracks().forEach(t => t.stop());
     }
-    isRecording = false;
     clearInterval(timerInterval);
     document.getElementById('btnRecord').className = 'btn-record start';
     document.getElementById('btnIcon').textContent = '🎙️';
     document.getElementById('btnLabel').textContent = 'Start Recording';
     document.getElementById('btnStop').style.display = 'none';
+    document.getElementById('statusDot').className = 'status-dot recording';
+    document.getElementById('statusText').textContent = 'Finishing... (' + chunkQueue.length + ' chunks left)';
+    lastColearnerTime = 0;
+    
+    // Wait for queue to drain (final chunks from stop + any in-flight)
+    const maxWait = 30000; // 30s max
+    const startWait = Date.now();
+    while (chunkQueue.length > 0 || queueProcessing) {
+        if (Date.now() - startWait > maxWait) break;
+        await new Promise(r => setTimeout(r, 200));
+        if (chunkQueue.length > 0 || queueProcessing) {
+            document.getElementById('statusText').textContent = 'Finishing... (' + chunkQueue.length + ' left)';
+        }
+    }
+    
     document.getElementById('btnDownload').style.display = 'inline-flex';
     document.getElementById('statusDot').className = 'status-dot connected';
     document.getElementById('statusText').textContent = 'Stopped';
-    lastColearnerTime = 0;
 
     // Persist to backend
     const elapsed = Math.floor((Date.now() - startTime) / 1000);

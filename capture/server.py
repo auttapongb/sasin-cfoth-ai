@@ -69,6 +69,7 @@ TRANSCRIBE_TIMEOUT = 25
 COLEARNER_TIMEOUT = 15
 _last_engine_used = "groq"
 _last_colearner_time = 0.0
+_webm_headers: dict[str, bytes] = {}  # session_id -> cached WebM header bytes
 COLEARNER_COOLDOWN_SEC = 20  # server-side cooldown
 
 logging.basicConfig(level=logging.WARNING)
@@ -246,6 +247,15 @@ async def transcribe(audio: UploadFile = File(...), chunk_index: int = Form(0),
     wav_path = tmp_path
     try:
         if suffix not in (".wav",):
+            # WebM header caching: some browsers send headerless chunks after first
+            # Save first chunk's header bytes and prepend to subsequent chunks
+            if raw_audio[:4] == b"\x1a\x45\xdf\xa3":  # EBML header magic
+                _webm_headers[session_id] = raw_audio[:2000]  # cache header
+            elif session_id in _webm_headers and len(raw_audio) > 100:
+                # Prepend cached header to headerless chunk
+                raw_audio = _webm_headers[session_id] + raw_audio
+                with open(tmp_path, "wb") as fh:
+                    fh.write(raw_audio)
             wav_path = tmp_path + ".wav"
             loop = asyncio.get_event_loop()
             await asyncio.wait_for(
