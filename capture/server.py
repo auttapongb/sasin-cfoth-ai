@@ -67,6 +67,9 @@ COLEARNER_URL = os.environ.get("COLEARNER_URL", "https://api.deepseek.com/v1/cha
 
 TRANSCRIBE_TIMEOUT = 25
 COLEARNER_TIMEOUT = 15
+_last_engine_used = "groq"
+_last_colearner_time = 0.0
+COLEARNER_COOLDOWN_SEC = 20  # server-side cooldown
 
 logging.basicConfig(level=logging.WARNING)
 logger = logging.getLogger("capture")
@@ -267,13 +270,13 @@ async def transcribe(audio: UploadFile = File(...), chunk_index: int = Form(0),
                 content_type="text",
                 timestamp_iso=now_iso,
                 elapsed_sec=elapsed_sec,
-                metadata={"chunk_index": chunk_index, "engine": getattr(_transcribe_with_fallback, "_last_engine", "groq")},
+                metadata={"chunk_index": chunk_index, "engine": _last_engine_used},
             )
 
         return {
             "text": text,
             "chunk_index": chunk_index,
-            "engine": getattr(_transcribe_with_fallback, "_last_engine", "groq"),
+            "engine": _last_engine_used,
             "timestamp_iso": now_iso,
             "entry_id": entry_id,
         }
@@ -344,21 +347,22 @@ async def _deepgram_transcribe(wav_path: str) -> str:
 
 
 async def _transcribe_with_fallback(wav_path: str) -> str:
+    global _last_engine_used
     try:
         text = await _groq_transcribe(wav_path)
         if text:
-            _transcribe_with_fallback._last_engine = "groq"
+            _last_engine_used = "groq"
             return text
     except Exception as e:
         logger.warning(f"Groq failed, trying Deepgram: {e}")
     try:
         text = await _deepgram_transcribe(wav_path)
         if text:
-            _transcribe_with_fallback._last_engine = "deepgram"
+            _last_engine_used = "deepgram"
             return text
     except Exception as e:
         logger.error(f"Deepgram also failed: {e}")
-    _transcribe_with_fallback._last_engine = "none"
+    _last_engine_used = "none"
     return ""
 
 
@@ -386,6 +390,16 @@ async def save_transcript(req: SaveRequest):
 
 
 # ── Slide Analysis → routes to Box 1 or Box 2 ──
+
+def _cleanup_old_slides(slide_dir: Path, keep: int = 100):
+    """Keep only the most recent N slide files."""
+    try:
+        files = sorted(slide_dir.glob("*.jpg"), key=lambda p: p.stat().st_mtime, reverse=True)
+        for old in files[keep:]:
+            old.unlink(missing_ok=True)
+    except Exception:
+        pass
+
 
 SLIDE_ANALYSIS_PROMPT = """Analyze this lecture slide. Return a JSON object with exactly these keys:
 - "has_useful_info": true if the slide contains educational content (text, diagrams, charts, formulas, tables), false if it's blank, blurry, or just a title slide with no substance
@@ -423,6 +437,8 @@ async def analyze_slide(
     img_path = img_dir / f"{img_hash}_{datetime.now().strftime('%H%M%S')}.jpg"
     with open(img_path, "wb") as f:
         f.write(image_bytes)
+    # Cleanup: keep only last 100 slides
+    _cleanup_old_slides(img_dir, keep=100)
 
     payload = {
         "contents": [{
@@ -552,6 +568,14 @@ async def co_learner(req: CoLearnerRequest):
     """AI Co-Learner thinks out loud about transcript and slide context."""
     if not COLEARNER_API_KEY:
         return {"insight": "", "error": "Co-learner API not configured"}
+
+    # Server-side cooldown
+    global _last_colearner_time
+    import time as _time
+    now = _time.time()
+    if now - _last_colearner_time < COLEARNER_COOLDOWN_SEC:
+        return {"insight": "", "reason": "cooldown"}
+    _last_colearner_time = now
 
     transcript = req.transcript_chunk.strip()
     slide = req.slide_context.strip()

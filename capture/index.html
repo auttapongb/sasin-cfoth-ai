@@ -239,6 +239,8 @@ body {
     <button class="btn-record start" id="btnRecord" onclick="toggleRecording()">
         <span id="btnIcon">🎙️</span> <span id="btnLabel">Start Recording</span>
     </button>
+    <button class="btn-sm primary" id="btnStop" onclick="stopAndSave()" style="display:none">⏹️ Stop</button>
+    <button class="btn-sm" id="btnDownload" onclick="downloadTranscript()" style="display:none">📥 Download</button>
     <button class="btn-slide" id="btnSlide" onclick="captureSlide()" title="Capture slide">📸</button>
 </div>
 
@@ -252,6 +254,8 @@ let chunkIndex = 0, sessionId = '', totalWords = 0;
 let box1Entries = 0, box2Entries = 0;
 let lastTranscript = ''; // for co-learner context
 let colearnerBusy = false;
+let lastColearnerTime = 0;
+const COLEARNER_COOLDOWN_MS = 30000; // 30 seconds between insights
 
 // ─── Session ──────────────────────────────────────
 async function startSession() {
@@ -289,23 +293,44 @@ async function loadSessions() {
             toast('No saved sessions found', 'info');
             return;
         }
-        // Load most recent session
         const sid = data.sessions[0].id;
         sessionId = sid;
         const detail = await fetch(`${API}/sessions/${sid}`);
         const sdata = await detail.json();
-        // Render entries
         document.getElementById('box1Body').innerHTML = '';
         document.getElementById('box2Body').innerHTML = '';
         document.getElementById('slideStrip').innerHTML = '';
         box1Entries = 0; box2Entries = 0;
         for (const e of sdata.entries) {
-            renderEntry(e);
+            renderSavedEntry(e);
         }
         updateCounts();
         toast(`Loaded: ${sdata.session.title || sid} (${sdata.entry_count} entries)`, 'info');
     } catch(e) {
         toast('Failed to load sessions: ' + e.message, 'error');
+    }
+}
+
+function renderSavedEntry(e) {
+    try {
+        if (e.box === 'transcript') {
+            if (e.content_type === 'slide_image') {
+                const meta = JSON.parse(e.metadata || '{}');
+                const imgUrl = meta.image_path ? `${API}/slides/${meta.image_path.split('/').pop()}` : '';
+                addSlideToBox1(e.timestamp_iso, e.elapsed_sec, imgUrl || `/slides/${meta.image_hash}.jpg`);
+            } else {
+                addToBox1(e.content, e.timestamp_iso, e.elapsed_sec);
+            }
+        } else if (e.box === 'colearner') {
+            if (e.content_type === 'slide_analysis') {
+                const parsed = JSON.parse(e.content);
+                addToBox2(parsed, 'slide_analysis', e.timestamp_iso, e.elapsed_sec);
+            } else {
+                addToBox2(e.content, 'insight', e.timestamp_iso, e.elapsed_sec);
+            }
+        }
+    } catch(err) {
+        console.error('Render error:', err, e);
     }
 }
 
@@ -333,9 +358,8 @@ async function toggleRecording() {
                 if (data.text && data.text.trim()) {
                     addToBox1(data.text.trim(), data.timestamp_iso, data.elapsed_sec || ((Date.now()-startTime)/1000));
                     totalWords += data.text.split(/\s+/).length;
-                    document.getElementById('wordCount') && (document.getElementById('wordCount').textContent = totalWords);
                     lastTranscript = data.text.trim();
-                    // Trigger co-learner
+                    // Trigger co-learner (with cooldown)
                     triggerCoLearner(data.text.trim(), '', (Date.now() - startTime) / 1000);
                 }
                 chunkIndex++;
@@ -354,6 +378,8 @@ async function toggleRecording() {
         document.getElementById('btnLabel').textContent = 'Recording...';
         document.getElementById('statusDot').className = 'status-dot recording';
         document.getElementById('statusText').textContent = 'Recording';
+        document.getElementById('btnStop').style.display = 'inline-flex';
+        document.getElementById('btnDownload').style.display = 'none';
         mediaRecorder._stream = stream;
         toast('Recording started — 5s chunks', 'info');
     } catch(e) {
@@ -372,9 +398,38 @@ function stopAndSave() {
     document.getElementById('btnRecord').className = 'btn-record start';
     document.getElementById('btnIcon').textContent = '🎙️';
     document.getElementById('btnLabel').textContent = 'Start Recording';
+    document.getElementById('btnStop').style.display = 'none';
+    document.getElementById('btnDownload').style.display = 'inline-flex';
     document.getElementById('statusDot').className = 'status-dot connected';
     document.getElementById('statusText').textContent = 'Stopped';
-    toast('Recording stopped', 'info');
+    lastColearnerTime = 0;
+
+    // Persist to backend
+    const elapsed = Math.floor((Date.now() - startTime) / 1000);
+    saveToBackend(elapsed);
+    toast(`Recording stopped — ${formatTime(elapsed)} captured`, 'info');
+}
+
+async function saveToBackend(duration) {
+    try {
+        const allTranscripts = [];
+        document.getElementById('box1Body').querySelectorAll('.entry-text').forEach(e => allTranscripts.push(e.textContent));
+        const fullText = allTranscripts.join('\n');
+        await fetch(`${API}/save`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+                transcript: fullText,
+                word_count: totalWords,
+                duration: duration,
+                chunks: chunkIndex,
+                timestamp: new Date().toISOString(),
+                tags: 'lecture'
+            })
+        });
+    } catch(e) {
+        console.error('Save failed:', e);
+    }
 }
 
 function updateTimer() {
@@ -497,8 +552,12 @@ function addToBox2(content, type, timestampIso, elapsedSec) {
 async function triggerCoLearner(transcriptChunk, slideContext, elapsedSec) {
     if (colearnerBusy) return;
     if (!transcriptChunk.trim() && !slideContext.trim()) return;
+    // Cooldown: don't fire more than once per 30 seconds
+    const now = Date.now();
+    if (now - lastColearnerTime < COLEARNER_COOLDOWN_MS) return;
+    lastColearnerTime = now;
     colearnerBusy = true;
-    document.getElementById('colearnerStatus').textContent = 'thinking...';
+    document.getElementById('colearnerStatus').textContent = '💭 thinking...';
 
     try {
         const resp = await fetch(`${API}/co-learner`, {
@@ -537,18 +596,20 @@ async function handleSlideCapture(input) {
     form.append('session_id', sessionId);
     form.append('elapsed_sec', elapsedSec);
 
-    // Show thumbnail immediately
-    const reader = new FileReader();
+    // Show thumbnail with loading state
     const imgUrl = URL.createObjectURL(file);
-    reader.onload = () => addSlideThumb(imgUrl, null);
-    reader.readAsDataURL(file);
+    const thumbDiv = addSlideThumb(imgUrl, 'processing');
+    thumbDiv.classList.add('processing');
 
     try {
         const resp = await fetch(`${API}/analyze-slide`, { method: 'POST', body: form });
         const data = await resp.json();
 
+        // Remove processing thumb
+        thumbDiv.remove();
+
         if (data.box === 'colearner' && data.analysis) {
-            // Useful info → Box 2 with analysis
+            // Useful info → Box 2
             addSlideThumb(`${API}${data.image_url}`, 'useful');
             addToBox2(data.analysis, 'slide_analysis', data.timestamp_iso, elapsedSec);
             // Also trigger co-learner with slide context
@@ -571,7 +632,10 @@ async function handleSlideCapture(input) {
 
 // ─── Slide Strip ──────────────────────────────────
 function addSlideThumb(url, analysisType) {
+    // Remove any processing thumb for this URL
     const strip = document.getElementById('slideStrip');
+    const existing = strip.querySelectorAll('.slide-thumb.processing');
+    existing.forEach(e => e.remove());
     const thumb = document.createElement('div');
     thumb.className = 'slide-thumb';
     thumb.style.backgroundImage = `url(${url})`;
@@ -580,8 +644,11 @@ function addSlideThumb(url, analysisType) {
         thumb.innerHTML = '<div class="badge badge-useful">🧠</div>';
     } else if (analysisType === 'raw') {
         thumb.innerHTML = '<div class="badge badge-raw">📝</div>';
+    } else if (analysisType === 'processing') {
+        // keep it bare for loading state
     }
     strip.appendChild(thumb);
+    return thumb;
 }
 
 // ─── Helpers ─────────────────────────────────────
@@ -618,6 +685,19 @@ function toast(msg, type) {
     el.textContent = msg;
     document.body.appendChild(el);
     setTimeout(() => { el.style.opacity = '0'; setTimeout(() => el.remove(), 300); }, 3000);
+}
+
+// ─── Download ─────────────────────────────────────
+function downloadTranscript() {
+    const allText = [];
+    document.getElementById('box1Body').querySelectorAll('.entry-text').forEach(e => allText.push(e.textContent));
+    if (!allText.length) { toast('Nothing to download', 'error'); return; }
+    const blob = new Blob([allText.join('\n\n')], {type: 'text/plain'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = `transcript-${sessionId || 'lecture'}.txt`;
+    a.click(); URL.revokeObjectURL(url);
+    toast('Downloaded ✓', 'info');
 }
 
 // ─── Init ────────────────────────────────────────
