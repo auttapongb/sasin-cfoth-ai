@@ -164,6 +164,9 @@ body {
 }
 .btn-slide:hover { background: rgba(59,130,246,0.1); }
 .btn-slide:active { transform: scale(0.94); }
+.btn-slide.pdf-upload { border-color: #7C3AED; color: #A78BFA; }
+.btn-slide.pdf-upload:hover { background: rgba(124,58,237,0.15); }
+.btn-slide.pdf-upload.uploading { animation: dotPulse 1s infinite; pointer-events: none; opacity: 0.5; }
 
 /* Toast */
 .toast {
@@ -299,9 +302,11 @@ body {
     <button class="btn-sm primary" id="btnStop" onclick="stopAndSave()" style="display:none">⏹️ Stop</button>
     <button class="btn-sm" id="btnDownload" onclick="downloadTranscript()" style="display:none">📥 Download</button>
     <button class="btn-slide" id="btnSlide" onclick="captureSlide()" title="Capture slide">📸</button>
+    <button class="btn-slide pdf-upload" id="btnPDF" onclick="uploadPDF()" title="Upload PDF to Second Brain">📄</button>
 </div>
 
 <input type="file" id="slideInput" accept="image/*" capture="environment" style="display:none" onchange="handleSlideCapture(this)">
+<input type="file" id="pdfInput" accept=".pdf" multiple style="display:none" onchange="handlePDFUpload(this)">
 
 <!-- ═══ SCRIPTS ═══ -->
 <script>
@@ -683,6 +688,54 @@ async function triggerCoLearner(transcriptChunk, slideContext, elapsedSec) {
         document.getElementById('colearnerStatus').textContent = '';
     }
     colearnerBusy = false;
+}
+
+// ─── PDF Upload ────────────────────────────────────
+function uploadPDF() {
+    document.getElementById('pdfInput').click();
+}
+
+async function handlePDFUpload(input) {
+    if (!input.files || !input.files.length) return;
+    
+    const files = Array.from(input.files);
+    const btn = document.getElementById('btnPDF');
+    btn.classList.add('uploading');
+    
+    let success = 0, fail = 0;
+    
+    for (const file of files) {
+        btn.textContent = '⏳';
+        const form = new FormData();
+        form.append('file', file);
+        form.append('file_type', 'pdf');
+        form.append('title', file.name.replace('.pdf',''));
+        form.append('tags', 'lecture,pdf');
+        
+        try {
+            const resp = await fetch(`${API}/ingest`, { method: 'POST', body: form });
+            const data = await resp.json();
+            if (data.deep_tutor_uploaded) {
+                success++;
+            } else {
+                fail++;
+                console.error('PDF upload failed:', file.name, data.error || data);
+            }
+        } catch(e) {
+            fail++;
+            console.error('PDF upload error:', file.name, e);
+        }
+    }
+    
+    btn.classList.remove('uploading');
+    btn.textContent = '📄';
+    input.value = '';
+    
+    if (fail === 0) {
+        toast(`Uploaded ${success} PDF${success>1?'s':''} to Second Brain`, 'info');
+    } else {
+        toast(`${success} uploaded, ${fail} failed`, 'error');
+    }
 }
 
 // ─── Slide Capture ────────────────────────────────
