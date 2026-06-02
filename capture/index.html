@@ -1859,7 +1859,7 @@ body {
       "shared": []
     }
   ],
-  "updated": "2026-06-03T03:36:53.228076"
+  "updated": "2026-06-03T04:07:31.541419"
 }
 </script>
 </div>
@@ -1986,7 +1986,7 @@ const COLEARNER_COOLDOWN_MS = 30000; // 30 seconds between insights
 
 // ─── Session ──────────────────────────────────────
 async function startSession(title) {
-    title = title || 'Lecture — ' + new Date().toLocaleDateString('en-GB', {day:'numeric',month:'short',year:'numeric'});
+    title = title || '';
     const resp = await fetch(`${API}/sessions`, {
         method: 'POST',
         headers: {'Content-Type': 'application/x-www-form-urlencoded'},
@@ -1994,13 +1994,13 @@ async function startSession(title) {
     });
     const data = await resp.json();
     sessionId = data.session_id;
-    document.getElementById('sessionTitle').textContent = title;
+    document.getElementById('sessionTitle').textContent = data.title || title;
     box1Entries = 0; box2Entries = 0;
     document.getElementById('box1Body').innerHTML = '';
     document.getElementById('box2Body').innerHTML = '';
     document.getElementById('slideStrip').innerHTML = '';
     updateCounts();
-    toast('Session: ' + title, 'info');
+    toast('Session: ' + (data.title || title), 'info');
     return sessionId;
 }
 

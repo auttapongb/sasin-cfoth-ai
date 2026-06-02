@@ -962,8 +962,10 @@ async def list_sessions():
 @app.post("/sessions")
 async def new_session(title: str = Form(""), tags: str = Form("")):
     sid = create_session()
-    if title:
-        db_execute("UPDATE sessions SET title = ?, tags = ? WHERE id = ?", (title, tags, sid))
+    if not title:
+        # Auto-generate timestamped title for same-day disambiguation
+        title = datetime.now().strftime("Lecture — %b %d, %Y %I:%M %p")
+    db_execute("UPDATE sessions SET title = ?, tags = ? WHERE id = ?", (title, tags, sid))
     return {"session_id": sid, "title": title}
 
 
