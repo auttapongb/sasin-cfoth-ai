@@ -524,11 +524,11 @@ async function toggleRecording() {
 
 async function stopAndSave() {
     if (!isRecording) return;
-    isRecording = false;
     if (mediaRecorder) {
         mediaRecorder.stop();
         if (mediaRecorder._stream) mediaRecorder._stream.getTracks().forEach(t => t.stop());
     }
+    isRecording = false;
     clearInterval(timerInterval);
     document.getElementById('btnRecord').className = 'btn-record start';
     document.getElementById('btnIcon').textContent = '🎙️';
