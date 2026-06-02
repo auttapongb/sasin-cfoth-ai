@@ -6,6 +6,7 @@
 <title>Sasin Lecture Capture — Two-Box Study</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:wght@600;700;800&display=swap" rel="stylesheet">
+<script src="https://d3js.org/d3.v7.min.js"></script>
 <style>
 :root {
     --gold: #C9A84C; --gold-light: #E8D48B;
@@ -316,6 +317,56 @@ body {
     .modal-card { width: 95vw; max-height: 80vh; }
     .session-title { max-width: 120px; font-size: 0.7rem; }
 }
+/* ── v5: New Tab Views ── */
+.tab-view {
+    display: none; flex-direction: column; flex: 1; min-height: 0; overflow-y: auto;
+}
+.tab-view.active { display: flex; }
+#briefsView, #flashcardsView, #quizzesView, #audioView, #casesView {
+    background: var(--bg);
+}
+
+/* ── Flashcards ── */
+#flashcardCard {
+    perspective: 1000px;
+}
+#flashcardCard:hover {
+    transform: scale(1.02);
+}
+
+/* ── Modal Overlay ── */
+.modal-overlay {
+    display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.7); z-index: 100;
+    align-items: center; justify-content: center;
+}
+.modal-card {
+    background: var(--card); border: 1px solid var(--gold);
+    border-radius: 16px; padding: 24px; max-width: 500px; width: 90%;
+    max-height: 80vh; overflow-y: auto;
+}
+.modal-header {
+    display: flex; align-items: center; gap: 12px; margin-bottom: 16px;
+}
+.modal-header span { color: var(--gold); font-weight: 600; }
+.modal-close {
+    margin-left: auto; background: none; border: none;
+    color: var(--dim); font-size: 1.2rem; cursor: pointer;
+}
+.modal-body { max-height: 60vh; overflow-y: auto; }
+
+/* ── Responsive Tab Bar ── */
+@media (max-width: 900px) {
+    .tabs { flex-wrap: wrap; gap: 1px; }
+    .tab { font-size: 0.65rem; padding: 4px 8px; }
+}
+@media (max-width: 600px) {
+    .topbar { flex-wrap: wrap; gap: 6px; }
+    .topbar .logo { font-size: 0.9rem; }
+    .btn-sm { font-size: 0.65rem; padding: 4px 10px; }
+    #flashcardCard { min-height: 180px; padding: 20px; }
+    #flashcardFront { font-size: 1rem; }
+}
 </style>
 </head>
 <body>
@@ -328,6 +379,12 @@ body {
     <div class="tabs">
         <button class="tab active" id="tabCapture" onclick="switchTab('capture')">📝 Capture</button>
         <button class="tab" id="tabChat" onclick="switchTab('chat')">💬 Chat</button>
+        <button class="tab" id="tabBrain" onclick="switchTab('brain')">🧠 2nd Brain</button>
+        <button class="tab" id="tabBriefs" onclick="switchTab('briefs')">📋 Briefs</button>
+        <button class="tab" id="tabFlashcards" onclick="switchTab('flashcards')">🃏 Cards</button>
+        <button class="tab" id="tabQuizzes" onclick="switchTab('quizzes')">📝 Quiz</button>
+        <button class="tab" id="tabAudio" onclick="switchTab('audio')">🎧 Audio</button>
+        <button class="tab" id="tabCases" onclick="switchTab('cases')">📊 Cases</button>
     </div>
     <span class="session-title" id="sessionTitle" onclick="renameSession()" title="Click to rename">New Session</span>
     <span class="timer" id="timer">00:00</span>
@@ -335,6 +392,8 @@ body {
     <button class="btn-sm save" onclick="saveCurrentSession()">💾 Save</button>
     <button class="btn-sm" onclick="newSession()">✨ New</button>
     <button class="btn-sm second-brain" id="btnSecondBrain" onclick="pushToSecondBrain()" title="Upload transcript to Second Brain">🧠 2nd Brain</button>
+    <button class="btn-sm" onclick="extractActions()" title="Extract action items">✅ Actions</button>
+    <button class="btn-sm" onclick="showSchedule()" title="Study schedule">📅 Schedule</button>
 </div>
 
 <!-- ═══ CAPTURE VIEW ═══ -->
@@ -404,8 +463,1513 @@ body {
     </div>
 </div>
 
+<!-- ═══ SECOND BRAIN VIEW ═══ -->
+<div id="brainView" class="tab-view" style="display:none;position:relative;flex:1;min-height:0;">
+    <div id="brainSearch" style="position:absolute;top:12px;left:12px;z-index:10;background:rgba(20,20,40,0.95);border:1px solid var(--border);border-radius:10px;padding:8px 14px;">
+        <input type="text" placeholder="🔍 Search concepts, documents..." id="brainSearchInput" style="background:transparent;border:none;color:var(--text);font-size:13px;outline:none;width:240px;font-family:'Inter',sans-serif;" oninput="filterBrainGraph()">
+    </div>
+    <div id="brainInfo" style="position:absolute;top:12px;right:12px;z-index:10;background:rgba(20,20,40,0.95);border:1px solid var(--border);border-radius:10px;padding:12px 16px;max-width:300px;max-height:60vh;overflow-y:auto;font-size:12px;color:var(--dim);">
+        <div style="font-weight:600;color:var(--gold);margin-bottom:8px;">📚 Knowledge Graph</div>
+        <div id="brainDetail" style="line-height:1.6;">Click a node to explore</div>
+        <div id="brainStats" style="margin-top:10px;padding-top:8px;border-top:1px solid var(--border);font-size:11px;"></div>
+    </div>
+    <svg id="brainGraph" style="width:100%;height:100%;background:#0D1117;"></svg>
+    <script id="brainGraphData" type="application/json">
+{
+  "nodes": [
+    {
+      "id": "2026-06-01-test-lecture.enriched.txt",
+      "type": "document",
+      "title": "2026-06-01-test-lecture",
+      "frameworks": [],
+      "topics": [
+        "Finance",
+        "Operations"
+      ],
+      "group": "doc",
+      "related": [],
+      "size": 987,
+      "preview": "---\ntitle: 2026-06-01-test-lecture\ndate: 2026-06-01\ntype: lecture_transcript\nsource: Sasin Capture Server\n---\n\nThis is a test lecture on Financial Accounting.\n\nToday we covered the fundamental accounting equation: Assets = Liabilities + Equity. \nThis equation must always balance and forms the founda"
+    },
+    {
+      "id": "demo_session_001.txt",
+      "type": "document",
+      "title": "Untitled",
+      "frameworks": [
+        "Five Forces",
+        "Porter's Five Forces"
+      ],
+      "topics": [
+        "Marketing",
+        "Operations"
+      ],
+      "group": "doc",
+      "related": [
+        "test_lecture.txt"
+      ],
+      "size": 657,
+      "preview": "# demo_session_001\nTags: lecture,capture\nSource: demo_session_001.txt\nProcessed: 2026-06-02T20:51:55.344047\nType: text\n\nToday we discussed Porter's Five Forces framework. The five forces are: Threat of New Entrants, Bargaining Power of Suppliers, Bargaining Power of Buyers, Threat of Substitutes, an"
+    },
+    {
+      "id": "lecture_20260601_195810.json.txt",
+      "type": "document",
+      "title": "Untitled",
+      "frameworks": [
+        "BCG Matrix"
+      ],
+      "topics": [
+        "Operations"
+      ],
+      "group": "doc",
+      "related": [
+        "test_lecture.txt"
+      ],
+      "size": 349,
+      "preview": "# lecture_20260601_195810.json.txt\nTags: lecture-transcript\nSource: lecture_20260601_195810.json.txt\nProcessed: 2026-06-01T19:58:10.965922\nType: text\n\nBCG Matrix classifies business units into four categories: Stars (high growth high share), Cash Cows (low growth high share), Question Marks (high gr"
+    },
+    {
+      "id": "lecture_20260601_201949.json.txt",
+      "type": "document",
+      "title": "Untitled",
+      "frameworks": [
+        "Ansoff Matrix"
+      ],
+      "topics": [
+        "Operations"
+      ],
+      "group": "doc",
+      "related": [],
+      "size": 274,
+      "preview": "# lecture_20260601_201949.json.txt\nTags: lecture-transcript\nSource: lecture_20260601_201949.json.txt\nProcessed: 2026-06-01T20:19:49.273451\nType: text\n\nAnsoff Matrix has four growth strategies: market penetration, market development, product development, and diversification."
+    },
+    {
+      "id": "lecture_20260601_202021.json.txt",
+      "type": "document",
+      "title": "Untitled",
+      "frameworks": [
+        "PEST",
+        "PESTEL"
+      ],
+      "topics": [
+        "Economics",
+        "Operations",
+        "Strategy"
+      ],
+      "group": "doc",
+      "related": [
+        "test_lecture.txt"
+      ],
+      "size": 342,
+      "preview": "# lecture_20260601_202021.json.txt\nTags: lecture-transcript\nSource: lecture_20260601_202021.json.txt\nProcessed: 2026-06-01T20:20:21.934916\nType: text\n\nPESTEL analysis examines Political, Economic, Social, Technological, Environmental, and Legal factors affecting an industry. It helps strategic plann"
+    },
+    {
+      "id": "lecture_20260601_204040.json.txt",
+      "type": "document",
+      "title": "Untitled",
+      "frameworks": [],
+      "topics": [
+        "Operations"
+      ],
+      "group": "doc",
+      "related": [],
+      "size": 232,
+      "preview": "# lecture_20260601_204040.json.txt\nTags: lecture-transcript\nSource: lecture_20260601_204040.json.txt\nProcessed: 2026-06-01T20:40:40.505961\nType: text\n\nDeepTutor RAG pipeline end-to-end verification test for EMBA 2026 knowledge base."
+    },
+    {
+      "id": "lecture_20260601_212826.json.txt",
+      "type": "document",
+      "title": "Untitled",
+      "frameworks": [],
+      "topics": [
+        "Marketing",
+        "Operations",
+        "Strategy"
+      ],
+      "group": "doc",
+      "related": [],
+      "size": 273,
+      "preview": "# lecture_20260601_212826.json.txt\nTags: lecture-transcript\nSource: lecture_20260601_212826.json.txt\nProcessed: 2026-06-01T21:28:26.485361\nType: text\n\nThis is professor speaking about EMBA marketing strategy and consumer behavior analysis in real-time lecture capture test."
+    },
+    {
+      "id": "lecture_20260601_212931.json.txt",
+      "type": "document",
+      "title": "Untitled",
+      "frameworks": [],
+      "topics": [
+        "Operations"
+      ],
+      "group": "doc",
+      "related": [],
+      "size": 151,
+      "preview": "# lecture_20260601_212931.json.txt\nTags: lecture-transcript\nSource: lecture_20260601_212931.json.txt\nProcessed: 2026-06-01T21:29:31.320048\nType: text"
+    },
+    {
+      "id": "lecture_20260601_213014.json.txt",
+      "type": "document",
+      "title": "Untitled",
+      "frameworks": [],
+      "topics": [
+        "Operations"
+      ],
+      "group": "doc",
+      "related": [],
+      "size": 151,
+      "preview": "# lecture_20260601_213014.json.txt\nTags: lecture-transcript\nSource: lecture_20260601_213014.json.txt\nProcessed: 2026-06-01T21:30:14.171543\nType: text"
+    },
+    {
+      "id": "lecture_20260601_213932.json.txt",
+      "type": "document",
+      "title": "Untitled",
+      "frameworks": [],
+      "topics": [
+        "Marketing",
+        "Operations",
+        "Strategy"
+      ],
+      "group": "doc",
+      "related": [],
+      "size": 194,
+      "preview": "# lecture_20260601_213932.json.txt\nTags: marketing,lecture-4,slides\nSource: lecture_20260601_213932.json.txt\nProcessed: 2026-06-01T21:39:32.743038\nType: text\n\nTest lecture on marketing strategy."
+    },
+    {
+      "id": "lecture_20260601_214121.json.txt",
+      "type": "document",
+      "title": "Untitled",
+      "frameworks": [],
+      "topics": [
+        "Operations"
+      ],
+      "group": "doc",
+      "related": [],
+      "size": 272,
+      "preview": "# lecture_20260601_214121.json.txt\nTags: lecture-transcript\nSource: lecture_20260601_214121.json.txt\nProcessed: 2026-06-01T21:41:22.082303\nType: text\n\nto generate social media campaigns, product images, and even entire websites, and it's as easy as clicking a few buttons."
+    },
+    {
+      "id": "lecture_20260602_083054.enriched.txt",
+      "type": "document",
+      "title": "lecture_20260602_083054",
+      "frameworks": [],
+      "topics": [],
+      "group": "doc",
+      "related": [],
+      "size": 165,
+      "preview": "---\ntitle: lecture_20260602_083054\ndate: 2026-06-02\ntype: lecture_transcript\nsource: Sasin Capture Server\n---\n\nวันนี้ดิวอาชาบอกว่า อันนี้ทั้งหมดที่มีคอร์ส หรือ ที่มี"
+    },
+    {
+      "id": "lecture_20260602_105752.enriched.txt",
+      "type": "document",
+      "title": "lecture_20260602_105752",
+      "frameworks": [],
+      "topics": [],
+      "group": "doc",
+      "related": [],
+      "size": 2053,
+      "preview": "---\ntitle: lecture_20260602_105752\ndate: 2026-06-02\ntype: lecture_transcript\nsource: Sasin Capture Server\n---\n\nอยู่ที่ภูเขา แมมลอทนะคะวันนี้เป็นวันแรกที่เราจะไปเล่นกัน\nเดี๋ยวเราไปกินข้าว แล้วก็เต้นตัว แล้วไปเล่นกันดีกว่า\nอันนี้ก่อนจะพักไลค์\nSo what?\nสวัสดีครับ ผมได้ไปชาติ ไม่เคยอ่านค่ะ ครับ\nThank yo"
+    },
+    {
+      "id": "lecture_20260602_151930.enriched.txt",
+      "type": "document",
+      "title": "lecture_20260602_151930",
+      "frameworks": [],
+      "topics": [],
+      "group": "doc",
+      "related": [],
+      "size": 111,
+      "preview": "---\ntitle: lecture_20260602_151930\ndate: 2026-06-02\ntype: lecture_transcript\nsource: Sasin Capture Server\n---"
+    },
+    {
+      "id": "marketing.txt",
+      "type": "document",
+      "title": "Untitled",
+      "frameworks": [
+        "4Ps",
+        "Marketing Mix",
+        "STP"
+      ],
+      "topics": [
+        "Leadership",
+        "Marketing",
+        "Operations",
+        "Strategy"
+      ],
+      "group": "doc",
+      "related": [],
+      "size": 509,
+      "preview": "# Marketing\nTags: lecture\nSource: marketing.pdf\nProcessed: 2026-06-02T08:05:28.168854\nType: pdf\n\nMarketing Management - Kotler\nThe Marketing Mix (4Ps):\n1. Product - what you offer to customers\n2. Price - what customers pay\n3. Place - where and how customers buy\n4. Promotion - how you communicate val"
+    },
+    {
+      "id": "test.txt",
+      "type": "document",
+      "title": "Untitled",
+      "frameworks": [],
+      "topics": [
+        "Operations"
+      ],
+      "group": "doc",
+      "related": [],
+      "size": 121,
+      "preview": "# Test\nTags: test\nSource: test.txt\nProcessed: 2026-06-01T16:09:02.631882\nType: text\n\nHello EMBA 2026 - Second Brain Test"
+    },
+    {
+      "id": "test_lecture.txt",
+      "type": "document",
+      "title": "Untitled",
+      "frameworks": [
+        "BCG Matrix",
+        "Blue Ocean",
+        "Blue Ocean Strategy",
+        "Five Forces",
+        "PEST",
+        "PESTLE",
+        "Porter Five Forces",
+        "SWOT",
+        "SWOT Analysis"
+      ],
+      "topics": [
+        "Leadership",
+        "Operations",
+        "Strategy"
+      ],
+      "group": "doc",
+      "related": [
+        "demo_session_001.txt",
+        "lecture_20260601_195810.json.txt",
+        "lecture_20260601_202021.json.txt"
+      ],
+      "size": 537,
+      "preview": "# Strategic Management Frameworks\nTags: lecture,strategy\nSource: test_lecture.pdf\nProcessed: 2026-06-02T08:02:58.792817\nType: pdf\n\nSasin EMBA 2026 - Lecture Notes\nTopic: Strategic Management Frameworks\n1. Porter Five Forces - industry competitiveness analysis\n2. SWOT Analysis - internal strengths/we"
+    },
+    {
+      "id": "test_transcript.txt",
+      "type": "document",
+      "title": "Untitled",
+      "frameworks": [
+        "CAPM"
+      ],
+      "topics": [
+        "Finance",
+        "Operations"
+      ],
+      "group": "doc",
+      "related": [],
+      "size": 237,
+      "preview": "# CAPM Test\nTags: lecture,test\nSource: test_transcript.txt\nProcessed: 2026-06-02T07:51:35.502227\nType: text\n\nThe CAPM model calculates expected return as risk-free rate plus beta times market risk premium. Beta measures systematic risk."
+    },
+    {
+      "id": "concept:4Ps",
+      "type": "framework",
+      "title": "4Ps",
+      "docs": [
+        "marketing.txt"
+      ],
+      "group": "framework"
+    },
+    {
+      "id": "concept:Ansoff Matrix",
+      "type": "framework",
+      "title": "Ansoff Matrix",
+      "docs": [
+        "lecture_20260601_201949.json.txt"
+      ],
+      "group": "framework"
+    },
+    {
+      "id": "concept:BCG Matrix",
+      "type": "framework",
+      "title": "BCG Matrix",
+      "docs": [
+        "lecture_20260601_195810.json.txt",
+        "test_lecture.txt"
+      ],
+      "group": "framework"
+    },
+    {
+      "id": "concept:Blue Ocean",
+      "type": "framework",
+      "title": "Blue Ocean",
+      "docs": [
+        "test_lecture.txt"
+      ],
+      "group": "framework"
+    },
+    {
+      "id": "concept:Blue Ocean Strategy",
+      "type": "framework",
+      "title": "Blue Ocean Strategy",
+      "docs": [
+        "test_lecture.txt"
+      ],
+      "group": "framework"
+    },
+    {
+      "id": "concept:CAPM",
+      "type": "framework",
+      "title": "CAPM",
+      "docs": [
+        "test_transcript.txt"
+      ],
+      "group": "framework"
+    },
+    {
+      "id": "concept:Five Forces",
+      "type": "framework",
+      "title": "Five Forces",
+      "docs": [
+        "demo_session_001.txt",
+        "test_lecture.txt"
+      ],
+      "group": "framework"
+    },
+    {
+      "id": "concept:Marketing Mix",
+      "type": "framework",
+      "title": "Marketing Mix",
+      "docs": [
+        "marketing.txt"
+      ],
+      "group": "framework"
+    },
+    {
+      "id": "concept:PEST",
+      "type": "framework",
+      "title": "PEST",
+      "docs": [
+        "lecture_20260601_202021.json.txt",
+        "test_lecture.txt"
+      ],
+      "group": "framework"
+    },
+    {
+      "id": "concept:PESTEL",
+      "type": "framework",
+      "title": "PESTEL",
+      "docs": [
+        "lecture_20260601_202021.json.txt"
+      ],
+      "group": "framework"
+    },
+    {
+      "id": "concept:PESTLE",
+      "type": "framework",
+      "title": "PESTLE",
+      "docs": [
+        "test_lecture.txt"
+      ],
+      "group": "framework"
+    },
+    {
+      "id": "concept:Porter Five Forces",
+      "type": "framework",
+      "title": "Porter Five Forces",
+      "docs": [
+        "test_lecture.txt"
+      ],
+      "group": "framework"
+    },
+    {
+      "id": "concept:Porter's Five Forces",
+      "type": "framework",
+      "title": "Porter's Five Forces",
+      "docs": [
+        "demo_session_001.txt"
+      ],
+      "group": "framework"
+    },
+    {
+      "id": "concept:STP",
+      "type": "framework",
+      "title": "STP",
+      "docs": [
+        "marketing.txt"
+      ],
+      "group": "framework"
+    },
+    {
+      "id": "concept:SWOT",
+      "type": "framework",
+      "title": "SWOT",
+      "docs": [
+        "test_lecture.txt"
+      ],
+      "group": "framework"
+    },
+    {
+      "id": "concept:SWOT Analysis",
+      "type": "framework",
+      "title": "SWOT Analysis",
+      "docs": [
+        "test_lecture.txt"
+      ],
+      "group": "framework"
+    },
+    {
+      "id": "topic:Economics",
+      "type": "topic",
+      "title": "Economics",
+      "docs": [
+        "lecture_20260601_202021.json.txt"
+      ],
+      "group": "topic"
+    },
+    {
+      "id": "topic:Finance",
+      "type": "topic",
+      "title": "Finance",
+      "docs": [
+        "2026-06-01-test-lecture.enriched.txt",
+        "test_transcript.txt"
+      ],
+      "group": "topic"
+    },
+    {
+      "id": "topic:Leadership",
+      "type": "topic",
+      "title": "Leadership",
+      "docs": [
+        "marketing.txt",
+        "test_lecture.txt"
+      ],
+      "group": "topic"
+    },
+    {
+      "id": "topic:Marketing",
+      "type": "topic",
+      "title": "Marketing",
+      "docs": [
+        "demo_session_001.txt",
+        "lecture_20260601_212826.json.txt",
+        "lecture_20260601_213932.json.txt",
+        "marketing.txt"
+      ],
+      "group": "topic"
+    },
+    {
+      "id": "topic:Operations",
+      "type": "topic",
+      "title": "Operations",
+      "docs": [
+        "2026-06-01-test-lecture.enriched.txt",
+        "demo_session_001.txt",
+        "lecture_20260601_195810.json.txt",
+        "lecture_20260601_201949.json.txt",
+        "lecture_20260601_202021.json.txt",
+        "lecture_20260601_204040.json.txt",
+        "lecture_20260601_212826.json.txt",
+        "lecture_20260601_212931.json.txt",
+        "lecture_20260601_213014.json.txt",
+        "lecture_20260601_213932.json.txt",
+        "lecture_20260601_214121.json.txt",
+        "marketing.txt",
+        "test.txt",
+        "test_lecture.txt",
+        "test_transcript.txt"
+      ],
+      "group": "topic"
+    },
+    {
+      "id": "topic:Strategy",
+      "type": "topic",
+      "title": "Strategy",
+      "docs": [
+        "lecture_20260601_202021.json.txt",
+        "lecture_20260601_212826.json.txt",
+        "lecture_20260601_213932.json.txt",
+        "marketing.txt",
+        "test_lecture.txt"
+      ],
+      "group": "topic"
+    }
+  ],
+  "links": [
+    {
+      "source": "marketing.txt",
+      "target": "concept:4Ps",
+      "type": "contains"
+    },
+    {
+      "source": "lecture_20260601_201949.json.txt",
+      "target": "concept:Ansoff Matrix",
+      "type": "contains"
+    },
+    {
+      "source": "lecture_20260601_195810.json.txt",
+      "target": "concept:BCG Matrix",
+      "type": "contains"
+    },
+    {
+      "source": "test_lecture.txt",
+      "target": "concept:BCG Matrix",
+      "type": "contains"
+    },
+    {
+      "source": "test_lecture.txt",
+      "target": "concept:Blue Ocean",
+      "type": "contains"
+    },
+    {
+      "source": "test_lecture.txt",
+      "target": "concept:Blue Ocean Strategy",
+      "type": "contains"
+    },
+    {
+      "source": "test_transcript.txt",
+      "target": "concept:CAPM",
+      "type": "contains"
+    },
+    {
+      "source": "demo_session_001.txt",
+      "target": "concept:Five Forces",
+      "type": "contains"
+    },
+    {
+      "source": "test_lecture.txt",
+      "target": "concept:Five Forces",
+      "type": "contains"
+    },
+    {
+      "source": "marketing.txt",
+      "target": "concept:Marketing Mix",
+      "type": "contains"
+    },
+    {
+      "source": "lecture_20260601_202021.json.txt",
+      "target": "concept:PEST",
+      "type": "contains"
+    },
+    {
+      "source": "test_lecture.txt",
+      "target": "concept:PEST",
+      "type": "contains"
+    },
+    {
+      "source": "lecture_20260601_202021.json.txt",
+      "target": "concept:PESTEL",
+      "type": "contains"
+    },
+    {
+      "source": "test_lecture.txt",
+      "target": "concept:PESTLE",
+      "type": "contains"
+    },
+    {
+      "source": "test_lecture.txt",
+      "target": "concept:Porter Five Forces",
+      "type": "contains"
+    },
+    {
+      "source": "demo_session_001.txt",
+      "target": "concept:Porter's Five Forces",
+      "type": "contains"
+    },
+    {
+      "source": "marketing.txt",
+      "target": "concept:STP",
+      "type": "contains"
+    },
+    {
+      "source": "test_lecture.txt",
+      "target": "concept:SWOT",
+      "type": "contains"
+    },
+    {
+      "source": "test_lecture.txt",
+      "target": "concept:SWOT Analysis",
+      "type": "contains"
+    },
+    {
+      "source": "lecture_20260601_202021.json.txt",
+      "target": "topic:Economics",
+      "type": "belongs_to"
+    },
+    {
+      "source": "2026-06-01-test-lecture.enriched.txt",
+      "target": "topic:Finance",
+      "type": "belongs_to"
+    },
+    {
+      "source": "test_transcript.txt",
+      "target": "topic:Finance",
+      "type": "belongs_to"
+    },
+    {
+      "source": "marketing.txt",
+      "target": "topic:Leadership",
+      "type": "belongs_to"
+    },
+    {
+      "source": "test_lecture.txt",
+      "target": "topic:Leadership",
+      "type": "belongs_to"
+    },
+    {
+      "source": "demo_session_001.txt",
+      "target": "topic:Marketing",
+      "type": "belongs_to"
+    },
+    {
+      "source": "lecture_20260601_212826.json.txt",
+      "target": "topic:Marketing",
+      "type": "belongs_to"
+    },
+    {
+      "source": "lecture_20260601_213932.json.txt",
+      "target": "topic:Marketing",
+      "type": "belongs_to"
+    },
+    {
+      "source": "marketing.txt",
+      "target": "topic:Marketing",
+      "type": "belongs_to"
+    },
+    {
+      "source": "2026-06-01-test-lecture.enriched.txt",
+      "target": "topic:Operations",
+      "type": "belongs_to"
+    },
+    {
+      "source": "demo_session_001.txt",
+      "target": "topic:Operations",
+      "type": "belongs_to"
+    },
+    {
+      "source": "lecture_20260601_195810.json.txt",
+      "target": "topic:Operations",
+      "type": "belongs_to"
+    },
+    {
+      "source": "lecture_20260601_201949.json.txt",
+      "target": "topic:Operations",
+      "type": "belongs_to"
+    },
+    {
+      "source": "lecture_20260601_202021.json.txt",
+      "target": "topic:Operations",
+      "type": "belongs_to"
+    },
+    {
+      "source": "lecture_20260601_204040.json.txt",
+      "target": "topic:Operations",
+      "type": "belongs_to"
+    },
+    {
+      "source": "lecture_20260601_212826.json.txt",
+      "target": "topic:Operations",
+      "type": "belongs_to"
+    },
+    {
+      "source": "lecture_20260601_212931.json.txt",
+      "target": "topic:Operations",
+      "type": "belongs_to"
+    },
+    {
+      "source": "lecture_20260601_213014.json.txt",
+      "target": "topic:Operations",
+      "type": "belongs_to"
+    },
+    {
+      "source": "lecture_20260601_213932.json.txt",
+      "target": "topic:Operations",
+      "type": "belongs_to"
+    },
+    {
+      "source": "lecture_20260601_214121.json.txt",
+      "target": "topic:Operations",
+      "type": "belongs_to"
+    },
+    {
+      "source": "marketing.txt",
+      "target": "topic:Operations",
+      "type": "belongs_to"
+    },
+    {
+      "source": "test.txt",
+      "target": "topic:Operations",
+      "type": "belongs_to"
+    },
+    {
+      "source": "test_lecture.txt",
+      "target": "topic:Operations",
+      "type": "belongs_to"
+    },
+    {
+      "source": "test_transcript.txt",
+      "target": "topic:Operations",
+      "type": "belongs_to"
+    },
+    {
+      "source": "lecture_20260601_202021.json.txt",
+      "target": "topic:Strategy",
+      "type": "belongs_to"
+    },
+    {
+      "source": "lecture_20260601_212826.json.txt",
+      "target": "topic:Strategy",
+      "type": "belongs_to"
+    },
+    {
+      "source": "lecture_20260601_213932.json.txt",
+      "target": "topic:Strategy",
+      "type": "belongs_to"
+    },
+    {
+      "source": "marketing.txt",
+      "target": "topic:Strategy",
+      "type": "belongs_to"
+    },
+    {
+      "source": "test_lecture.txt",
+      "target": "topic:Strategy",
+      "type": "belongs_to"
+    },
+    {
+      "source": "2026-06-01-test-lecture.enriched.txt",
+      "target": "demo_session_001.txt",
+      "type": "related",
+      "shared": []
+    },
+    {
+      "source": "2026-06-01-test-lecture.enriched.txt",
+      "target": "lecture_20260601_195810.json.txt",
+      "type": "related",
+      "shared": []
+    },
+    {
+      "source": "2026-06-01-test-lecture.enriched.txt",
+      "target": "lecture_20260601_201949.json.txt",
+      "type": "related",
+      "shared": []
+    },
+    {
+      "source": "2026-06-01-test-lecture.enriched.txt",
+      "target": "lecture_20260601_202021.json.txt",
+      "type": "related",
+      "shared": []
+    },
+    {
+      "source": "2026-06-01-test-lecture.enriched.txt",
+      "target": "lecture_20260601_204040.json.txt",
+      "type": "related",
+      "shared": []
+    },
+    {
+      "source": "2026-06-01-test-lecture.enriched.txt",
+      "target": "lecture_20260601_212826.json.txt",
+      "type": "related",
+      "shared": []
+    },
+    {
+      "source": "2026-06-01-test-lecture.enriched.txt",
+      "target": "lecture_20260601_212931.json.txt",
+      "type": "related",
+      "shared": []
+    },
+    {
+      "source": "2026-06-01-test-lecture.enriched.txt",
+      "target": "lecture_20260601_213014.json.txt",
+      "type": "related",
+      "shared": []
+    },
+    {
+      "source": "2026-06-01-test-lecture.enriched.txt",
+      "target": "lecture_20260601_213932.json.txt",
+      "type": "related",
+      "shared": []
+    },
+    {
+      "source": "2026-06-01-test-lecture.enriched.txt",
+      "target": "lecture_20260601_214121.json.txt",
+      "type": "related",
+      "shared": []
+    },
+    {
+      "source": "2026-06-01-test-lecture.enriched.txt",
+      "target": "marketing.txt",
+      "type": "related",
+      "shared": []
+    },
+    {
+      "source": "2026-06-01-test-lecture.enriched.txt",
+      "target": "test.txt",
+      "type": "related",
+      "shared": []
+    },
+    {
+      "source": "2026-06-01-test-lecture.enriched.txt",
+      "target": "test_lecture.txt",
+      "type": "related",
+      "shared": []
+    },
+    {
+      "source": "2026-06-01-test-lecture.enriched.txt",
+      "target": "test_transcript.txt",
+      "type": "related",
+      "shared": []
+    },
+    {
+      "source": "demo_session_001.txt",
+      "target": "lecture_20260601_195810.json.txt",
+      "type": "related",
+      "shared": []
+    },
+    {
+      "source": "demo_session_001.txt",
+      "target": "lecture_20260601_201949.json.txt",
+      "type": "related",
+      "shared": []
+    },
+    {
+      "source": "demo_session_001.txt",
+      "target": "lecture_20260601_202021.json.txt",
+      "type": "related",
+      "shared": []
+    },
+    {
+      "source": "demo_session_001.txt",
+      "target": "lecture_20260601_204040.json.txt",
+      "type": "related",
+      "shared": []
+    },
+    {
+      "source": "demo_session_001.txt",
+      "target": "lecture_20260601_212826.json.txt",
+      "type": "related",
+      "shared": []
+    },
+    {
+      "source": "demo_session_001.txt",
+      "target": "lecture_20260601_212931.json.txt",
+      "type": "related",
+      "shared": []
+    },
+    {
+      "source": "demo_session_001.txt",
+      "target": "lecture_20260601_213014.json.txt",
+      "type": "related",
+      "shared": []
+    },
+    {
+      "source": "demo_session_001.txt",
+      "target": "lecture_20260601_213932.json.txt",
+      "type": "related",
+      "shared": []
+    },
+    {
+      "source": "demo_session_001.txt",
+      "target": "lecture_20260601_214121.json.txt",
+      "type": "related",
+      "shared": []
+    },
+    {
+      "source": "demo_session_001.txt",
+      "target": "marketing.txt",
+      "type": "related",
+      "shared": []
+    },
+    {
+      "source": "demo_session_001.txt",
+      "target": "test.txt",
+      "type": "related",
+      "shared": []
+    },
+    {
+      "source": "demo_session_001.txt",
+      "target": "test_lecture.txt",
+      "type": "related",
+      "shared": [
+        "Five Forces"
+      ]
+    },
+    {
+      "source": "demo_session_001.txt",
+      "target": "test_transcript.txt",
+      "type": "related",
+      "shared": []
+    },
+    {
+      "source": "lecture_20260601_195810.json.txt",
+      "target": "lecture_20260601_201949.json.txt",
+      "type": "related",
+      "shared": []
+    },
+    {
+      "source": "lecture_20260601_195810.json.txt",
+      "target": "lecture_20260601_202021.json.txt",
+      "type": "related",
+      "shared": []
+    },
+    {
+      "source": "lecture_20260601_195810.json.txt",
+      "target": "lecture_20260601_204040.json.txt",
+      "type": "related",
+      "shared": []
+    },
+    {
+      "source": "lecture_20260601_195810.json.txt",
+      "target": "lecture_20260601_212826.json.txt",
+      "type": "related",
+      "shared": []
+    },
+    {
+      "source": "lecture_20260601_195810.json.txt",
+      "target": "lecture_20260601_212931.json.txt",
+      "type": "related",
+      "shared": []
+    },
+    {
+      "source": "lecture_20260601_195810.json.txt",
+      "target": "lecture_20260601_213014.json.txt",
+      "type": "related",
+      "shared": []
+    },
+    {
+      "source": "lecture_20260601_195810.json.txt",
+      "target": "lecture_20260601_213932.json.txt",
+      "type": "related",
+      "shared": []
+    },
+    {
+      "source": "lecture_20260601_195810.json.txt",
+      "target": "lecture_20260601_214121.json.txt",
+      "type": "related",
+      "shared": []
+    },
+    {
+      "source": "lecture_20260601_195810.json.txt",
+      "target": "marketing.txt",
+      "type": "related",
+      "shared": []
+    },
+    {
+      "source": "lecture_20260601_195810.json.txt",
+      "target": "test.txt",
+      "type": "related",
+      "shared": []
+    },
+    {
+      "source": "lecture_20260601_195810.json.txt",
+      "target": "test_lecture.txt",
+      "type": "related",
+      "shared": [
+        "BCG Matrix"
+      ]
+    },
+    {
+      "source": "lecture_20260601_195810.json.txt",
+      "target": "test_transcript.txt",
+      "type": "related",
+      "shared": []
+    },
+    {
+      "source": "lecture_20260601_201949.json.txt",
+      "target": "lecture_20260601_202021.json.txt",
+      "type": "related",
+      "shared": []
+    },
+    {
+      "source": "lecture_20260601_201949.json.txt",
+      "target": "lecture_20260601_204040.json.txt",
+      "type": "related",
+      "shared": []
+    },
+    {
+      "source": "lecture_20260601_201949.json.txt",
+      "target": "lecture_20260601_212826.json.txt",
+      "type": "related",
+      "shared": []
+    },
+    {
+      "source": "lecture_20260601_201949.json.txt",
+      "target": "lecture_20260601_212931.json.txt",
+      "type": "related",
+      "shared": []
+    },
+    {
+      "source": "lecture_20260601_201949.json.txt",
+      "target": "lecture_20260601_213014.json.txt",
+      "type": "related",
+      "shared": []
+    },
+    {
+      "source": "lecture_20260601_201949.json.txt",
+      "target": "lecture_20260601_213932.json.txt",
+      "type": "related",
+      "shared": []
+    },
+    {
+      "source": "lecture_20260601_201949.json.txt",
+      "target": "lecture_20260601_214121.json.txt",
+      "type": "related",
+      "shared": []
+    },
+    {
+      "source": "lecture_20260601_201949.json.txt",
+      "target": "marketing.txt",
+      "type": "related",
+      "shared": []
+    },
+    {
+      "source": "lecture_20260601_201949.json.txt",
+      "target": "test.txt",
+      "type": "related",
+      "shared": []
+    },
+    {
+      "source": "lecture_20260601_201949.json.txt",
+      "target": "test_lecture.txt",
+      "type": "related",
+      "shared": []
+    },
+    {
+      "source": "lecture_20260601_201949.json.txt",
+      "target": "test_transcript.txt",
+      "type": "related",
+      "shared": []
+    },
+    {
+      "source": "lecture_20260601_202021.json.txt",
+      "target": "lecture_20260601_204040.json.txt",
+      "type": "related",
+      "shared": []
+    },
+    {
+      "source": "lecture_20260601_202021.json.txt",
+      "target": "lecture_20260601_212826.json.txt",
+      "type": "related",
+      "shared": []
+    },
+    {
+      "source": "lecture_20260601_202021.json.txt",
+      "target": "lecture_20260601_212931.json.txt",
+      "type": "related",
+      "shared": []
+    },
+    {
+      "source": "lecture_20260601_202021.json.txt",
+      "target": "lecture_20260601_213014.json.txt",
+      "type": "related",
+      "shared": []
+    },
+    {
+      "source": "lecture_20260601_202021.json.txt",
+      "target": "lecture_20260601_213932.json.txt",
+      "type": "related",
+      "shared": []
+    },
+    {
+      "source": "lecture_20260601_202021.json.txt",
+      "target": "lecture_20260601_214121.json.txt",
+      "type": "related",
+      "shared": []
+    },
+    {
+      "source": "lecture_20260601_202021.json.txt",
+      "target": "marketing.txt",
+      "type": "related",
+      "shared": []
+    },
+    {
+      "source": "lecture_20260601_202021.json.txt",
+      "target": "test.txt",
+      "type": "related",
+      "shared": []
+    },
+    {
+      "source": "lecture_20260601_202021.json.txt",
+      "target": "test_lecture.txt",
+      "type": "related",
+      "shared": [
+        "PEST"
+      ]
+    },
+    {
+      "source": "lecture_20260601_202021.json.txt",
+      "target": "test_transcript.txt",
+      "type": "related",
+      "shared": []
+    },
+    {
+      "source": "lecture_20260601_204040.json.txt",
+      "target": "lecture_20260601_212826.json.txt",
+      "type": "related",
+      "shared": []
+    },
+    {
+      "source": "lecture_20260601_204040.json.txt",
+      "target": "lecture_20260601_212931.json.txt",
+      "type": "related",
+      "shared": []
+    },
+    {
+      "source": "lecture_20260601_204040.json.txt",
+      "target": "lecture_20260601_213014.json.txt",
+      "type": "related",
+      "shared": []
+    },
+    {
+      "source": "lecture_20260601_204040.json.txt",
+      "target": "lecture_20260601_213932.json.txt",
+      "type": "related",
+      "shared": []
+    },
+    {
+      "source": "lecture_20260601_204040.json.txt",
+      "target": "lecture_20260601_214121.json.txt",
+      "type": "related",
+      "shared": []
+    },
+    {
+      "source": "lecture_20260601_204040.json.txt",
+      "target": "marketing.txt",
+      "type": "related",
+      "shared": []
+    },
+    {
+      "source": "lecture_20260601_204040.json.txt",
+      "target": "test.txt",
+      "type": "related",
+      "shared": []
+    },
+    {
+      "source": "lecture_20260601_204040.json.txt",
+      "target": "test_lecture.txt",
+      "type": "related",
+      "shared": []
+    },
+    {
+      "source": "lecture_20260601_204040.json.txt",
+      "target": "test_transcript.txt",
+      "type": "related",
+      "shared": []
+    },
+    {
+      "source": "lecture_20260601_212826.json.txt",
+      "target": "lecture_20260601_212931.json.txt",
+      "type": "related",
+      "shared": []
+    },
+    {
+      "source": "lecture_20260601_212826.json.txt",
+      "target": "lecture_20260601_213014.json.txt",
+      "type": "related",
+      "shared": []
+    },
+    {
+      "source": "lecture_20260601_212826.json.txt",
+      "target": "lecture_20260601_213932.json.txt",
+      "type": "related",
+      "shared": []
+    },
+    {
+      "source": "lecture_20260601_212826.json.txt",
+      "target": "lecture_20260601_214121.json.txt",
+      "type": "related",
+      "shared": []
+    },
+    {
+      "source": "lecture_20260601_212826.json.txt",
+      "target": "marketing.txt",
+      "type": "related",
+      "shared": []
+    },
+    {
+      "source": "lecture_20260601_212826.json.txt",
+      "target": "test.txt",
+      "type": "related",
+      "shared": []
+    },
+    {
+      "source": "lecture_20260601_212826.json.txt",
+      "target": "test_lecture.txt",
+      "type": "related",
+      "shared": []
+    },
+    {
+      "source": "lecture_20260601_212826.json.txt",
+      "target": "test_transcript.txt",
+      "type": "related",
+      "shared": []
+    },
+    {
+      "source": "lecture_20260601_212931.json.txt",
+      "target": "lecture_20260601_213014.json.txt",
+      "type": "related",
+      "shared": []
+    },
+    {
+      "source": "lecture_20260601_212931.json.txt",
+      "target": "lecture_20260601_213932.json.txt",
+      "type": "related",
+      "shared": []
+    },
+    {
+      "source": "lecture_20260601_212931.json.txt",
+      "target": "lecture_20260601_214121.json.txt",
+      "type": "related",
+      "shared": []
+    },
+    {
+      "source": "lecture_20260601_212931.json.txt",
+      "target": "marketing.txt",
+      "type": "related",
+      "shared": []
+    },
+    {
+      "source": "lecture_20260601_212931.json.txt",
+      "target": "test.txt",
+      "type": "related",
+      "shared": []
+    },
+    {
+      "source": "lecture_20260601_212931.json.txt",
+      "target": "test_lecture.txt",
+      "type": "related",
+      "shared": []
+    },
+    {
+      "source": "lecture_20260601_212931.json.txt",
+      "target": "test_transcript.txt",
+      "type": "related",
+      "shared": []
+    },
+    {
+      "source": "lecture_20260601_213014.json.txt",
+      "target": "lecture_20260601_213932.json.txt",
+      "type": "related",
+      "shared": []
+    },
+    {
+      "source": "lecture_20260601_213014.json.txt",
+      "target": "lecture_20260601_214121.json.txt",
+      "type": "related",
+      "shared": []
+    },
+    {
+      "source": "lecture_20260601_213014.json.txt",
+      "target": "marketing.txt",
+      "type": "related",
+      "shared": []
+    },
+    {
+      "source": "lecture_20260601_213014.json.txt",
+      "target": "test.txt",
+      "type": "related",
+      "shared": []
+    },
+    {
+      "source": "lecture_20260601_213014.json.txt",
+      "target": "test_lecture.txt",
+      "type": "related",
+      "shared": []
+    },
+    {
+      "source": "lecture_20260601_213014.json.txt",
+      "target": "test_transcript.txt",
+      "type": "related",
+      "shared": []
+    },
+    {
+      "source": "lecture_20260601_213932.json.txt",
+      "target": "lecture_20260601_214121.json.txt",
+      "type": "related",
+      "shared": []
+    },
+    {
+      "source": "lecture_20260601_213932.json.txt",
+      "target": "marketing.txt",
+      "type": "related",
+      "shared": []
+    },
+    {
+      "source": "lecture_20260601_213932.json.txt",
+      "target": "test.txt",
+      "type": "related",
+      "shared": []
+    },
+    {
+      "source": "lecture_20260601_213932.json.txt",
+      "target": "test_lecture.txt",
+      "type": "related",
+      "shared": []
+    },
+    {
+      "source": "lecture_20260601_213932.json.txt",
+      "target": "test_transcript.txt",
+      "type": "related",
+      "shared": []
+    },
+    {
+      "source": "lecture_20260601_214121.json.txt",
+      "target": "marketing.txt",
+      "type": "related",
+      "shared": []
+    },
+    {
+      "source": "lecture_20260601_214121.json.txt",
+      "target": "test.txt",
+      "type": "related",
+      "shared": []
+    },
+    {
+      "source": "lecture_20260601_214121.json.txt",
+      "target": "test_lecture.txt",
+      "type": "related",
+      "shared": []
+    },
+    {
+      "source": "lecture_20260601_214121.json.txt",
+      "target": "test_transcript.txt",
+      "type": "related",
+      "shared": []
+    },
+    {
+      "source": "marketing.txt",
+      "target": "test.txt",
+      "type": "related",
+      "shared": []
+    },
+    {
+      "source": "marketing.txt",
+      "target": "test_lecture.txt",
+      "type": "related",
+      "shared": []
+    },
+    {
+      "source": "marketing.txt",
+      "target": "test_transcript.txt",
+      "type": "related",
+      "shared": []
+    },
+    {
+      "source": "test.txt",
+      "target": "test_lecture.txt",
+      "type": "related",
+      "shared": []
+    },
+    {
+      "source": "test.txt",
+      "target": "test_transcript.txt",
+      "type": "related",
+      "shared": []
+    },
+    {
+      "source": "test_lecture.txt",
+      "target": "test_transcript.txt",
+      "type": "related",
+      "shared": []
+    }
+  ],
+  "updated": "2026-06-03T03:05:38.977171"
+}
+</script>
+</div>
+
 <input type="file" id="slideInput" accept="image/*" capture="environment" style="display:none" onchange="handleSlideCapture(this)">
 <input type="file" id="pdfInput" accept=".pdf" multiple style="display:none" onchange="handlePDFUpload(this)">
+
+<!-- ═══ v5 NEW VIEWS ═══ -->
+
+<!-- ═══ BRIEFS VIEW ═══ -->
+<div id="briefsView" class="tab-view" style="display:none;flex-direction:column;flex:1;min-height:0;overflow-y:auto;">
+<div style="padding:16px;display:flex;gap:12px;align-items:center;border-bottom:1px solid var(--border);">
+<h2 style="color:var(--gold);font-family:'Playfair Display',serif;margin:0;">📋 Executive Briefs</h2>
+<button class="btn-sm primary" onclick="generateBrief()" style="margin-left:auto;">+ New Brief</button>
+</div>
+<div style="padding:12px;display:flex;gap:8px;flex-wrap:wrap;">
+<input id="briefTopic" placeholder="Topic (optional, uses current session)" style="flex:1;min-width:200px;background:var(--bg);border:1px solid var(--border);color:var(--text);padding:6px 12px;border-radius:8px;font-family:Inter;font-size:0.8rem;">
+<select id="briefTemplate" style="background:var(--bg);border:1px solid var(--border);color:var(--text);padding:6px 12px;border-radius:8px;font-size:0.8rem;"><option value="">No template</option></select>
+</div>
+<div id="briefsList" style="padding:8px 16px;display:flex;flex-direction:column;gap:8px;"></div>
+<div id="briefContent" style="display:none;padding:16px;margin:8px 16px;background:var(--card);border:1px solid var(--border);border-radius:12px;white-space:pre-wrap;font-size:0.85rem;line-height:1.6;"></div>
+</div>
+
+<!-- ═══ FLASHCARDS VIEW ═══ -->
+<div id="flashcardsView" class="tab-view" style="display:none;flex-direction:column;flex:1;min-height:0;overflow-y:auto;">
+<div style="padding:16px;display:flex;gap:12px;align-items:center;border-bottom:1px solid var(--border);">
+<h2 style="color:var(--gold);font-family:'Playfair Display',serif;margin:0;">🃏 Spaced Repetition</h2>
+<div style="margin-left:auto;display:flex;gap:8px;">
+<span id="flashcardStats" style="font-size:0.75rem;color:var(--dim);"></span>
+<button class="btn-sm" onclick="generateFlashcards()">+ Generate</button>
+<button class="btn-sm primary" onclick="reviewFlashcards()">Review Due</button>
+</div>
+</div>
+<div id="flashcardReview" style="display:none;flex-direction:column;align-items:center;justify-content:center;flex:1;padding:24px;">
+<div id="flashcardCard" style="width:100%;max-width:500px;min-height:250px;background:var(--card);border:2px solid var(--gold);border-radius:16px;padding:32px;text-align:center;cursor:pointer;transition:transform 0.3s;display:flex;align-items:center;justify-content:center;flex-direction:column;">
+<div id="flashcardFront" style="font-size:1.15rem;font-weight:600;line-height:1.5;"></div>
+<div id="flashcardBack" style="display:none;font-size:0.95rem;color:var(--dim);margin-top:16px;line-height:1.5;"></div>
+<div id="flashcardSource" style="display:none;font-size:0.7rem;color:var(--dim);margin-top:12px;font-style:italic;"></div>
+</div>
+<div id="flashcardActions" style="display:none;margin-top:20px;display:flex;gap:12px;flex-wrap:wrap;justify-content:center;">
+<button class="btn-sm" onclick="rateFlashcard(1)" style="border-color:#E85D3A;color:#E85D3A;">Again (1d)</button>
+<button class="btn-sm" onclick="rateFlashcard(2)" style="border-color:#F59E0B;color:#F59E0B;">Hard (3d)</button>
+<button class="btn-sm" onclick="rateFlashcard(3)" style="border-color:#4CAF50;color:#4CAF50;">Good (7d)</button>
+<button class="btn-sm" onclick="rateFlashcard(4)" style="border-color:#3B82F6;color:#3B82F6;">Easy (30d)</button>
+</div>
+<div id="flashcardDone" style="display:none;text-align:center;padding:48px;color:var(--gold);font-size:1.2rem;">🎉 All caught up! No cards due.</div>
+</div>
+<div id="flashcardsList" style="padding:8px 16px;display:flex;flex-direction:column;gap:4px;"></div>
+</div>
+
+<!-- ═══ QUIZZES VIEW ═══ -->
+<div id="quizzesView" class="tab-view" style="display:none;flex-direction:column;flex:1;min-height:0;overflow-y:auto;">
+<div style="padding:16px;display:flex;gap:12px;align-items:center;border-bottom:1px solid var(--border);">
+<h2 style="color:var(--gold);font-family:'Playfair Display',serif;margin:0;">📝 Quizzes</h2>
+<button class="btn-sm primary" onclick="generateQuiz()" style="margin-left:auto;">+ Generate Quiz</button>
+</div>
+<div style="padding:8px 16px;display:flex;gap:8px;">
+<select id="quizType" style="background:var(--bg);border:1px solid var(--border);color:var(--text);padding:6px 12px;border-radius:8px;font-size:0.8rem;">
+<option value="mcq">Multiple Choice</option>
+<option value="short">Short Answer</option>
+<option value="mixed">Mixed</option></select>
+<select id="quizCount" style="background:var(--bg);border:1px solid var(--border);color:var(--text);padding:6px 12px;border-radius:8px;font-size:0.8rem;">
+<option value="5">5 questions</option><option value="10" selected>10 questions</option><option value="15">15 questions</option></select>
+</div>
+<div id="quizList" style="padding:8px 16px;display:flex;flex-direction:column;gap:8px;"></div>
+<div id="quizTaker" style="display:none;flex:1;overflow-y:auto;padding:16px;"></div>
+</div>
+
+<!-- ═══ AUDIO VIEW ═══ -->
+<div id="audioView" class="tab-view" style="display:none;flex-direction:column;flex:1;min-height:0;overflow-y:auto;">
+<div style="padding:16px;display:flex;gap:12px;align-items:center;border-bottom:1px solid var(--border);">
+<h2 style="color:var(--gold);font-family:'Playfair Display',serif;margin:0;">🎧 Audio Overviews</h2>
+<button class="btn-sm primary" onclick="generateAudio()" style="margin-left:auto;">+ Generate Podcast</button>
+</div>
+<div style="padding:8px 16px;display:flex;gap:8px;">
+<select id="audioStyle" style="background:var(--bg);border:1px solid var(--border);color:var(--text);padding:6px 12px;border-radius:8px;font-size:0.8rem;">
+<option value="podcast">Podcast (2 hosts)</option><option value="summary">Summary</option><option value="lecture">Lecture Notes</option></select>
+</div>
+<div id="audioList" style="padding:8px 16px;display:flex;flex-direction:column;gap:8px;"></div>
+<div id="audioPlayer" style="display:none;padding:16px;background:var(--card);margin:8px 16px;border-radius:12px;border:1px solid var(--border);"></div>
+</div>
+
+<!-- ═══ CASES VIEW ═══ -->
+<div id="casesView" class="tab-view" style="display:none;flex-direction:column;flex:1;min-height:0;overflow-y:auto;">
+<div style="padding:16px;display:flex;gap:12px;align-items:center;border-bottom:1px solid var(--border);">
+<h2 style="color:var(--gold);font-family:'Playfair Display',serif;margin:0;">📊 Case Studies</h2>
+<button class="btn-sm primary" onclick="analyzeCase()" style="margin-left:auto;">+ New Analysis</button>
+</div>
+<div style="padding:8px 16px;display:flex;gap:8px;flex-wrap:wrap;">
+<input id="caseCompany" placeholder="Company name" style="flex:1;min-width:150px;background:var(--bg);border:1px solid var(--border);color:var(--text);padding:6px 12px;border-radius:8px;font-size:0.8rem;">
+<input id="caseIndustry" placeholder="Industry" style="flex:1;min-width:120px;background:var(--bg);border:1px solid var(--border);color:var(--text);padding:6px 12px;border-radius:8px;font-size:0.8rem;">
+</div>
+<div id="casesList" style="padding:8px 16px;display:flex;flex-direction:column;gap:8px;"></div>
+<div id="caseContent" style="display:none;padding:16px;margin:8px 16px;background:var(--card);border:1px solid var(--border);border-radius:12px;white-space:pre-wrap;font-size:0.85rem;line-height:1.6;"></div>
+</div>
+
+<!-- ═══ MODALS ═══ -->
+<div id="scheduleModal" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.7);z-index:100;align-items:center;justify-content:center;">
+<div style="background:var(--card);border:1px solid var(--gold);border-radius:16px;padding:24px;max-width:400px;width:90%;max-height:80vh;overflow-y:auto;">
+<h3 style="color:var(--gold);margin-bottom:12px;">📅 Study Schedule</h3>
+<div id="scheduleContent"></div>
+<button class="btn-sm" onclick="document.getElementById('scheduleModal').style.display='none'" style="margin-top:16px;">Close</button>
+</div></div>
+
+<div id="actionModal" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.7);z-index:100;align-items:center;justify-content:center;">
+<div style="background:var(--card);border:1px solid var(--gold);border-radius:16px;padding:24px;max-width:500px;width:90%;max-height:80vh;overflow-y:auto;">
+<h3 style="color:var(--gold);margin-bottom:12px;">✅ Action Items</h3>
+<div id="actionContent"></div>
+<button class="btn-sm" onclick="document.getElementById('actionModal').style.display='none'" style="margin-top:16px;">Close</button>
+</div></div>
+
 
 <!-- ═══ SCRIPTS ═══ -->
 <script>
@@ -1128,17 +2692,36 @@ function downloadTranscript() {
 // ─── Tab Switching ────────────────────────────────
 function switchTab(tab) {
     document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-    document.getElementById('tab' + tab.charAt(0).toUpperCase() + tab.slice(1)).classList.add('active');
+    const tabId = 'tab' + tab.charAt(0).toUpperCase() + tab.slice(1);
+    const el = document.getElementById(tabId);
+    if (el) el.classList.add('active');
+    // Hide all views
+    ['captureView','chatView','brainView','briefsView','flashcardsView','quizzesView','audioView','casesView'].forEach(id => {
+        const v = document.getElementById(id);
+        if (!v) return;
+        if (id === 'chatView') v.classList.toggle('active', tab === 'chat');
+        else v.style.display = (id === tab + 'View' || (tab==='chat' && id==='chatView') || (tab==='brain' && id==='brainView')) ? '' : 'none';
+    });
+    // Fix: explicit view visibility
     document.getElementById('captureView').style.display = tab === 'capture' ? '' : 'none';
     document.getElementById('chatView').classList.toggle('active', tab === 'chat');
-    if (tab === 'chat') {
-        document.getElementById('slideStrip').style.display = 'none';
-        document.querySelector('.bottombar').style.display = 'none';
-        document.getElementById('chatInput').focus();
-    } else {
-        document.getElementById('slideStrip').style.display = '';
-        document.querySelector('.bottombar').style.display = '';
-    }
+    document.getElementById('brainView').style.display = tab === 'brain' ? 'flex' : 'none';
+    document.getElementById('briefsView').style.display = tab === 'briefs' ? 'flex' : 'none';
+    document.getElementById('flashcardsView').style.display = tab === 'flashcards' ? 'flex' : 'none';
+    document.getElementById('quizzesView').style.display = tab === 'quizzes' ? 'flex' : 'none';
+    document.getElementById('audioView').style.display = tab === 'audio' ? 'flex' : 'none';
+    document.getElementById('casesView').style.display = tab === 'cases' ? 'flex' : 'none';
+    // Show/hide capture controls
+    const isCapture = tab === 'capture';
+    document.getElementById('slideStrip').style.display = isCapture ? '' : 'none';
+    document.querySelector('.bottombar').style.display = isCapture ? '' : 'none';
+    if (tab === 'chat') document.getElementById('chatInput').focus();
+    if (tab === 'brain' && !window._brainGraphInited) { window._brainGraphInited = true; initBrainGraph(); }
+    if (tab === 'briefs') loadBriefs();
+    if (tab === 'flashcards') { loadFlashcardStats(); loadFlashcardsList(); }
+    if (tab === 'quizzes') loadQuizzes();
+    if (tab === 'audio') loadAudioOverviews();
+    if (tab === 'cases') loadCases();
 }
 
 // ─── Chat ─────────────────────────────────────────
@@ -1198,6 +2781,541 @@ document.addEventListener('DOMContentLoaded', () => {
         if (e.key === 'Escape' && isRecording) stopAndSave();
     });
 });
+
+// ─── Second Brain Graph ─────────────────────────
+let brainSim = null;
+
+function initBrainGraph() {
+    const scriptEl = document.getElementById('brainGraphData');
+    if (!scriptEl) return;
+    try {
+        const graphData = JSON.parse(scriptEl.textContent.trim());
+        if (graphData.placeholder) return;
+        renderBrainGraph(graphData);
+        document.getElementById('brainStats').textContent = 
+            `${graphData.nodes.filter(n=>n.group==='doc').length} docs · ${graphData.nodes.filter(n=>n.group==='framework').length} frameworks · ${graphData.nodes.filter(n=>n.group==='topic').length} topics · ${graphData.links.filter(l=>l.type==='related').length} cross-links · Updated: ${graphData.updated||'?'}`;
+    } catch(e) { console.error('Brain graph parse error:', e); }
+}
+
+function renderBrainGraph(data) {
+    const svg = d3.select('#brainGraph');
+    svg.selectAll('*').remove();
+    const W = svg.node().clientWidth, H = svg.node().clientHeight;
+    const g = svg.append('g');
+    svg.call(d3.zoom().scaleExtent([0.1, 4]).on('zoom', (e) => g.attr('transform', e.transform)));
+
+    const colors = { doc: '#818cf8', framework: '#60a5fa', topic: '#4ade80' };
+    const sim = d3.forceSimulation(data.nodes)
+        .force('link', d3.forceLink(data.links).id(d => d.id).distance(100))
+        .force('charge', d3.forceManyBody().strength(-180))
+        .force('center', d3.forceCenter(W/2, H/2))
+        .force('collision', d3.forceCollide().radius(25));
+    brainSim = sim;
+
+    const link = g.append('g').selectAll('line')
+        .data(data.links).join('line')
+        .attr('stroke', d => d.type === 'related' ? 'rgba(251,191,36,0.2)' : 'rgba(148,163,184,0.12)')
+        .attr('stroke-width', d => d.type === 'related' ? 1.2 : 0.6)
+        .attr('stroke-dasharray', d => d.type === 'related' ? '3,2' : 'none');
+
+    const node = g.append('g').selectAll('g')
+        .data(data.nodes).join('g').attr('class','brain-node').style('cursor','pointer')
+        .call(d3.drag().on('start',(e,d)=>{if(!e.active)sim.alphaTarget(0.3).restart();d.fx=d.x;d.fy=d.y;})
+            .on('drag',(e,d)=>{d.fx=e.x;d.fy=e.y;})
+            .on('end',(e,d)=>{if(!e.active)sim.alphaTarget(0);d.fx=null;d.fy=null;}));
+
+    node.append('circle').attr('r', d => d.group==='doc' ? Math.max(5,Math.min(16,(d.size||100)/200)) : 7)
+        .attr('fill', d => colors[d.group]||'#64748b').attr('stroke','#1e293b').attr('stroke-width',1.5);
+
+    node.append('text').text(d => (d.title||'').length > 22 ? d.title.slice(0,22)+'…' : d.title||'')
+        .attr('dx',10).attr('dy',4).attr('fill','#94a3b8').attr('font-size','10px');
+
+    node.on('click', (e, d) => showBrainDetail(d, data));
+    node.on('mouseenter', (e, d) => {
+        const connected = new Set();
+        data.links.forEach(l => { if(l.source.id===d.id||l.target.id===d.id) connected.add(l.source.id===d.id?l.target.id:l.source.id); });
+        node.style('opacity', n => connected.has(n.id)||n.id===d.id ? 1 : 0.15);
+        link.style('opacity', l => l.source.id===d.id||l.target.id===d.id ? 0.7 : 0.03);
+    });
+    node.on('mouseleave', () => { node.style('opacity',1); link.style('opacity', d => d.type==='related'?0.3:0.5); });
+
+    sim.on('tick', () => {
+        link.attr('x1',d=>d.source.x).attr('y1',d=>d.source.y).attr('x2',d=>d.target.x).attr('y2',d=>d.target.y);
+        node.attr('transform', d => `translate(${d.x},${d.y})`);
+    });
+}
+
+function showBrainDetail(d, data) {
+    const el = document.getElementById('brainDetail');
+    if (d.group === 'doc') {
+        let h = `<div style="color:var(--gold);font-weight:600;margin-bottom:4px;">📄 ${d.title || d.id}</div>`;
+        h += `<div style="font-size:10px;color:var(--dim);margin-bottom:6px;">${d.id}</div>`;
+        if (d.frameworks && d.frameworks.length) {
+            h += '<div style="font-size:10px;color:var(--dim);margin-top:6px;">Frameworks:</div>';
+            h += d.frameworks.map(f => `<span style="display:inline-block;margin:2px;padding:2px 7px;border-radius:10px;font-size:10px;background:rgba(59,130,246,0.15);color:#60a5fa;">${f}</span>`).join('');
+        }
+        if (d.topics && d.topics.length) {
+            h += '<div style="font-size:10px;color:var(--dim);margin-top:6px;">Topics:</div>';
+            h += d.topics.map(t => `<span style="display:inline-block;margin:2px;padding:2px 7px;border-radius:10px;font-size:10px;background:rgba(34,197,94,0.15);color:#4ade80;">${t}</span>`).join('');
+        }
+        if (d.preview) {
+            h += `<div style="margin-top:8px;padding:8px;background:rgba(255,255,255,0.03);border-radius:6px;font-size:11px;color:var(--dim);max-height:120px;overflow-y:auto;white-space:pre-wrap;">${escapeHtml(d.preview.slice(0,300))}</div>`;
+        }
+        if (d.related && d.related.length) {
+            h += `<div style="font-size:10px;color:var(--dim);margin-top:8px;">🔗 Related docs (${d.related.length}):</div>`;
+            h += d.related.slice(0,10).map(r => {
+                const rn = r.length > 30 ? r.slice(0,30)+'…' : r;
+                return `<div style="font-size:10px;margin:2px 0;cursor:pointer;color:#c084fc;" onclick="openDocInChat('${escapeHtml(r)}')">📄 ${escapeHtml(rn)}</div>`;
+            }).join('');
+        }
+        h += `<div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap;">
+            <button onclick="openDocInChat('${escapeHtml(d.id)}')" style="background:var(--gold);color:#000;border:none;padding:4px 12px;border-radius:6px;font-size:11px;cursor:pointer;font-weight:600;">🔍 Chat</button>
+            <button onclick="window.open('http://185.218.125.121:8400/download/emba-2026/'+encodeURIComponent('${escapeHtml(d.id)}'), '_blank')" style="background:rgba(59,130,246,0.2);color:#60a5fa;border:1px solid rgba(59,130,246,0.3);padding:4px 12px;border-radius:6px;font-size:11px;cursor:pointer;font-weight:600;">📥 Download</button>
+        </div>`;
+        el.innerHTML = h;
+    } else if (d.group === 'framework') {
+        let h = `<div style="color:#60a5fa;font-weight:600;margin-bottom:6px;">🔷 ${d.title}</div>`;
+        h += `<div style="font-size:10px;color:var(--dim);margin-bottom:8px;">Appears in ${(d.docs||[]).length} document(s):</div>`;
+        (d.docs||[]).forEach(doc => {
+            const dn = doc.length > 35 ? doc.slice(0,35)+'…' : doc;
+            h += `<div style="font-size:10px;margin:3px 0;cursor:pointer;color:#c084fc;padding:2px 4px;border-radius:4px;" onclick="openDocInChat('${escapeHtml(doc)}')">📄 ${escapeHtml(dn)}</div>`;
+        });
+        el.innerHTML = h;
+    } else if (d.group === 'topic') {
+        let h = `<div style="color:#4ade80;font-weight:600;margin-bottom:6px;">🟢 ${d.title}</div>`;
+        h += `<div style="font-size:10px;color:var(--dim);margin-bottom:8px;">${(d.docs||[]).length} document(s):</div>`;
+        (d.docs||[]).slice(0,15).forEach(doc => {
+            const dn = doc.length > 35 ? doc.slice(0,35)+'…' : doc;
+            h += `<div style="font-size:10px;margin:3px 0;cursor:pointer;color:#c084fc;padding:2px 4px;border-radius:4px;" onclick="openDocInChat('${escapeHtml(doc)}')">📄 ${escapeHtml(dn)}</div>`;
+        });
+        if ((d.docs||[]).length > 15) {
+            h += `<div style="font-size:10px;color:var(--dim);">+${d.docs.length - 15} more</div>`;
+        }
+        el.innerHTML = h;
+    }
+}
+
+function openDocInChat(docName) {
+    switchTab('chat');
+    setTimeout(() => {
+        const inp = document.getElementById('chatInput');
+        if (inp) { inp.value = 'Summarize this document: ' + docName; inp.focus(); }
+    }, 100);
+}
+
+function escapeHtml(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
+
+function filterBrainGraph() {
+    const q = (document.getElementById('brainSearchInput')?.value || '').toLowerCase();
+    d3.selectAll('.brain-node').style('opacity', function() {
+        const d = d3.select(this).datum();
+        if (!d || !q) return 1;
+        return ((d.title||'').toLowerCase().includes(q) || (d.id||'').toLowerCase().includes(q) || (d.frameworks||[]).some(f=>f.toLowerCase().includes(q))) ? 1 : 0.06;
+    });
+    d3.selectAll('#brainGraph line').style('opacity', q ? 0.02 : 0.3);
+}
+
+
+// ═══════════════════════════════════════════════════
+// v5: LEARNING TOOLKIT JS
+// ═══════════════════════════════════════════════════
+
+// ─── Shared Error Handler ───
+function friendlyError(e, action) {
+    const msg = e.message || String(e);
+    if (msg.includes('No session content')) return 'No transcript content found. Start recording a lecture or load a saved session.';
+    if (msg.includes('API not configured') || msg.includes('503')) return 'AI service not configured. Check API keys.';
+    if (msg.includes('timeout')) return action + ' timed out. Try again.';
+    return action + ' failed: ' + msg;
+}
+async function api(url, opts={}) {
+    const res = await fetch(API + url, {headers:{'Content-Type':'application/json'},...opts});
+    if (!res.ok) { const e = await res.text(); throw new Error(e); }
+    return res.json();
+}
+
+// ═══ 1. BRIEFS ═══
+async function generateBrief() {
+    const topic = document.getElementById('briefTopic').value.trim();
+    if (!sessionId && !topic) { alert('Enter a topic or load a session first. Briefs can be generated from a topic alone or from lecture content.'); return; }
+    const btn = event.target; btn.disabled = true; btn.textContent = 'Generating...';
+    try {
+        const data = await api('/briefs/generate', {method:'POST',body:JSON.stringify({session_id:sessionId,topic})});
+        viewBrief(data.id);
+        loadBriefs();
+    } catch(e) { alert('Brief generation failed: '+e.message); }
+    btn.disabled = false; btn.textContent = '+ New Brief';
+}
+async function loadBriefs() {
+    try {
+        const data = await api('/briefs');
+        const list = document.getElementById('briefsList');
+        list.innerHTML = data.briefs.map(b => '<div style="padding:10px;background:var(--card);border:1px solid var(--border);border-radius:8px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;" onclick="viewBrief('+b.id+')"><span>📋 <strong>'+escapeHtml(b.topic||'Untitled')+'</strong></span><span style="font-size:0.7rem;color:var(--dim)">'+b.created_at?.slice(0,10)+'</span></div>').join('') || '<div class="empty-state" style="padding:32px;text-align:center;color:var(--dim)">No briefs yet. Generate one from a lecture session.</div>';
+    } catch(e) { console.error(e); }
+}
+async function viewBrief(id) {
+    try {
+        const b = await api('/briefs/'+id);
+        const div = document.getElementById('briefContent');
+        div.style.display = 'block';
+        div.innerHTML = '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;"><strong style="color:var(--gold)">'+escapeHtml(b.topic||'Brief')+'</strong><div><button class="btn-sm" onclick="downloadBrief('+id+')">⬇ .md</button><button class="btn-sm" onclick="deleteBrief('+id+')" style="border-color:#E85D3A;color:#E85D3A;">🗑</button><button class="btn-sm" onclick="document.getElementById(\'briefContent\').style.display=\'none\'">✕</button></div></div>'+markedToHtml(b.content);
+    } catch(e) { alert(friendlyError(e, 'Load')); }
+}
+function downloadBrief(id) { window.open(API+'/briefs/'+id+'/download', '_blank'); }
+
+// ═══ 2. FLASHCARDS ═══
+let _reviewCards = [], _reviewIdx = 0;
+async function generateFlashcards() {
+    if (!sessionId) { alert('Start or load a session first'); return; }
+    const btn = event.target; btn.disabled = true; btn.textContent = 'Generating...';
+    try {
+        const data = await api('/flashcards/generate', {method:'POST',body:JSON.stringify({session_id:sessionId,count:10})});
+        alert('Generated '+data.total+' flashcards!');
+        loadFlashcardStats();
+    } catch(e) { alert(friendlyError(e, 'Generation')); }
+    btn.disabled = false; btn.textContent = '+ Generate';
+}
+async function reviewFlashcards() {
+    try {
+        const data = await api('/flashcards/due');
+        _reviewCards = data.cards; _reviewIdx = 0;
+        document.getElementById('flashcardsList').style.display = 'none';
+        if (_reviewCards.length === 0) {
+            document.getElementById('flashcardReview').style.display = 'flex';
+            document.getElementById('flashcardDone').style.display = 'block';
+            document.getElementById('flashcardCard').style.display = 'none';
+            document.getElementById('flashcardActions').style.display = 'none';
+        } else {
+            document.getElementById('flashcardReview').style.display = 'flex';
+            document.getElementById('flashcardDone').style.display = 'none';
+            document.getElementById('flashcardCard').style.display = 'flex';
+            document.getElementById('flashcardActions').style.display = 'flex';
+            showFlashcard();
+        }
+    } catch(e) { alert(friendlyError(e, 'Generation')); }
+}
+function showFlashcard() {
+    if (_reviewIdx >= _reviewCards.length) {
+        document.getElementById('flashcardDone').style.display = 'block';
+        document.getElementById('flashcardCard').style.display = 'none';
+        document.getElementById('flashcardActions').style.display = 'none';
+        loadFlashcardStats();
+        return;
+    }
+    const c = _reviewCards[_reviewIdx];
+    document.getElementById('flashcardFront').textContent = c.front;
+    document.getElementById('flashcardBack').style.display = 'none';
+    document.getElementById('flashcardSource').style.display = 'none';
+    document.getElementById('flashcardCard').onclick = function() {
+        document.getElementById('flashcardBack').textContent = c.back;
+        document.getElementById('flashcardBack').style.display = 'block';
+        if (c.source) { document.getElementById('flashcardSource').textContent = '📎 '+c.source; document.getElementById('flashcardSource').style.display = 'block'; }
+    };
+}
+async function rateFlashcard(rating) {
+    const c = _reviewCards[_reviewIdx];
+    try {
+        await api('/flashcards/'+c.id+'/review', {method:'POST',body:JSON.stringify({rating})});
+    } catch(e) { console.error(e); }
+    _reviewIdx++;
+    showFlashcard();
+}
+async function loadFlashcardStats() {
+    try {
+        const s = await api('/flashcards/stats');
+        document.getElementById('flashcardStats').textContent = s.total+' total | '+s.due+' due | '+s.mastered+' mastered';
+    } catch(e) {}
+}
+async function loadFlashcardsList() {
+    try {
+        const data = await api('/flashcards/due');
+        const list = document.getElementById('flashcardsList');
+        list.innerHTML = data.cards.length ? data.cards.map(c => '<div style="padding:8px;background:var(--card);border:1px solid var(--border);border-radius:8px;font-size:0.8rem;"><strong>'+escapeHtml(c.front)+'</strong><span style="color:var(--dim);margin-left:8px;">'+escapeHtml(c.back?.slice(0,80))+'</span></div>').join('') : '';
+    } catch(e) {}
+}
+
+// ═══ 3. QUIZZES ═══
+let _currentQuiz = null;
+async function generateQuiz() {
+    if (!sessionId) { alert('Start or load a session first'); return; }
+    const btn = event.target; btn.disabled = true; btn.textContent = 'Generating...';
+    const qtype = document.getElementById('quizType').value;
+    const count = parseInt(document.getElementById('quizCount').value);
+    try {
+        const data = await api('/quizzes/generate', {method:'POST',body:JSON.stringify({session_id:sessionId,qtype,count})});
+        takeQuiz(data);
+    } catch(e) { alert(friendlyError(e, 'Generation')); }
+    btn.disabled = false; btn.textContent = '+ Generate Quiz';
+}
+async function loadQuizzes() {
+    try {
+        const data = await api('/quizzes');
+        const list = document.getElementById('quizList');
+        list.innerHTML = data.quizzes.map(q => '<div style="padding:10px;background:var(--card);border:1px solid var(--border);border-radius:8px;cursor:pointer;display:flex;justify-content:space-between;" onclick="loadQuiz('+q.id+')"><span>📝 <strong>'+escapeHtml(q.title)+'</strong> ('+q.question_count+'Q)</span><span style="font-size:0.7rem;color:var(--dim)">'+q.created_at?.slice(0,10)+'</span></div>').join('') || '<div class="empty-state" style="padding:32px;text-align:center;color:var(--dim)">No quizzes yet.</div>';
+    } catch(e) {}
+}
+async function loadQuiz(id) {
+    try {
+        _currentQuiz = await api('/quizzes/'+id);
+        takeQuiz(_currentQuiz);
+    } catch(e) { alert(friendlyError(e, 'Generation')); }
+}
+function takeQuiz(quiz) {
+    _currentQuiz = quiz;
+    const taker = document.getElementById('quizTaker');
+    taker.style.display = 'block';
+    document.getElementById('quizList').style.display = 'none';
+    let html = '<h3 style="color:var(--gold);margin-bottom:12px;">'+escapeHtml(quiz.title)+'</h3>';
+    quiz.questions.forEach((q, i) => {
+        html += '<div style="margin-bottom:16px;padding:12px;background:var(--bg);border:1px solid var(--border);border-radius:8px;">';
+        html += '<div style="font-weight:600;margin-bottom:8px;">'+(i+1)+'. '+escapeHtml(q.q)+'</div>';
+        if (q.choices) {
+            q.choices.forEach(c => { html += '<label style="display:block;padding:4px 0;font-size:0.85rem;cursor:pointer;"><input type="radio" name="q'+i+'" value="'+c.charAt(0)+'"> '+escapeHtml(c)+'</label>'; });
+        } else {
+            html += '<input type="text" id="sa'+i+'" placeholder="Your answer..." style="width:100%;background:var(--card);border:1px solid var(--border);color:var(--text);padding:8px;border-radius:8px;font-size:0.85rem;">';
+        }
+        html += '</div>';
+    });
+    html += '<button class="btn-sm primary" onclick="submitQuiz()" style="margin-top:12px;">Submit Answers</button>';
+    html += '<button class="btn-sm" onclick="document.getElementById(\'quizTaker\').style.display=\'none\';document.getElementById(\'quizList\').style.display=\'\';" style="margin-left:8px;">Cancel</button>';
+    taker.innerHTML = html;
+}
+async function submitQuiz() {
+    if (!_currentQuiz) return;
+    const answers = [];
+    _currentQuiz.questions.forEach((q, i) => {
+        const radio = document.querySelector('input[name="q'+i+'"]:checked');
+        if (radio) answers.push({question_idx:i, answer:radio.value});
+        else {
+            const sa = document.getElementById('sa'+i);
+            if (sa) answers.push({question_idx:i, answer:sa.value});
+        }
+    });
+    try {
+        const result = await api('/quizzes/'+_currentQuiz.id+'/submit', {method:'POST',body:JSON.stringify({answers})});
+        let html = '<h3 style="color:var(--gold);margin-bottom:12px;">Results: '+result.score+'%</h3>';
+        html += '<div style="font-size:1.5rem;text-align:center;margin:16px 0;color:'+(result.score>=70?'var(--success)':'var(--recording)')+'">'+result.correct+'/'+result.total+' correct</div>';
+        if (result.corrections && result.corrections.length) {
+            html += '<div style="margin-top:12px;"><strong>Review:</strong></div>';
+            result.corrections.forEach(c => {
+                html += '<div style="padding:8px;margin:4px 0;background:rgba(232,93,58,0.1);border:1px solid rgba(232,93,58,0.2);border-radius:8px;font-size:0.85rem;">';
+                html += '<strong>Q'+(c.question_idx+1)+':</strong> Your answer: '+escapeHtml(c.your_answer)+' → Correct: '+escapeHtml(c.correct_answer);
+                if (c.explanation) html += '<br><span style="color:var(--dim)">'+escapeHtml(c.explanation)+'</span>';
+                html += '</div>';
+            });
+        }
+        html += '<button class="btn-sm" onclick="document.getElementById(\'quizTaker\').style.display=\'none\';document.getElementById(\'quizList\').style.display=\'\';loadQuizzes();" style="margin-top:12px;">Back to Quizzes</button>';
+        document.getElementById('quizTaker').innerHTML = html;
+    } catch(e) { alert(friendlyError(e, 'Generation')); }
+}
+
+// ═══ 4. AUDIO OVERVIEWS ═══
+async function generateAudio() {
+    if (!sessionId) { alert('Start or load a session first'); return; }
+    const btn = event.target; btn.disabled = true; btn.textContent = 'Generating script...';
+    const style = document.getElementById('audioStyle').value;
+    try {
+        const data = await api('/audio/generate', {method:'POST',body:JSON.stringify({session_id:sessionId,style})});
+        showAudioScript(data);
+    } catch(e) { alert(friendlyError(e, 'Generation')); }
+    btn.disabled = false; btn.textContent = '+ Generate Podcast';
+}
+async function loadAudioOverviews() {
+    try {
+        const data = await api('/audio');
+        const list = document.getElementById('audioList');
+        list.innerHTML = data.overviews.map(o => '<div style="padding:10px;background:var(--card);border:1px solid var(--border);border-radius:8px;cursor:pointer;display:flex;justify-content:space-between;" onclick="viewAudio('+o.id+')"><span>🎧 <strong>'+escapeHtml(o.title)+'</strong> <span style="font-size:0.7rem;color:var(--dim)">('+o.style+')</span></span><span style="font-size:0.7rem;color:var(--dim)">'+o.created_at?.slice(0,10)+'</span></div>').join('') || '<div class="empty-state" style="padding:32px;text-align:center;color:var(--dim)">No audio overviews yet.</div>';
+    } catch(e) {}
+}
+async function viewAudio(id) {
+    try {
+        const o = await api('/audio/'+id);
+        showAudioScript(o);
+    } catch(e) { alert(friendlyError(e, 'Generation')); }
+}
+function showAudioScript(data) {
+    const player = document.getElementById('audioPlayer');
+    player.style.display = 'block';
+    let html = '<h3 style="color:var(--gold);margin-bottom:8px;">🎧 '+escapeHtml(data.title)+'</h3>';
+    html += '<div style="font-size:0.75rem;color:var(--dim);margin-bottom:12px;">'+data.turns+' turns • '+data.style+'</div>';
+    html += '<div style="max-height:400px;overflow-y:auto;line-height:1.8;">';
+    if (data.script) {
+        data.script.forEach(line => {
+            const isHostA = line.startsWith('HOST_A:');
+            html += '<div style="padding:4px 0;color:'+(isHostA?'var(--blue)':'var(--gold)')+'"><strong>'+(isHostA?'🎤 Host A':'🎙️ Host B')+':</strong> '+escapeHtml(line.replace(/^HOST_[AB]:\s*/,''))+'</div>';
+        });
+    }
+    html += '</div>';
+    if (!data.audio_available) html += '<div style="margin-top:8px;padding:8px;background:rgba(201,168,76,0.1);border-radius:8px;font-size:0.8rem;">📝 Script ready. TTS audio generation coming soon.</div>';
+    html += '<button class="btn-sm" onclick="document.getElementById(\'audioPlayer\').style.display=\'none\'" style="margin-top:8px;">Close</button>';
+    player.innerHTML = html;
+}
+
+// ═══ 5. CASE STUDIES ═══
+async function analyzeCase() {
+    if (!sessionId) { alert('Start or load a session first'); return; }
+    const company = document.getElementById('caseCompany').value.trim();
+    const industry = document.getElementById('caseIndustry').value.trim();
+    const btn = event.target; btn.disabled = true; btn.textContent = 'Analyzing...';
+    try {
+        const data = await api('/cases/analyze', {method:'POST',body:JSON.stringify({session_id:sessionId,company,industry})});
+        showCaseAnalysis(data);
+    } catch(e) { alert(friendlyError(e, 'Generation')); }
+    btn.disabled = false; btn.textContent = '+ New Analysis';
+}
+async function loadCases() {
+    try {
+        const data = await api('/cases');
+        const list = document.getElementById('casesList');
+        list.innerHTML = data.cases.map(c => '<div style="padding:10px;background:var(--card);border:1px solid var(--border);border-radius:8px;cursor:pointer;display:flex;justify-content:space-between;" onclick="viewCase('+c.id+')"><span>📊 <strong>'+escapeHtml(c.company||'Case')+'</strong> <span style="font-size:0.7rem;color:var(--dim)">'+escapeHtml(c.industry||'')+'</span></span><span style="font-size:0.7rem;color:var(--dim)">'+c.created_at?.slice(0,10)+'</span></div>').join('') || '<div class="empty-state" style="padding:32px;text-align:center;color:var(--dim)">No case analyses yet.</div>';
+    } catch(e) {}
+}
+async function viewCase(id) {
+    try {
+        const c = await api('/cases/'+id);
+        showCaseAnalysis(c);
+    } catch(e) { alert(friendlyError(e, 'Generation')); }
+}
+function showCaseAnalysis(data) {
+    const div = document.getElementById('caseContent');
+    div.style.display = 'block';
+    let html = '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;"><strong style="color:var(--gold)">📊 '+escapeHtml(data.company||'Case Analysis')+'</strong><div>';
+    if (data.id) html += '<button class="btn-sm" onclick="deleteCase('+data.id+')" style="border-color:#E85D3A;color:#E85D3A;">🗑</button>';
+    html += '<button class="btn-sm" onclick="window.open(API+\'/cases/'+data.id+'/export\',\'_blank\')">⬇ .md</button>';
+    html += '<button class="btn-sm" onclick="document.getElementById(\'caseContent\').style.display=\'none\'">✕</button></div></div>';
+    if (data.frameworks && data.frameworks.length) html += '<div style="margin-bottom:8px;display:flex;gap:4px;flex-wrap:wrap;">'+data.frameworks.map(f => '<span style="padding:2px 8px;background:rgba(201,168,76,0.15);border-radius:12px;font-size:0.7rem;color:var(--gold)">'+f+'</span>').join('')+'</div>';
+    html += '<div style="white-space:pre-wrap;line-height:1.6;">'+markedToHtml(data.analysis||'')+'</div>';
+    div.innerHTML = html;
+}
+
+// ═══ 6. ACTION ITEMS ═══
+async function extractActions() {
+    if (!sessionId) { alert('No active session. Start a lecture capture or load a saved session first.'); return; }
+    try {
+        const data = await api('/sessions/'+sessionId+'/action-items/extract', {method:'POST',body:'{}'});
+        showActions(data);
+    } catch(e) { 
+        if (e.message && e.message.includes('No session content')) {
+            alert('No transcript content found in this session. Action items are extracted from lecture transcripts — start recording or add some content first.');
+        } else {
+            alert('Failed: '+e.message);
+        }
+    }
+}
+async function showActions(data) {
+    const modal = document.getElementById('actionModal');
+    const content = document.getElementById('actionContent');
+    modal.style.display = 'flex';
+    let html = '<div style="margin-bottom:12px;font-size:0.8rem;">Extracted '+data.total+' action items</div>';
+    if (data.items) {
+        data.items.forEach(item => {
+            html += '<div style="padding:8px;margin:4px 0;background:var(--bg);border:1px solid var(--border);border-radius:8px;display:flex;justify-content:space-between;align-items:center;">';
+            html += '<div><strong>'+escapeHtml(item.text)+'</strong>';
+            if (item.speaker) html += '<br><span style="font-size:0.7rem;color:var(--dim)">👤 '+escapeHtml(item.speaker)+'</span>';
+            if (item.deadline) html += ' <span style="font-size:0.7rem;color:var(--recording)">⏰ '+escapeHtml(item.deadline)+'</span>';
+            html += '</div>';
+            html += '<div><button class="btn-sm" onclick="updateAction('+item.id+',\'done\')">✅</button></div>';
+            html += '</div>';
+        });
+    }
+    content.innerHTML = html;
+}
+async function updateAction(id, status) {
+    try {
+        const formData = new FormData(); formData.append('status', status);
+        await fetch(API+'/action-items/'+id, {method:'PATCH',body:formData});
+        extractActions();
+    } catch(e) {}
+}
+
+// ═══ 7. SCHEDULE ═══
+async function showSchedule() {
+    const modal = document.getElementById('scheduleModal');
+    const content = document.getElementById('scheduleContent');
+    modal.style.display = 'flex';
+    try {
+        const due = await api('/schedule/due');
+        let html = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">';
+        html += '<div style="padding:12px;background:var(--bg);border-radius:8px;text-align:center;"><div style="font-size:1.5rem;color:var(--gold)">'+due.flashcards_due+'</div><div style="font-size:0.75rem;color:var(--dim)">Cards Due</div></div>';
+        html += '<div style="padding:12px;background:var(--bg);border-radius:8px;text-align:center;"><div style="font-size:1.5rem;color:var(--blue)">'+due.open_action_items+'</div><div style="font-size:0.75rem;color:var(--dim)">Open Actions</div></div>';
+        html += '<div style="padding:12px;background:var(--bg);border-radius:8px;text-align:center;"><div style="font-size:1.5rem;color:var(--success)">'+due.quizzes_this_week+'</div><div style="font-size:0.75rem;color:var(--dim)">Quizzes This Week</div></div>';
+        html += '</div>';
+        content.innerHTML = html;
+    } catch(e) { content.innerHTML = 'Failed to load schedule.'; }
+}
+
+// ═══ 8. CITATION-AWARE CHAT ═══
+async function sendChatV2() {
+    const input = document.getElementById('chatInput');
+    const btn = document.getElementById('chatSendBtn');
+    const question = input.value.trim();
+    if (!question) return;
+    input.value = ''; input.disabled = true; btn.disabled = true;
+    const msgs = document.getElementById('chatMessages');
+    msgs.innerHTML += '<div class="chat-msg user">'+escapeHtml(question)+'</div>';
+    const thinking = document.createElement('div');
+    thinking.className = 'chat-msg ai thinking'; thinking.textContent = 'Thinking...';
+    msgs.appendChild(thinking);
+    try {
+        const data = await api('/chat/v2', {method:'POST',body:JSON.stringify({session_id:sessionId,question})});
+        thinking.remove();
+        let answerHtml = '<div class="chat-msg ai">'+markedToHtml(data.answer)+'</div>';
+        if (data.sources && data.sources.length) {
+            answerHtml += '<div class="chat-msg ai" style="font-size:0.75rem;opacity:0.7;border-left:2px solid var(--gold);padding-left:12px;"><strong>📎 Sources:</strong> '+data.sources.map(s => escapeHtml(s.file)).join(', ')+'</div>';
+        }
+        msgs.innerHTML += answerHtml;
+    } catch(e) {
+        thinking.remove();
+        msgs.innerHTML += '<div class="chat-msg ai">Error: '+escapeHtml(e.message)+'</div>';
+    }
+    input.disabled = false; btn.disabled = false;
+    input.focus();
+}
+
+// ═══ HELPERS ═══
+function escapeHtml(s) {
+    if (!s) return '';
+    const div = document.createElement('div');
+    div.textContent = s;
+    return div.innerHTML;
+}
+function markedToHtml(md) {
+    if (!md) return '';
+    return md.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+        .replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>')
+        .replace(/\*(.+?)\*/g,'<em>$1</em>')
+        .replace(/^### (.+)$/gm,'<h4 style="color:var(--gold);margin:12px 0 4px;">$1</h4>')
+        .replace(/^## (.+)$/gm,'<h3 style="color:var(--gold);margin:14px 0 6px;">$1</h3>')
+        .replace(/^# (.+)$/gm,'<h2 style="color:var(--gold);margin:16px 0 8px;">$1</h2>')
+        .replace(/^- (.+)$/gm,'<li>$1</li>')
+        .replace(/\n\n/g,'<br><br>');
+}
+
+
+
+// ═══ DELETE + CONFIRMATION ═══
+function confirmDelete(msg, callback) {
+    if (confirm(msg)) callback();
+}
+async function deleteBrief(id) { confirmDelete('Delete this brief?', async () => { await api('/briefs/'+id, {method:'DELETE'}); loadBriefs(); document.getElementById('briefContent').style.display='none'; }); }
+async function deleteQuiz(id) { confirmDelete('Delete this quiz and all attempts?', async () => { await api('/quizzes/'+id, {method:'DELETE'}); loadQuizzes(); }); }
+async function deleteAudio(id) { confirmDelete('Delete this audio overview?', async () => { await api('/audio/'+id, {method:'DELETE'}); loadAudioOverviews(); document.getElementById('audioPlayer').style.display='none'; }); }
+async function deleteCase(id) { confirmDelete('Delete this case analysis?', async () => { await api('/cases/'+id, {method:'DELETE'}); loadCases(); document.getElementById('caseContent').style.display='none'; }); }
+async function deleteSession(id) {
+    confirmDelete('Delete this session and ALL associated data (entries, flashcards, briefs, quizzes, cases, audio, actions)? This cannot be undone.', async () => {
+        await api('/sessions/'+id, {method:'DELETE'});
+        alert('Session deleted');
+        loadSessions();
+        if (sessionId === id) newSession();
+    });
+}
+// Override chat send to use v2 when on chat tab
+const _origSendChat = sendChat;
+sendChat = function() {
+    // Always use v2 for citation-aware responses
+    return sendChatV2();
+};
+
 </script>
 <!-- ═══ LOAD MODAL ═══ -->
 <div class="modal-overlay" id="loadModal" style="display:none" onclick="if(event.target===this)closeLoadModal()">
