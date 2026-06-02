@@ -1022,6 +1022,9 @@ async def delete_session(session_id: str):
 
 @app.delete("/templates/{template_id}")
 async def delete_template(template_id: int):
+    existing = db_fetch("SELECT id FROM class_templates WHERE id = ? AND is_default = 0", (template_id,))
+    if not existing:
+        raise HTTPException(404, "Template not found")
     db_execute("DELETE FROM class_templates WHERE id = ? AND is_default = 0", (template_id,))
     return {"deleted": template_id}
 
@@ -1419,6 +1422,9 @@ async def download_brief(brief_id: int):
 
 @app.delete("/briefs/{brief_id}")
 async def delete_brief(brief_id: int):
+    existing = db_fetch("SELECT id FROM briefs WHERE id = ?", (brief_id,))
+    if not existing:
+        raise HTTPException(404, "Brief not found")
     db_execute("DELETE FROM briefs WHERE id = ?", (brief_id,))
     return {"deleted": brief_id}
 
@@ -1510,6 +1516,9 @@ async def flashcard_stats():
 
 @app.delete("/flashcards/{card_id}")
 async def delete_flashcard(card_id: int):
+    existing = db_fetch("SELECT id FROM flashcards WHERE id = ?", (card_id,))
+    if not existing:
+        raise HTTPException(404, "Flashcard not found")
     db_execute("DELETE FROM flashcards WHERE id = ?", (card_id,))
     return {"deleted": card_id}
 
@@ -1570,6 +1579,9 @@ async def get_quiz(quiz_id: int):
 
 @app.delete("/quizzes/{quiz_id}")
 async def delete_quiz(quiz_id: int):
+    existing = db_fetch("SELECT id FROM quizzes WHERE id = ?", (quiz_id,))
+    if not existing:
+        raise HTTPException(404, "Quiz not found")
     db_execute("DELETE FROM quiz_attempts WHERE quiz_id = ?", (quiz_id,))
     db_execute("DELETE FROM quizzes WHERE id = ?", (quiz_id,))
     return {"deleted": quiz_id}
@@ -1654,6 +1666,9 @@ async def get_audio_overview(overview_id: int):
 
 @app.delete("/audio/{overview_id}")
 async def delete_audio_overview(overview_id: int):
+    existing = db_fetch("SELECT id FROM audio_overviews WHERE id = ?", (overview_id,))
+    if not existing:
+        raise HTTPException(404, "Overview not found")
     db_execute("DELETE FROM audio_overviews WHERE id = ?", (overview_id,))
     return {"deleted": overview_id}
 
@@ -1723,6 +1738,9 @@ async def export_case(case_id: int):
 
 @app.delete("/cases/{case_id}")
 async def delete_case(case_id: int):
+    existing = db_fetch("SELECT id FROM case_studies WHERE id = ?", (case_id,))
+    if not existing:
+        raise HTTPException(404, "Case not found")
     db_execute("DELETE FROM case_studies WHERE id = ?", (case_id,))
     return {"deleted": case_id}
 
@@ -1828,6 +1846,9 @@ async def update_action_item(item_id: int, status: str = Form(...)):
 
 @app.delete("/action-items/{item_id}")
 async def delete_action_item(item_id: int):
+    existing = db_fetch("SELECT id FROM action_items WHERE id = ?", (item_id,))
+    if not existing:
+        raise HTTPException(404, "Action item not found")
     db_execute("DELETE FROM action_items WHERE id = ?", (item_id,))
     return {"deleted": item_id}
 

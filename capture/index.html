@@ -2049,6 +2049,7 @@ async function loadSessions() {
                     + '<div style="display:flex;align-items:center;gap:6px;flex-shrink:0">'
                     + '<div class="sli-count">' + count + '</div>'
                     + '<button class="modal-close" onclick="event.stopPropagation();downloadSession(\'' + s.id + '\',\'' + escTitle + '\')" title="Download" style="font-size:0.9rem;padding:2px 6px">📥</button>'
+                    + '<button class="modal-close" onclick="event.stopPropagation();deleteSession(\'' + s.id + '\')" title="Delete" style="font-size:0.9rem;padding:2px 6px;color:#E85D3A;">🗑</button>'
                     + '</div></div>';
             }).join('');
         }
@@ -2912,8 +2913,6 @@ function openDocInChat(docName) {
         if (inp) { inp.value = 'Summarize this document: ' + docName; inp.focus(); }
     }, 100);
 }
-
-function escapeHtml(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
 
 function filterBrainGraph() {
     const q = (document.getElementById('brainSearchInput')?.value || '').toLowerCase();
