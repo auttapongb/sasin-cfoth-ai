@@ -807,12 +807,32 @@ async def download_session(session_id: str):
 
 # ── AI Chat (session-aware + KB) ──
 
-CHAT_SYSTEM_PROMPT = """You are a helpful AI assistant for a Sasin EMBA student. You have access to:
-1. The current lecture session's transcripts and AI insights
-2. Uploaded knowledge base (PDFs, slides)
+CHAT_SYSTEM_PROMPT = """You are an AI Learning Assistant for a student in the Sasin School of Management EMBA program (Class of 2026).
 
-Answer questions concisely using the provided context. If the answer is not in the context, say so and offer to help with what you know.
-Format: Use plain text, keep answers under 4 sentences unless detail is requested. Use the same language as the question."""
+YOUR ROLE:
+- Help this student learn, understand frameworks, prepare for cases, and connect concepts
+- You have access to their personal Knowledge Base of uploaded lecture PDFs, slides, transcripts
+- Prioritize information from THEIR materials over general knowledge
+- When the answer is in their KB, cite specific files/concepts from it
+- When it's not in their materials, say so clearly and offer to help if they upload relevant content
+
+TONE:
+- Graduate-level academic, but approachable
+- Concise and structured (use bullet points for frameworks/lists)
+- Challenge the student with follow-up questions when appropriate
+- Match the student's language (English or Thai)
+
+CAPABILITIES:
+- Explain business frameworks (Porter, SWOT, PESTLE, BCG, Blue Ocean, etc.)
+- Connect lecture concepts across sessions
+- Help prepare for case discussions and exams
+- Summarize uploaded PDFs and slides
+- Generate practice questions from study materials
+
+FORMAT:
+- Keep first response under 4 sentences unless detail is requested
+- Use markdown-style formatting (bold for key terms, bullet points for lists)
+- Always ground answers in the student's provided materials when possible"""
 
 class ChatRequest(BaseModel):
     session_id: str = ""
@@ -840,23 +860,63 @@ async def chat(req: ChatRequest):
             insight_text = " ".join(e["content"] for e in insight_entries[-5:])
             context_parts.append(f"AI INSIGHTS:\n{insight_text[-1000:]}")
     
-    # Fetch real KB file list for context
+    # Fetch real KB file list + try to find relevant file content
     kb_context = ""
     try:
         global _http_client
         if _http_client is None:
-            _http_client = httpx.AsyncClient(timeout=httpx.Timeout(10.0))
+            _http_client = httpx.AsyncClient(timeout=httpx.Timeout(15.0))
+        
+        # Get file list
         kb_resp = await _http_client.get("http://localhost:8001/api/v1/knowledge/emba-2026/files", timeout=5.0)
         if kb_resp.status_code == 200:
             data = kb_resp.json()
             files = data.get('files', data) if isinstance(data, dict) else data
             if isinstance(files, list) and len(files) > 0:
-                names = [f["name"] if isinstance(f, dict) else str(f) for f in files[:20]]
-                kb_context = f"Knowledge Base ({len(files)} docs): " + ", ".join(names)
-    except Exception:
-        pass
+                # Build file list
+                file_names = []
+                for f in files[:30]:
+                    name = f["name"] if isinstance(f, dict) else str(f)
+                    size = f.get("size", 0) if isinstance(f, dict) else 0
+                    file_names.append(f"{name} ({size//1024}KB)" if size > 1024 else name)
+                
+                # Try to find relevant files by keyword match on question
+                question_lower = req.question.lower()
+                relevant_files = []
+                for f in files[:30]:
+                    name = f["name"] if isinstance(f, dict) else str(f)
+                    name_lower = name.lower()
+                    # Simple keyword match
+                    keywords = question_lower.split()
+                    matches = sum(1 for kw in keywords if len(kw) > 2 and kw in name_lower)
+                    if matches >= 2 or any(kw in name_lower for kw in keywords if len(kw) > 4):
+                        relevant_files.append(name)
+                
+                # Fetch content of top 3 relevant files
+                kb_content = ""
+                for rf_name in relevant_files[:3]:
+                    try:
+                        content_resp = await _http_client.get(
+                            f"http://localhost:8001/api/v1/knowledge/emba-2026/files/{rf_name}",
+                            timeout=3.0
+                        )
+                        if content_resp.status_code == 200:
+                            content = content_resp.text[:1500]  # limit per file
+                            kb_content += f"\n--- {rf_name} ---\n{content}\n"
+                    except Exception:
+                        pass
+                
+                kb_context = f"KNOWLEDGE BASE ({len(files)} docs available):\n"
+                kb_context += "Files: " + ", ".join(file_names[:15])
+                if len(file_names) > 15:
+                    kb_context += f" ... and {len(file_names)-15} more"
+                if kb_content:
+                    kb_context += f"\n\nRELEVANT CONTENT FROM YOUR MATERIALS:\n{kb_content[:3000]}"
+    except Exception as e:
+        logger.warning(f"KB fetch failed: {e}")
+    
     if not kb_context:
-        kb_context = "No files in knowledge base yet. Upload PDFs or slides via 📄 button or 🧠 2nd Brain."
+        kb_context = "No files in knowledge base yet. Upload lecture PDFs or slides via 📄 button or 🧠 2nd Brain."
     context_parts.append(kb_context)
     
     context = "\n\n---\n\n".join(context_parts) if context_parts else "No session context available yet. Start recording or upload materials."
