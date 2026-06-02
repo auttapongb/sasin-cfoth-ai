@@ -367,16 +367,23 @@ async function loadSessions() {
                 const title = s.title || s.id;
                 const date = new Date(s.updated_at).toLocaleDateString('en-GB', {day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'});
                 const count = s.entry_count || 0;
+                const preview = (s.preview || '').substring(0, 80);
                 // Content type icon
                 let icon = '📝';
                 const ti = (s.tags || '') + ' ' + (s.title || '');
                 if (/pdf/i.test(ti) || /\.pdf$/i.test(s.title||'')) icon = '📄';
                 else if (/slide/i.test(ti)) icon = '📸';
                 else if (/live/i.test(s.tags||'') || count > 5) icon = '🎙️';
-                return `<div class="session-list-item" onclick="selectSession('${s.id}','${title.replace(/'/g, "\\'")}')">
-                    <div><div class="sli-title">${icon} ${escapeHtml(title)}</div>
-                    <div class="sli-meta">${date}</div></div>
-                    <div class="sli-count">${count} entries</div>
+                const escTitle = escapeHtml(title).replace(/'/g, "&#39;");
+                return `<div class="session-list-item">
+                    <div style="flex:1;min-width:0" onclick="selectSession('${s.id}','${title.replace(/'/g, "\\'")}')">
+                        <div class="sli-title">${icon} ${escapeHtml(title)}</div>
+                        <div class="sli-meta">${date}${preview ? ' — ' + escapeHtml(preview) : ''}</div>
+                    </div>
+                    <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
+                        <div class="sli-count">${count}</div>
+                        <button class="modal-close" onclick="event.stopPropagation();downloadSession('${s.id}','${escTitle}')" title="Download as .txt" style="font-size:0.9rem;padding:2px 6px">📥</button>
+                    </div>
                 </div>`;
             }).join('');
         }
@@ -405,6 +412,14 @@ async function selectSession(sid, title) {
     } catch(e) {
         toast('Failed to load session: ' + e.message, 'error');
     }
+}
+
+async function downloadSession(sid, title) {
+    const a = document.createElement('a');
+    a.href = `${API}/sessions/${sid}/download`;
+    a.download = (title || 'session').replace(/[^a-zA-Z0-9ก-๙ \-]/g, '_') + '.txt';
+    a.click();
+    toast('Downloading: ' + (title || sid), 'info');
 }
 
 function closeLoadModal() {

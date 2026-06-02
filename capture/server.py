@@ -711,6 +711,12 @@ async def list_sessions():
         s["entry_count"] = db_fetch(
             "SELECT COUNT(*) as cnt FROM entries WHERE session_id = ?", (s["id"],)
         )[0]["cnt"]
+        # Add preview: first transcript entry
+        preview = db_fetch(
+            "SELECT content FROM entries WHERE session_id = ? AND box = 'transcript' AND content_type != 'slide_image' ORDER BY id ASC LIMIT 1",
+            (s["id"],)
+        )
+        s["preview"] = preview[0]["content"][:120] if preview else ""
     return {"sessions": sessions}
 
 
@@ -739,6 +745,64 @@ async def rename_session(session_id: str, title: str = Form("")):
     db_execute("UPDATE sessions SET title = ?, updated_at = ? WHERE id = ?",
                (title, datetime.now(timezone.utc).isoformat(), session_id))
     return {"session_id": session_id, "title": title}
+
+
+@app.get("/sessions/{session_id}/download")
+async def download_session(session_id: str):
+    """Download full session as plain text — Box 1 transcript + Box 2 insights."""
+    session = db_fetch("SELECT * FROM sessions WHERE id = ?", (session_id,))
+    if not session:
+        raise HTTPException(404, "Session not found")
+    entries = get_entries(session_id)
+    
+    lines = []
+    lines.append(f"Session: {session[0]['title'] or session_id}")
+    lines.append(f"Date: {session[0]['created_at']}")
+    lines.append(f"Entries: {len(entries)}")
+    lines.append("=" * 50)
+    lines.append("")
+    
+    for e in entries:
+        ts = e.get('timestamp_iso', '')[:19] if e.get('timestamp_iso') else ''
+        box = e.get('box', '')
+        ctype = e.get('content_type', '')
+        content = e.get('content', '')
+        
+        if box == 'transcript':
+            if ctype == 'slide_image':
+                lines.append(f"[{ts}] 📸 Slide captured")
+            else:
+                lines.append(f"[{ts}] 🎙️ {content}")
+        elif box == 'colearner':
+            if ctype == 'slide_analysis':
+                try:
+                    import json as _json
+                    parsed = _json.loads(content)
+                    lines.append(f"[{ts}] 🔍 Slide Analysis:")
+                    if parsed.get('summary'):
+                        lines.append(f"    Summary: {parsed['summary']}")
+                    if parsed.get('explanation'):
+                        lines.append(f"    {parsed['explanation']}")
+                    if parsed.get('text'):
+                        lines.append(f"    Text: {parsed['text'][:200]}")
+                except Exception:
+                    lines.append(f"[{ts}] 🔍 Slide Analysis: {content[:200]}")
+            else:
+                lines.append(f"[{ts}] 💡 {content}")
+        lines.append("")
+    
+    text = "\n".join(lines)
+    
+    # Use a safe filename
+    safe_title = "".join(c for c in (session[0]['title'] or 'session') if c.isalnum() or c in ' -_')
+    filename = f"{safe_title or 'session'}.txt"
+    
+    from fastapi.responses import Response
+    return Response(
+        content=text,
+        media_type="text/plain",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'}
+    )
 
 
 # ── Legacy endpoints ──
