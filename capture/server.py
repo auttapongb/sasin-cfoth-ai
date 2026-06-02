@@ -584,7 +584,7 @@ async def save_transcript(req: SaveRequest):
 
 # ── Audio Download ──
 
-@app.get("/audio/{session_id}")
+@app.get("/audio/download/{session_id}")
 async def download_session_audio(session_id: str):
     """Download the full recording for a session (concatenated WAV)."""
     session_dir = AUDIO_DIR / session_id
@@ -1558,7 +1558,7 @@ Start with HOST_A introducing the topic. End with HOST_B giving a key takeaway."
 async def generate_audio_overview(req: AudioGenerateRequest):
     text = _build_session_text(req.session_id)
     if not text.strip():
-        raise HTTPException(400, "No session content")
+        raise HTTPException(400, "No content found for this session. Record a lecture or add entries first, then generate audio.")
     if not COLEARNER_API_KEY:
         raise HTTPException(503, "LLM API not configured")
     style = req.style if req.style in ("podcast", "summary", "lecture") else "podcast"
