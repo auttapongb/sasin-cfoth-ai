@@ -840,8 +840,23 @@ async def chat(req: ChatRequest):
             insight_text = " ".join(e["content"] for e in insight_entries[-5:])
             context_parts.append(f"AI INSIGHTS:\n{insight_text[-1000:]}")
     
-    # KB context — 19 docs indexed, use session context primarily
-    kb_context = "Knowledge Base contains 19 uploaded documents (PDFs, slides). Upload via 📄 or 🧠 2nd Brain."
+    # Fetch real KB file list for context
+    kb_context = ""
+    try:
+        global _http_client
+        if _http_client is None:
+            _http_client = httpx.AsyncClient(timeout=httpx.Timeout(10.0))
+        kb_resp = await _http_client.get("http://localhost:8001/api/v1/knowledge/emba-2026/files", timeout=5.0)
+        if kb_resp.status_code == 200:
+            data = kb_resp.json()
+            files = data.get('files', data) if isinstance(data, dict) else data
+            if isinstance(files, list) and len(files) > 0:
+                names = [f["name"] if isinstance(f, dict) else str(f) for f in files[:20]]
+                kb_context = f"Knowledge Base ({len(files)} docs): " + ", ".join(names)
+    except Exception:
+        pass
+    if not kb_context:
+        kb_context = "No files in knowledge base yet. Upload PDFs or slides via 📄 button or 🧠 2nd Brain."
     context_parts.append(kb_context)
     
     context = "\n\n---\n\n".join(context_parts) if context_parts else "No session context available yet. Start recording or upload materials."
