@@ -2098,6 +2098,30 @@ async def proxy_stats():
         return JSONResponse(resp.json())
 
 
+@app.delete("/second-brain/doc/{name:path}")
+async def proxy_delete_doc(name: str):
+    """Proxy delete document from Second Brain."""
+    import httpx
+    async with httpx.AsyncClient() as client:
+        resp = await client.delete(f"http://localhost:8400/doc/{name}", timeout=15.0)
+        return JSONResponse(resp.json(), status_code=resp.status_code)
+
+
+@app.get("/second-brain/download/{kb_name}/{filename:path}")
+async def proxy_download(kb_name: str, filename: str):
+    """Proxy file download from Second Brain → DeepTutor KB."""
+    import httpx
+    from fastapi.responses import Response
+    url = f"http://localhost:8400/download/{kb_name}/{filename}"
+    async with httpx.AsyncClient(timeout=30.0) as client:
+        resp = await client.get(url)
+        if resp.status_code != 200:
+            raise HTTPException(resp.status_code, "File not found")
+        content_type = resp.headers.get("content-type", "application/octet-stream")
+        return Response(content=resp.content, media_type=content_type,
+                       headers={"Content-Disposition": f'attachment; filename="{filename}"'})
+
+
 @app.on_event("shutdown")
 async def shutdown():
     global _http_client

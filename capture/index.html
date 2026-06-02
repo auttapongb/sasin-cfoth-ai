@@ -1859,7 +1859,7 @@ body {
       "shared": []
     }
   ],
-  "updated": "2026-06-03T03:05:38.977171"
+  "updated": "2026-06-03T03:36:53.228076"
 }
 </script>
 </div>
@@ -2879,7 +2879,8 @@ function showBrainDetail(d, data) {
         }
         h += `<div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap;">
             <button onclick="openDocInChat('${escapeHtml(d.id)}')" style="background:var(--gold);color:#000;border:none;padding:4px 12px;border-radius:6px;font-size:11px;cursor:pointer;font-weight:600;">🔍 Chat</button>
-            <button onclick="window.open('http://185.218.125.121:8400/download/emba-2026/'+encodeURIComponent('${escapeHtml(d.id)}'), '_blank')" style="background:rgba(59,130,246,0.2);color:#60a5fa;border:1px solid rgba(59,130,246,0.3);padding:4px 12px;border-radius:6px;font-size:11px;cursor:pointer;font-weight:600;">📥 Download</button>
+            <button onclick="window.open(API+'/second-brain/download/emba-2026/'+encodeURIComponent('${escapeHtml(d.id)}'), '_blank')" style="background:rgba(59,130,246,0.2);color:#60a5fa;border:1px solid rgba(59,130,246,0.3);padding:4px 12px;border-radius:6px;font-size:11px;cursor:pointer;font-weight:600;">📥 Download</button>
+            <button onclick="deleteBrainDoc('${escapeHtml(d.id)}')" style="background:rgba(232,93,58,0.15);color:#E85D3A;border:1px solid rgba(232,93,58,0.3);padding:4px 12px;border-radius:6px;font-size:11px;cursor:pointer;font-weight:600;">🗑 Delete</button>
         </div>`;
         el.innerHTML = h;
     } else if (d.group === 'framework') {
@@ -3324,6 +3325,20 @@ sendChat = function() {
     // Always use v2 for citation-aware responses
     return sendChatV2();
 };
+
+// ═══ 2ND BRAIN DELETE ═══
+async function deleteBrainDoc(docName) {
+    confirmDelete(`Delete "${docName}" from the knowledge graph? This removes it from the index, corpus, and DeepTutor KB.`, async () => {
+        try {
+            await api('/second-brain/doc/' + encodeURIComponent(docName), {method:'DELETE'});
+            alert('Document deleted. Reloading graph...');
+            // Reload the page to refresh graph data
+            location.reload();
+        } catch(e) {
+            alert('Delete failed: ' + e.message);
+        }
+    });
+}
 
 </script>
 <!-- ═══ LOAD MODAL ═══ -->
