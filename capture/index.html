@@ -322,7 +322,7 @@ const COLEARNER_COOLDOWN_MS = 30000; // 30 seconds between insights
 
 // ─── Session ──────────────────────────────────────
 async function startSession(title) {
-    title = title || 'Untitled Lecture';
+    title = title || 'Lecture — ' + new Date().toLocaleDateString('en-GB', {day:'numeric',month:'short',year:'numeric'});
     const resp = await fetch(`${API}/sessions`, {
         method: 'POST',
         headers: {'Content-Type': 'application/x-www-form-urlencoded'},
@@ -349,7 +349,7 @@ async function newSession() {
     if (isRecording) { toast('Stop recording first', 'error'); return; }
     const title = prompt('Lecture title:', '');
     if (title === null) return; // cancelled
-    await startSession(title || 'Untitled Lecture');
+    await startSession(title || undefined);
 }
 
 async function loadSessions() {
@@ -452,7 +452,7 @@ function renderSavedEntry(e) {
 // ─── Recording ────────────────────────────────────
 async function toggleRecording() {
     if (isRecording) return;
-    if (!sessionId) await startSession('Untitled Lecture');
+    if (!sessionId) await startSession();
     try {
         const stream = await navigator.mediaDevices.getUserMedia({
             audio: { sampleRate: 16000, channelCount: 1, echoCancellation: true }
