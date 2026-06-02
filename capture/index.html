@@ -62,6 +62,10 @@ body {
 .tab:hover { color: var(--text); border-color: var(--gold); }
 .tab.active { color: var(--gold); border-color: var(--gold); background: rgba(201,168,76,0.06); }
 
+/* ── Tab View Containers ── */
+#captureView { display: flex; flex-direction: column; flex: 1; min-height: 0; overflow: hidden; }
+#chatView.chat-view.active { display: flex; flex-direction: column; flex: 1; min-height: 0; }
+
 /* ── Chat View ── */
 .chat-view {
     display: none; flex-direction: column; height: 100%;

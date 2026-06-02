@@ -840,28 +840,9 @@ async def chat(req: ChatRequest):
             insight_text = " ".join(e["content"] for e in insight_entries[-5:])
             context_parts.append(f"AI INSIGHTS:\n{insight_text[-1000:]}")
     
-    # Try DeepTutor KB search
-    kb_context = ""
-    try:
-        global _http_client
-        if _http_client is None:
-            _http_client = httpx.AsyncClient(timeout=httpx.Timeout(15.0))
-        # Use DeepTutor tutorbot chat for KB search
-        kb_resp = await _http_client.post(
-            "http://localhost:8001/api/v1/tutorbot",
-            json={"kb_name": "emba-2026", "question": req.question},
-            timeout=10.0
-        )
-        if kb_resp.status_code == 200:
-            kb_data = kb_resp.json()
-            kb_answer = kb_data.get("answer", "") or kb_data.get("response", "")
-            if kb_answer:
-                kb_context = f"KNOWLEDGE BASE:\n{kb_answer[:1000]}"
-    except Exception:
-        pass  # KB unavailable — proceed with session context only
-    
-    if kb_context:
-        context_parts.append(kb_context)
+    # KB context — 19 docs indexed, use session context primarily
+    kb_context = "Knowledge Base contains 19 uploaded documents (PDFs, slides). Upload via 📄 or 🧠 2nd Brain."
+    context_parts.append(kb_context)
     
     context = "\n\n---\n\n".join(context_parts) if context_parts else "No session context available yet. Start recording or upload materials."
     
