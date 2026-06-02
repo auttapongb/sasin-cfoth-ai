@@ -1,0 +1,18 @@
+This is a test lecture on Financial Accounting.
+
+Today we covered the fundamental accounting equation: Assets = Liabilities + Equity. 
+This equation must always balance and forms the foundation of double-entry bookkeeping.
+
+Key concepts:
+1. Debits increase assets, decrease liabilities
+2. Credits decrease assets, increase liabilities
+3. Every transaction affects at least two accounts
+4. The trial balance verifies debit-credit equality
+
+We also discussed the difference between cash basis and accrual basis accounting.
+In accrual accounting, revenue is recognized when earned, not when cash is received.
+Expenses are matched to the period they relate to, following the matching principle.
+
+Important: Financial statements include the balance sheet, income statement, 
+cash flow statement, and statement of changes in equity. These are required 
+under both IFRS and US GAAP.

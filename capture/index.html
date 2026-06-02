@@ -1,686 +1,633 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
-    <title>Sasin Lecture Capture</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:wght@600;700;800&display=swap" rel="stylesheet" />
-    <style>
-        :root {
-            --sasin-gold: #C9A84C;
-            --sasin-gold-light: #E8D48B;
-            --sasin-dark: #1A1A2E;
-            --sasin-mid: #2D2D44;
-            --sasin-text: #E0E0E8;
-            --sasin-dim: #8A8AA0;
-            --bg: #0F0F1A;
-            --card: #1A1A2E;
-            --border: #2A2A44;
-            --recording: #E85D3A;
-            --success: #4CAF50;
-            --slide: #3B82F6;
-        }
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body {
-            font-family: 'Inter', sans-serif;
-            background: var(--bg);
-            color: var(--sasin-text);
-            min-height: 100vh;
-            overflow-x: hidden;
-        }
-        .container { max-width: 800px; margin: 0 auto; padding: 16px; }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Sasin Lecture Capture — Two-Box Study</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+    --gold: #C9A84C; --gold-light: #E8D48B;
+    --bg: #0A0A14; --card: #141428; --border: #252540;
+    --text: #D8D8E8; --dim: #7A7A9A;
+    --recording: #E85D3A; --success: #4CAF50; --blue: #3B82F6;
+    --box1-accent: #3B82F6; --box2-accent: #C9A84C;
+    --box1-bg: #0D1117; --box2-bg: #111118;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+    font-family: 'Inter', sans-serif;
+    background: var(--bg); color: var(--text);
+    height: 100vh; overflow: hidden;
+    display: flex; flex-direction: column;
+}
 
-        /* Header */
-        .header {
-            display: flex; align-items: center; gap: 12px;
-            padding: 16px 0; border-bottom: 1px solid var(--border);
-            margin-bottom: 20px;
-        }
-        .logo { font-family: 'Playfair Display', serif; font-size: 1.3rem; color: var(--sasin-gold); }
-        .logo span { color: var(--sasin-text); font-size: 0.8rem; font-family: 'Inter', sans-serif; font-weight: 300; }
+/* ── Top Bar ── */
+.topbar {
+    display: flex; align-items: center; gap: 12px;
+    padding: 8px 16px; background: var(--card);
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0; z-index: 10;
+}
+.topbar .logo { font-family: 'Playfair Display', serif; font-size: 1.1rem; color: var(--gold); }
+.topbar .logo span { font-size: 0.65rem; color: var(--dim); font-family: 'Inter', sans-serif; margin-left: 4px; }
+.status-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--success); flex-shrink: 0; }
+.status-dot.recording { background: var(--recording); animation: dotPulse 1s infinite; }
+@keyframes dotPulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+.status-text { font-size: 0.75rem; color: var(--dim); }
+.timer { margin-left: auto; font-family: monospace; font-size: 0.9rem; color: var(--gold); }
+.btn-sm {
+    padding: 6px 14px; border-radius: 16px; border: 1px solid var(--border);
+    background: transparent; color: var(--text); font-size: 0.7rem;
+    font-weight: 600; cursor: pointer; font-family: 'Inter', sans-serif;
+    transition: all 0.15s; white-space: nowrap;
+}
+.btn-sm:hover { border-color: var(--gold); color: var(--gold); }
+.btn-sm.primary { background: var(--recording); border-color: var(--recording); color: white; }
+.btn-sm.primary:hover { opacity: 0.9; }
+.btn-sm.save { border-color: var(--gold); color: var(--gold); }
 
-        /* Status bar */
-        .status-bar {
-            display: flex; align-items: center; gap: 12px;
-            padding: 12px 16px; background: var(--card);
-            border-radius: 12px; border: 1px solid var(--border);
-            margin-bottom: 16px;
-        }
-        .status-dot {
-            width: 10px; height: 10px; border-radius: 50%;
-            background: var(--success); flex-shrink: 0;
-        }
-        .status-dot.recording { background: var(--recording); animation: dotPulse 1s infinite; }
-        .status-dot.connected { background: var(--success); }
-        @keyframes dotPulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
-        .status-text { font-size: 0.85rem; color: var(--sasin-text); }
-        .timer { margin-left: auto; font-family: monospace; font-size: 1rem; color: var(--sasin-gold); }
+/* ── Main Two-Panel ── */
+.main-panels {
+    display: flex; flex: 1; overflow: hidden;
+    gap: 2px; background: var(--border);
+}
+.panel {
+    flex: 1; display: flex; flex-direction: column;
+    background: var(--card); overflow: hidden;
+    min-width: 0;
+}
+.panel-header {
+    padding: 10px 14px; font-weight: 700; font-size: 0.8rem;
+    display: flex; align-items: center; gap: 8px;
+    flex-shrink: 0; letter-spacing: 0.3px;
+}
+.panel-header .icon { font-size: 1rem; }
+.box1 .panel-header { background: rgba(59,130,246,0.1); color: var(--box1-accent); border-bottom: 1px solid rgba(59,130,246,0.2); }
+.box2 .panel-header { background: rgba(201,168,76,0.1); color: var(--box2-accent); border-bottom: 1px solid rgba(201,168,76,0.2); }
+.panel-body {
+    flex: 1; overflow-y: auto; padding: 8px 12px;
+    scroll-behavior: smooth;
+}
+.panel-body::-webkit-scrollbar { width: 4px; }
+.panel-body::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
 
-        /* Controls */
-        .controls { display: flex; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; }
-        .btn {
-            height: 52px; padding: 0 24px; border-radius: 26px; border: none;
-            font-size: 0.95rem; font-weight: 600; cursor: pointer; font-family: 'Inter', sans-serif;
-            display: flex; align-items: center; justify-content: center; gap: 8px;
-            transition: all 0.2s; white-space: nowrap;
-        }
-        .btn-record {
-            background: var(--recording); color: white; flex: 1;
-            box-shadow: 0 4px 20px rgba(232,93,58,0.3);
-        }
-        .btn-record:hover { transform: translateY(-1px); box-shadow: 0 6px 24px rgba(232,93,58,0.4); }
-        .btn-record:active { transform: scale(0.97); }
-        .btn-record.recording {
-            background: #1A1A2E; border: 2px solid var(--recording); color: var(--recording);
-            box-shadow: none; animation: borderPulse 1.5s infinite;
-        }
-        @keyframes borderPulse {
-            0%, 100% { border-color: var(--recording); }
-            50% { border-color: rgba(232,93,58,0.3); }
-        }
-        .btn-slide {
-            background: var(--card); color: var(--slide); border: 1px solid var(--slide);
-            flex: 0 0 52px; width: 52px; padding: 0;
-            box-shadow: 0 2px 12px rgba(59,130,246,0.15);
-        }
-        .btn-slide:hover { background: rgba(59,130,246,0.1); }
-        .btn-slide:active { transform: scale(0.94); }
-        .btn-stop { background: var(--card); color: var(--sasin-text); border: 1px solid var(--border); display: none; }
-        .btn-stop.visible { display: flex; }
-        .btn-download { background: var(--card); color: var(--sasin-gold); border: 1px solid var(--sasin-gold); display: none; }
-        .btn-download.visible { display: flex; }
+/* ── Entry Styles ── */
+.entry {
+    padding: 8px 10px; margin-bottom: 6px;
+    border-radius: 8px; animation: fadeIn 0.25s ease;
+    font-size: 0.85rem; line-height: 1.5;
+    position: relative;
+}
+@keyframes fadeIn { from { opacity:0; transform:translateY(3px) } to { opacity:1; transform:translateY(0) } }
+.entry-time {
+    font-size: 0.6rem; color: var(--dim); font-family: monospace;
+    margin-bottom: 2px; display: flex; align-items: center; gap: 6px;
+}
+.entry-time .elapsed { color: var(--gold); font-weight: 600; }
+.entry-latest { border-left: 2px solid var(--gold); padding-left: 10px; }
+.entry-latest .entry-text { color: #fff; }
 
-        /* Info cards */
-        .info-row {
-            display: grid; grid-template-columns: 1fr 1fr 1fr;
-            gap: 10px; margin-bottom: 16px;
-        }
-        .info-card {
-            background: var(--card); border: 1px solid var(--border);
-            border-radius: 12px; padding: 12px; text-align: center;
-        }
-        .info-card .value { font-size: 1.5rem; font-weight: 700; color: var(--sasin-gold); }
-        .info-card .label { font-size: 0.7rem; color: var(--sasin-dim); text-transform: uppercase; letter-spacing: 0.5px; margin-top: 4px; }
+/* Box 1 entries */
+.box1 .entry { background: rgba(59,130,246,0.04); border: 1px solid rgba(59,130,246,0.08); }
+.box1 .entry-text { color: var(--text); white-space: pre-wrap; word-break: break-word; }
+.box1 .entry-slide { border: 1px dashed var(--border); padding: 6px; text-align: center; }
+.box1 .entry-slide img { max-width: 100%; max-height: 200px; border-radius: 6px; cursor: pointer; }
+.box1 .entry-slide .slide-label { font-size: 0.65rem; color: var(--dim); margin-top: 4px; }
 
-        /* Transcript */
-        .transcript-area {
-            background: var(--card); border: 1px solid var(--border);
-            border-radius: 12px; padding: 16px; min-height: 250px;
-            max-height: 50vh; overflow-y: auto; position: relative;
-        }
-        .transcript-placeholder {
-            color: var(--sasin-dim); text-align: center;
-            padding-top: 90px; font-size: 0.95rem;
-        }
-        .transcript-segment {
-            padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.04);
-            animation: fadeIn 0.3s ease;
-        }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
-        .segment-time {
-            font-size: 0.65rem; color: var(--sasin-dim);
-            margin-bottom: 2px; font-family: monospace;
-        }
-        .segment-text { font-size: 0.95rem; line-height: 1.5; color: var(--sasin-text); }
-        .segment-latest { border-left: 2px solid var(--sasin-gold); padding-left: 12px; }
-        .segment-latest .segment-text { color: white; }
+/* Box 2 entries */
+.box2 .entry { background: rgba(201,168,76,0.04); border: 1px solid rgba(201,168,76,0.08); }
+.box2 .entry-text { color: var(--text); }
+.box2 .entry-insight { border-left: 2px solid var(--gold); padding-left: 10px; }
+.box2 .entry-slide-analysis { }
+.box2 .entry-slide-analysis .slide-text { font-size: 0.8rem; color: var(--dim); margin-bottom: 8px; }
+.box2 .entry-slide-analysis .qa { margin-bottom: 6px; }
+.box2 .entry-slide-analysis .q { color: var(--gold-light); font-weight: 600; font-size: 0.8rem; }
+.box2 .entry-slide-analysis .a { color: var(--text); font-size: 0.8rem; padding-left: 10px; border-left: 1px solid var(--border); }
+.box2 .entry-slide-analysis .summary { font-style: italic; color: var(--dim); font-size: 0.78rem; margin-bottom: 6px; }
+.box2 .entry-slide-analysis .explanation { color: var(--text); font-size: 0.82rem; line-height: 1.6; }
 
-        /* Slide strip */
-        .slide-strip {
-            margin-top: 12px; display: flex; gap: 8px; overflow-x: auto;
-            padding: 8px 0; min-height: 70px; align-items: center;
-        }
-        .slide-strip:empty { min-height: 0; padding: 0; }
-        .slide-thumb {
-            flex-shrink: 0; width: 60px; height: 60px; border-radius: 8px;
-            background-size: cover; background-position: center;
-            border: 1px solid var(--border); cursor: pointer; position: relative;
-            transition: all 0.2s;
-        }
-        .slide-thumb:hover { border-color: var(--slide); transform: scale(1.05); }
-        .slide-thumb .badge {
-            position: absolute; top: -6px; right: -6px;
-            background: var(--slide); color: white; font-size: 0.55rem;
-            font-weight: 700; padding: 2px 6px; border-radius: 10px;
-        }
-        .slide-thumb .analyze-btn {
-            position: absolute; bottom: -8px; left: 50%; transform: translateX(-50%);
-            background: var(--card); color: var(--sasin-gold); border: 1px solid var(--sasin-gold);
-            font-size: 0.5rem; padding: 2px 8px; border-radius: 10px; cursor: pointer;
-            white-space: nowrap; font-family: Inter, sans-serif; font-weight: 600;
-            opacity: 0; transition: opacity 0.2s;
-        }
-        .slide-thumb:hover .analyze-btn { opacity: 1; }
-        .slide-thumb.processing { opacity: 0.5; animation: shimmer 1s infinite; }
-        @keyframes shimmer { 0%, 100% { opacity: 0.4; } 50% { opacity: 0.8; } }
+.empty-state {
+    text-align: center; color: var(--dim); padding: 40px 20px;
+    font-size: 0.85rem; line-height: 1.6;
+}
+.empty-state .big-icon { font-size: 2rem; margin-bottom: 10px; opacity: 0.5; }
 
-        /* Slide analysis result */
-        .slide-result {
-            background: var(--card); border: 1px solid var(--sasin-gold);
-            border-radius: 10px; padding: 12px; margin-top: 6px;
-            font-size: 0.8rem; animation: fadeIn 0.3s ease;
-            max-height: 300px; overflow-y: auto;
-        }
-        .slide-result .q { color: var(--sasin-gold); font-weight: 600; margin-top: 8px; }
-        .slide-result .a { color: var(--sasin-text); margin-bottom: 6px; padding-left: 12px; border-left: 2px solid var(--border); }
-        .slide-result .summary { color: var(--sasin-dim); font-style: italic; margin-top: 6px; padding-top: 6px; border-top: 1px solid var(--border); }
+/* ── Slide Strip ── */
+.slide-strip {
+    display: flex; gap: 6px; overflow-x: auto;
+    padding: 8px 0; min-height: 50px; align-items: center;
+    flex-shrink: 0; border-top: 1px solid var(--border);
+    margin: 0 12px;
+}
+.slide-strip:empty { min-height:0; padding:0; border:none; }
+.slide-thumb {
+    flex-shrink: 0; width: 48px; height: 48px; border-radius: 6px;
+    background-size: cover; background-position: center;
+    border: 1px solid var(--border); cursor: pointer;
+    transition: all 0.15s; position: relative;
+}
+.slide-thumb:hover { border-color: var(--blue); transform: scale(1.05); }
+.slide-thumb .badge {
+    position: absolute; top: -5px; right: -5px;
+    font-size: 0.5rem; padding: 1px 5px; border-radius: 8px;
+    font-weight: 700; color: white;
+}
+.badge-useful { background: var(--box2-accent); }
+.badge-raw { background: var(--box1-accent); }
 
-        /* Errors */
-        .error-toast {
-            position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
-            background: var(--recording); color: white; padding: 12px 20px;
-            border-radius: 10px; font-size: 0.85rem; font-weight: 500;
-            z-index: 100; animation: slideUp 0.3s ease;
-            max-width: 90vw; text-align: center;
-        }
-        @keyframes slideUp { from { opacity: 0; transform: translateX(-50%) translateY(20px); } to { opacity: 1; transform: translateX(-50%) translateY(0); } }
+/* ── Bottom Controls ── */
+.bottombar {
+    display: flex; gap: 8px; padding: 8px 16px;
+    background: var(--card); border-top: 1px solid var(--border);
+    align-items: center; flex-shrink: 0;
+}
+.btn-record {
+    height: 44px; padding: 0 20px; border-radius: 22px; border: none;
+    font-size: 0.9rem; font-weight: 600; cursor: pointer;
+    font-family: 'Inter', sans-serif; display: flex; align-items: center; gap: 6px;
+    transition: all 0.2s;
+}
+.btn-record.start { background: var(--recording); color: white; flex: 1; box-shadow: 0 2px 12px rgba(232,93,58,0.3); }
+.btn-record.start:hover { transform: translateY(-1px); }
+.btn-record.recording { background: transparent; border: 2px solid var(--recording); color: var(--recording); flex: 1; animation: borderPulse 1.5s infinite; }
+@keyframes borderPulse { 0%,100%{border-color:var(--recording)} 50%{border-color:rgba(232,93,58,0.3)} }
+.btn-slide {
+    width: 44px; height: 44px; border-radius: 22px; border: 1px solid var(--blue);
+    background: transparent; color: var(--blue); font-size: 1.2rem;
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+    transition: all 0.15s; flex-shrink: 0;
+}
+.btn-slide:hover { background: rgba(59,130,246,0.1); }
+.btn-slide:active { transform: scale(0.94); }
 
-        /* Info banner */
-        .info-banner {
-            background: rgba(201,168,76,0.08); border: 1px solid rgba(201,168,76,0.2);
-            border-radius: 10px; padding: 10px 14px; margin-bottom: 16px;
-            font-size: 0.75rem; color: var(--sasin-dim);
-        }
-        .info-banner strong { color: var(--sasin-gold); }
+/* Toast */
+.toast {
+    position: fixed; bottom: 70px; left: 50%; transform: translateX(-50%);
+    padding: 10px 20px; border-radius: 10px; font-size: 0.8rem;
+    font-weight: 500; z-index: 100; animation: slideUp 0.3s ease;
+    max-width: 90vw; text-align: center;
+}
+.toast.error { background: var(--recording); color: white; }
+.toast.info { background: var(--card); color: var(--gold); border: 1px solid var(--gold); }
+@keyframes slideUp { from { opacity:0; transform:translateX(-50%) translateY(15px) } to { opacity:1; transform:translateX(-50%) translateY(0) } }
 
-        @media (max-width: 480px) {
-            .info-row { grid-template-columns: 1fr 1fr; }
-            .container { padding: 12px; }
-            .btn { padding: 14px 18px; font-size: 0.9rem; }
-            .btn-slide { width: 52px; padding: 0; }
-        }
-    </style>
+/* Mobile responsive */
+@media (max-width: 768px) {
+    .main-panels { flex-direction: column; }
+    .panel { flex: none; height: 50%; }
+    .topbar { padding: 6px 10px; }
+    .bottombar { padding: 6px 10px; }
+    .panel-body { padding: 6px 8px; }
+    .entry { font-size: 0.8rem; padding: 6px 8px; }
+}
+</style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <div class="logo">Sasin <span>EMBA 2026</span></div>
+
+<!-- ═══ TOP BAR ═══ -->
+<div class="topbar">
+    <div class="status-dot connected" id="statusDot"></div>
+    <span class="status-text" id="statusText">Ready</span>
+    <div class="logo">Sasin <span>EMBA 2026</span></div>
+    <span class="timer" id="timer">00:00</span>
+    <button class="btn-sm" onclick="loadSessions()" title="Load past session">📂 Load</button>
+    <button class="btn-sm save" onclick="saveCurrentSession()">💾 Save</button>
+    <button class="btn-sm" onclick="newSession()">✨ New</button>
+</div>
+
+<!-- ═══ TWO-PANEL ═══ -->
+<div class="main-panels">
+    <!-- Box 1: Transcript -->
+    <div class="panel box1">
+        <div class="panel-header">
+            <span class="icon">📝</span> Transcript
+            <span style="font-size:0.65rem;color:var(--dim);margin-left:auto" id="box1Count">0 entries</span>
         </div>
-        <div class="info-banner">
-            <strong>🎙️ Lecture Capture</strong> — Record audio for real-time transcription. Tap <strong>📸</strong> to snap slides. Everything auto-saves to your Second Brain.
-        </div>
-
-        <!-- Status -->
-        <div class="status-bar">
-            <div class="status-dot connected" id="statusDot"></div>
-            <span class="status-text" id="statusText">Ready</span>
-            <span class="timer" id="timer">00:00</span>
-        </div>
-
-        <!-- Buttons -->
-        <div class="controls">
-            <button class="btn btn-record" id="btnRecord" onclick="toggleRecording()">
-                <span id="btnIcon">🎙️</span> <span id="btnLabel">Start Recording</span>
-            </button>
-            <button class="btn btn-slide" id="btnSlide" onclick="captureSlide()" title="Capture slide from camera">
-                📸
-            </button>
-            <button class="btn btn-stop" id="btnStop" onclick="stopAndSave()">
-                ⏹️ Stop & Save
-            </button>
-            <button class="btn btn-download" id="btnDownload" onclick="downloadTranscript()">
-                📥 Download
-            </button>
-        </div>
-
-        <!-- Stats -->
-        <div class="info-row">
-            <div class="info-card">
-                <div class="value" id="wordCount">0</div>
-                <div class="label">Words Captured</div>
+        <div class="panel-body" id="box1Body">
+            <div class="empty-state">
+                <div class="big-icon">🎤</div>
+                <div>Press <strong>Start Recording</strong> to begin.<br>
+                <span style="font-size:0.7rem">Transcript appears here in real-time.</span></div>
             </div>
-            <div class="info-card">
-                <div class="value" id="chunkCount">0</div>
-                <div class="label">Chunks Processed</div>
-            </div>
-            <div class="info-card">
-                <div class="value" id="avgLatency">--</div>
-                <div class="label">Avg Latency</div>
-            </div>
-        </div>
-
-        <!-- Transcript -->
-        <div class="transcript-area" id="transcriptArea">
-            <div class="transcript-placeholder" id="placeholder">
-                🎤 Press <strong>Start Recording</strong> when the professor begins speaking.<br>
-                <span style="font-size:0.8rem;color:var(--sasin-dim)">Transcript appears in real-time. Tap 📸 to capture slides.</span>
-            </div>
-        </div>
-
-        <!-- Slide strip -->
-        <div class="slide-strip" id="slideStrip"></div>
-
-        <!-- Materials Upload -->
-        <div style="margin-top: 24px; padding-top: 24px; border-top: 1px solid var(--border);">
-            <h3 style="font-family: 'Playfair Display', serif; font-size: 1.1rem; margin-bottom: 4px; color: var(--sasin-gold);">🧠 Second Brain</h3>
-            <p style="font-size: 0.75rem; color: var(--sasin-dim); margin-bottom: 16px;">Upload PDFs, slides, whiteboard photos — auto-extracted and connected to your transcripts in DeepTutor.</p>
-
-            <div id="uploadZone" style="
-                border: 2px dashed var(--border); border-radius: 12px; padding: 30px 20px;
-                text-align: center; cursor: pointer; transition: all 0.2s;
-                background: var(--card);
-            " onclick="document.getElementById('fileInput').click()">
-                <div style="font-size: 2rem; margin-bottom: 8px;">📎</div>
-                <div style="font-weight: 600; color: var(--sasin-text);">Drop files here or click to browse</div>
-                <div style="font-size: 0.7rem; color: var(--sasin-dim); margin-top: 6px;">PDF · Images (JPG/PNG) · Audio (MP3/WAV) — up to 50MB</div>
-            </div>
-            <input type="file" id="fileInput" multiple accept=".pdf,.jpg,.jpeg,.png,.webp,.gif,.bmp,.mp3,.wav,.m4a,.ogg" style="display:none" onchange="handleFiles(this.files)" />
-            <input type="file" id="slideInput" accept="image/*" capture="environment" style="display:none" onchange="handleSlideCapture(this)" />
-
-            <div style="margin-top: 8px; display: flex; gap: 8px; align-items: center;">
-                <input type="text" id="tagInput" placeholder="Tags: lecture-3, finance, slides..." style="
-                    flex:1; background: var(--bg); border: 1px solid var(--border); color: var(--sasin-text);
-                    padding: 8px 12px; border-radius: 8px; font-size: 0.8rem; font-family: Inter, sans-serif;
-                " />
-                <span id="ingestStatus" style="font-size: 0.75rem; color: var(--sasin-dim); white-space: nowrap;"></span>
-            </div>
-
-            <div id="uploadResults" style="margin-top: 8px;"></div>
         </div>
     </div>
 
-    <script>
-        const API_URL = 'https://capture.sasin.cfoth.ai';
-        let mediaRecorder = null;
-        let isRecording = false;
-        let startTime = 0;
-        let timerInterval = null;
-        let totalWords = 0;
-        let chunkNumber = 0;
-        let latencies = [];
-        let fullTranscript = [];
-        let currentChunkIndex = 0;
-        let slideCount = 0;
+    <!-- Box 2: AI Co-Learner -->
+    <div class="panel box2">
+        <div class="panel-header">
+            <span class="icon">🧠</span> AI Co-Learner
+            <span style="font-size:0.65rem;color:var(--dim);margin-left:auto" id="box2Count">0 insights</span>
+            <span id="colearnerStatus" style="font-size:0.6rem;color:var(--dim)"></span>
+        </div>
+        <div class="panel-body" id="box2Body">
+            <div class="empty-state">
+                <div class="big-icon">🤖</div>
+                <div>I study alongside you.<br>
+                <span style="font-size:0.7rem">I'll explain slides, connect ideas, and think out loud.</span></div>
+            </div>
+        </div>
+    </div>
+</div>
 
-        // ─── Recording ────────────────────────────────────────
-        async function toggleRecording() {
-            if (isRecording) return;
-            try {
-                const stream = await navigator.mediaDevices.getUserMedia({ 
-                    audio: { 
-                        sampleRate: 16000, 
-                        channelCount: 1,
-                        echoCancellation: true,
-                        noiseSuppression: true 
-                    } 
-                });
-                startRecording(stream);
-            } catch (err) {
-                showError('Microphone access denied. Please allow microphone permissions.');
-                console.error(err);
-            }
+<!-- ═══ SLIDE STRIP ═══ -->
+<div class="slide-strip" id="slideStrip"></div>
+
+<!-- ═══ BOTTOM BAR ═══ -->
+<div class="bottombar">
+    <button class="btn-record start" id="btnRecord" onclick="toggleRecording()">
+        <span id="btnIcon">🎙️</span> <span id="btnLabel">Start Recording</span>
+    </button>
+    <button class="btn-slide" id="btnSlide" onclick="captureSlide()" title="Capture slide">📸</button>
+</div>
+
+<input type="file" id="slideInput" accept="image/*" capture="environment" style="display:none" onchange="handleSlideCapture(this)">
+
+<!-- ═══ SCRIPTS ═══ -->
+<script>
+const API = 'https://capture.sasin.cfoth.ai';
+let isRecording = false, mediaRecorder = null, startTime = 0, timerInterval = null;
+let chunkIndex = 0, sessionId = '', totalWords = 0;
+let box1Entries = 0, box2Entries = 0;
+let lastTranscript = ''; // for co-learner context
+let colearnerBusy = false;
+
+// ─── Session ──────────────────────────────────────
+async function startSession() {
+    const resp = await fetch(`${API}/sessions`, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+        body: 'title=Lecture&tags=live'
+    });
+    const data = await resp.json();
+    sessionId = data.session_id;
+    box1Entries = 0; box2Entries = 0;
+    document.getElementById('box1Body').innerHTML = '';
+    document.getElementById('box2Body').innerHTML = '';
+    document.getElementById('slideStrip').innerHTML = '';
+    updateCounts();
+    toast(`Session started: ${sessionId}`, 'info');
+    return sessionId;
+}
+
+async function saveCurrentSession() {
+    if (!sessionId) { toast('No active session', 'error'); return; }
+    toast('Session saved to database ✓', 'info');
+}
+
+async function newSession() {
+    if (isRecording) return;
+    await startSession();
+}
+
+async function loadSessions() {
+    try {
+        const resp = await fetch(`${API}/sessions`);
+        const data = await resp.json();
+        if (!data.sessions || data.sessions.length === 0) {
+            toast('No saved sessions found', 'info');
+            return;
         }
-
-        function startRecording(stream) {
-            const mimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus') 
-                ? 'audio/webm;codecs=opus' 
-                : 'audio/webm';
-            
-            mediaRecorder = new MediaRecorder(stream, { mimeType, audioBitsPerSecond: 32000 });
-            isRecording = true;
-            startTime = Date.now();
-            chunkNumber = 0;
-            totalWords = 0;
-            latencies = [];
-            fullTranscript = [];
-
-            document.getElementById('transcriptArea').innerHTML = '<div class="transcript-placeholder">Listening...</div>';
-            document.getElementById('wordCount').textContent = '0';
-            document.getElementById('chunkCount').textContent = '0';
-            document.getElementById('avgLatency').textContent = '--';
-
-            mediaRecorder.ondataavailable = async (e) => {
-                if (e.data.size > 0) {
-                    const chunk = new Blob([e.data], { type: mimeType });
-                    const idx = ++currentChunkIndex;
-                    sendChunk(chunk, idx);
-                }
-            };
-
-            mediaRecorder.start(5000);
-            updateUI(true);
-            timerInterval = setInterval(updateTimer, 1000);
+        // Load most recent session
+        const sid = data.sessions[0].id;
+        sessionId = sid;
+        const detail = await fetch(`${API}/sessions/${sid}`);
+        const sdata = await detail.json();
+        // Render entries
+        document.getElementById('box1Body').innerHTML = '';
+        document.getElementById('box2Body').innerHTML = '';
+        document.getElementById('slideStrip').innerHTML = '';
+        box1Entries = 0; box2Entries = 0;
+        for (const e of sdata.entries) {
+            renderEntry(e);
         }
+        updateCounts();
+        toast(`Loaded: ${sdata.session.title || sid} (${sdata.entry_count} entries)`, 'info');
+    } catch(e) {
+        toast('Failed to load sessions: ' + e.message, 'error');
+    }
+}
 
-        async function sendChunk(blob, idx) {
-            const sendTime = Date.now();
-            chunkNumber++;
-            document.getElementById('chunkCount').textContent = chunkNumber;
-
-            try {
-                const formData = new FormData();
-                formData.append('audio', blob, `chunk_${idx}.webm`);
-                formData.append('chunk_index', idx);
-
-                const resp = await fetch(`${API_URL}/transcribe`, {
-                    method: 'POST',
-                    body: formData
-                });
-
-                if (!resp.ok) throw new Error(`Server error: ${resp.status}`);
-
-                const data = await resp.json();
-                const latency = (Date.now() - sendTime) / 1000;
-                latencies.push(latency);
-                document.getElementById('avgLatency').textContent = 
-                    (latencies.reduce((a,b) => a+b, 0) / latencies.length).toFixed(1) + 's';
-
-                if (data.text && data.text.trim()) {
-                    fullTranscript.push(data.text.trim());
-                    totalWords += data.text.trim().split(/\s+/).length;
-                    document.getElementById('wordCount').textContent = totalWords;
-                    appendTranscript(data.text.trim(), idx, latency);
-                }
-            } catch (err) {
-                console.error('Chunk upload failed:', err);
-                appendTranscript('[transcription pending...]', idx, 0);
-            }
-        }
-
-        function appendTranscript(text, idx, latency) {
-            const area = document.getElementById('transcriptArea');
-            const placeholder = document.getElementById('placeholder');
-            if (placeholder) placeholder.remove();
-
-            area.querySelectorAll('.segment-latest').forEach(el => el.classList.remove('segment-latest'));
-
-            const div = document.createElement('div');
-            div.className = 'transcript-segment segment-latest';
-            const mins = Math.floor((Date.now() - startTime) / 60000);
-            const secs = Math.floor(((Date.now() - startTime) % 60000) / 1000);
-            div.innerHTML = `
-                <div class="segment-time">${String(mins).padStart(2,'0')}:${String(secs).padStart(2,'0')} · ${latency.toFixed(1)}s</div>
-                <div class="segment-text">${escapeHtml(text)}</div>
-            `;
-            area.appendChild(div);
-            area.scrollTop = area.scrollHeight;
-        }
-
-        async function stopAndSave() {
-            if (!isRecording || !mediaRecorder) return;
-            
-            mediaRecorder.requestData();
-            await new Promise(r => setTimeout(r, 500));
-
-            mediaRecorder.stop();
-            mediaRecorder.stream.getTracks().forEach(t => t.stop());
-            isRecording = false;
-            clearInterval(timerInterval);
-
-            try {
-                await fetch(`${API_URL}/save`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        transcript: fullTranscript.join('\n\n'),
-                        word_count: totalWords,
-                        duration: Math.floor((Date.now() - startTime) / 1000),
-                        chunks: chunkNumber,
-                        timestamp: new Date().toISOString(),
-                        tags: document.getElementById('tagInput').value
-                    })
-                });
-            } catch (err) {
-                console.error('Save failed:', err);
-            }
-
-            updateUI(false);
-        }
-
-        function downloadTranscript() {
-            const text = fullTranscript.join('\n\n');
-            const blob = new Blob([text], { type: 'text/plain' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `lecture-${new Date().toISOString().slice(0,10)}.txt`;
-            a.click();
-            URL.revokeObjectURL(url);
-        }
-
-        function updateUI(recording) {
-            const dot = document.getElementById('statusDot');
-            const text = document.getElementById('statusText');
-            const recordBtn = document.getElementById('btnRecord');
-            const stopBtn = document.getElementById('btnStop');
-            const downloadBtn = document.getElementById('btnDownload');
-            const icon = document.getElementById('btnIcon');
-            const label = document.getElementById('btnLabel');
-
-            if (recording) {
-                dot.className = 'status-dot recording';
-                text.textContent = 'Recording';
-                recordBtn.classList.add('recording');
-                stopBtn.classList.add('visible');
-                downloadBtn.classList.remove('visible');
-                icon.textContent = '⏺️';
-                label.textContent = 'Recording...';
-            } else {
-                dot.className = 'status-dot connected';
-                text.textContent = 'Session saved';
-                recordBtn.classList.remove('recording');
-                stopBtn.classList.remove('visible');
-                downloadBtn.classList.add('visible');
-                icon.textContent = '🎙️';
-                label.textContent = 'New Recording';
-            }
-        }
-
-        function updateTimer() {
-            const elapsed = Math.floor((Date.now() - startTime) / 1000);
-            const mins = Math.floor(elapsed / 60);
-            const secs = elapsed % 60;
-            document.getElementById('timer').textContent = 
-                `${String(mins).padStart(2,'0')}:${String(secs).padStart(2,'0')}`;
-        }
-
-        // ─── Slide Capture ──────────────────────────────────
-        function captureSlide() {
-            // Prefer camera on mobile, fall back to file picker
-            const input = document.getElementById('slideInput');
-            input.click();
-        }
-
-        async function handleSlideCapture(input) {
-            if (!input.files || !input.files[0]) return;
-
-            const file = input.files[0];
-            slideCount++;
-
-            // Add thumbnail immediately (processing state)
-            const strip = document.getElementById('slideStrip');
-            const reader = new FileReader();
-            const thumb = document.createElement('div');
-            thumb.className = 'slide-thumb processing';
-            thumb.id = `slide-${slideCount}`;
-            thumb.innerHTML = `<span class="badge">⏳</span>`;
-            strip.prepend(thumb);
-
-            reader.onload = (e) => {
-                thumb.style.backgroundImage = `url(${e.target.result})`;
-            };
-            reader.readAsDataURL(file);
-
-            // Upload to Second Brain
-            try {
-                const formData = new FormData();
-                formData.append('file', file);
-                formData.append('tags', document.getElementById('tagInput').value || 'lecture-slide');
-                formData.append('title', `slide-${slideCount}-${new Date().toISOString().slice(0,19)}`);
-
-                const resp = await fetch(`${API_URL}/ingest`, {
-                    method: 'POST',
-                    body: formData
-                });
-
-                const data = await resp.json();
-
-                // Update thumbnail
-                thumb.classList.remove('processing');
-                const badge = thumb.querySelector('.badge');
-                if (data.error) {
-                    badge.textContent = '❌';
-                    badge.style.background = 'var(--recording)';
-                } else {
-                    badge.textContent = '✓';
-                    badge.style.background = 'var(--success)';
-                    thumb.title = data.word_count ? `${data.word_count} words extracted` : 'Slide saved';
-                    // Add AI analyze button
-                    const analyzeBtn = document.createElement('button');
-                    analyzeBtn.className = 'analyze-btn';
-                    analyzeBtn.textContent = '🔍 AI Analyze';
-                    analyzeBtn.onclick = (ev) => { ev.stopPropagation(); analyzeSlide(thumb, file); };
-                    thumb.appendChild(analyzeBtn);
-                    // Store file reference for later analysis
-                    thumb._file = file;
-                }
-
-                // Update tag field status
-                document.getElementById('ingestStatus').textContent = 
-                    `Slide #${slideCount} stored → DeepTutor`;
-                setTimeout(() => {
-                    if (document.getElementById('ingestStatus').textContent.startsWith('Slide #')) {
-                        document.getElementById('ingestStatus').textContent = '';
-                    }
-                }, 3000);
-
-            } catch (err) {
-                console.error('Slide upload failed:', err);
-                thumb.classList.remove('processing');
-                const badge = thumb.querySelector('.badge');
-                badge.textContent = '⚠️';
-                badge.style.background = 'var(--recording)';
-            }
-
-            // Reset input so same file can be re-selected (camera retake)
-            input.value = '';
-        }
-
-        // ─── AI Slide Analysis ─────────────────────────────
-        async function analyzeSlide(thumb, file) {
-            // Remove any existing result
-            const existing = thumb.parentElement.querySelector('.slide-result');
-            if (existing) existing.remove();
-
-            // Show loading
-            const btn = thumb.querySelector('.analyze-btn');
-            btn.textContent = '⏳ Analyzing...';
-            btn.disabled = true;
-
-            // Create result placeholder
-            const result = document.createElement('div');
-            result.className = 'slide-result';
-            result.innerHTML = '<span style="color:var(--sasin-dim)">🔍 AI analyzing slide...</span>';
-            thumb.parentElement.insertBefore(result, thumb.nextSibling);
-
-            try {
-                const formData = new FormData();
-                formData.append('image', file);
-
-                const resp = await fetch(`${API_URL}/analyze-slide`, {
-                    method: 'POST',
-                    body: formData
-                });
-
-                const data = await resp.json();
-
-                if (data.error) {
-                    result.innerHTML = `<span style="color:var(--recording)">❌ ${escapeHtml(data.error)}</span>`;
-                } else {
-                    let html = '';
-                    if (data.summary) {
-                        html += `<div class="summary">📌 ${escapeHtml(data.summary)}</div>`;
-                    }
-                    if (data.questions && data.questions.length > 0) {
-                        html += '<div style="margin-top:6px;font-weight:600;color:var(--sasin-gold)">❓ Questions found:</div>';
-                        data.questions.forEach((q, i) => {
-                            html += `<div class="q">Q: ${escapeHtml(q)}</div>`;
-                            if (data.answers && data.answers[i]) {
-                                html += `<div class="a">A: ${escapeHtml(data.answers[i])}</div>`;
-                            }
-                        });
-                    }
-                    if (data.text && !data.summary) {
-                        html += `<div style="color:var(--sasin-dim);font-size:0.75rem">${escapeHtml(data.text.substring(0, 300))}${data.text.length > 300 ? '...' : ''}</div>`;
-                    }
-                    if (!html) html = '<span style="color:var(--sasin-dim)">No content detected</span>';
-                    result.innerHTML = html;
-                }
-            } catch (err) {
-                result.innerHTML = `<span style="color:var(--recording)">❌ ${escapeHtml(err.message)}</span>`;
-            }
-
-            btn.textContent = '🔍 AI Analyze';
-            btn.disabled = false;
-        }
-
-        // ─── Second Brain Upload ────────────────────────────
-        async function handleFiles(fileList) {
-            const results = document.getElementById('uploadResults');
-            const status = document.getElementById('ingestStatus');
-            const files = Array.from(fileList);
-
-            if (files.length === 0) return;
-
-            status.textContent = `Processing ${files.length} file(s)...`;
-            results.innerHTML = '';
-
-            for (const file of files) {
-                const card = document.createElement('div');
-                card.style.cssText = 'padding: 10px 12px; margin-bottom: 6px; background: var(--card); border-radius: 8px; font-size: 0.8rem; display: flex; align-items: center; gap: 8px;';
-                card.innerHTML = `<span>⏳</span> <span>${file.name}</span> <span style="color:var(--sasin-dim);margin-left:auto;">processing...</span>`;
-                results.appendChild(card);
-
-                try {
-                    const formData = new FormData();
-                    formData.append('file', file);
-                    formData.append('tags', document.getElementById('tagInput').value);
-                    formData.append('title', file.name);
-
-                    const resp = await fetch(`${API_URL}/ingest`, {
-                        method: 'POST',
-                        body: formData
-                    });
-
-                    const data = await resp.json();
-                    const icon = data.error ? '❌' : '✅';
-                    const detail = data.error 
-                        ? data.error 
-                        : `${data.word_count || 0} words · ${data.type}${data.deep_tutor_uploaded ? ' · indexed in DeepTutor' : ''}`;
-                    card.innerHTML = `<span>${icon}</span> <span>${file.name}</span> <span style="color:var(--sasin-dim);margin-left:auto;">${detail}</span>`;
-                } catch (err) {
-                    card.innerHTML = `<span>❌</span> <span>${file.name}</span> <span style="color:var(--sasin-dim);margin-left:auto;">${err.message}</span>`;
-                }
-            }
-
-            status.textContent = `Done — ${files.length} file(s) sent to DeepTutor`;
-            setTimeout(() => { status.textContent = ''; }, 5000);
-        }
-
-        function showError(msg) {
-            const toast = document.createElement('div');
-            toast.className = 'error-toast';
-            toast.textContent = msg;
-            document.body.appendChild(toast);
-            setTimeout(() => toast.remove(), 4000);
-        }
-
-        function escapeHtml(text) {
-            const div = document.createElement('div');
-            div.textContent = text;
-            return div.innerHTML;
-        }
-
-        // Drag and drop
-        const zone = document.getElementById('uploadZone');
-        zone.addEventListener('dragover', e => { e.preventDefault(); zone.style.borderColor = 'var(--sasin-gold)'; });
-        zone.addEventListener('dragleave', () => { zone.style.borderColor = 'var(--border)'; });
-        zone.addEventListener('drop', e => {
-            e.preventDefault();
-            zone.style.borderColor = 'var(--border)';
-            handleFiles(e.dataTransfer.files);
+// ─── Recording ────────────────────────────────────
+async function toggleRecording() {
+    if (isRecording) return;
+    if (!sessionId) await startSession();
+    try {
+        const stream = await navigator.mediaDevices.getUserMedia({
+            audio: { sampleRate: 16000, channelCount: 1, echoCancellation: true }
         });
-    </script>
+        mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm;codecs=opus' });
+        mediaRecorder.ondataavailable = async (e) => {
+            if (e.data.size < 1000) return;
+            const form = new FormData();
+            form.append('audio', e.data, 'chunk.webm');
+            form.append('chunk_index', chunkIndex);
+            form.append('session_id', sessionId);
+            form.append('elapsed_sec', (Date.now() - startTime) / 1000);
+            const t0 = Date.now();
+            try {
+                const resp = await fetch(`${API}/transcribe`, { method: 'POST', body: form });
+                const data = await resp.json();
+                const lat = Date.now() - t0;
+                if (data.text && data.text.trim()) {
+                    addToBox1(data.text.trim(), data.timestamp_iso, data.elapsed_sec || ((Date.now()-startTime)/1000));
+                    totalWords += data.text.split(/\s+/).length;
+                    document.getElementById('wordCount') && (document.getElementById('wordCount').textContent = totalWords);
+                    lastTranscript = data.text.trim();
+                    // Trigger co-learner
+                    triggerCoLearner(data.text.trim(), '', (Date.now() - startTime) / 1000);
+                }
+                chunkIndex++;
+            } catch(err) {
+                console.error('Transcribe error:', err);
+            }
+        };
+        mediaRecorder.start(5000);
+        isRecording = true;
+        startTime = Date.now();
+        chunkIndex = 0;
+        totalWords = 0;
+        timerInterval = setInterval(updateTimer, 500);
+        document.getElementById('btnRecord').className = 'btn-record recording';
+        document.getElementById('btnIcon').textContent = '⏺️';
+        document.getElementById('btnLabel').textContent = 'Recording...';
+        document.getElementById('statusDot').className = 'status-dot recording';
+        document.getElementById('statusText').textContent = 'Recording';
+        mediaRecorder._stream = stream;
+        toast('Recording started — 5s chunks', 'info');
+    } catch(e) {
+        toast('Microphone access denied: ' + e.message, 'error');
+    }
+}
+
+function stopAndSave() {
+    if (!isRecording) return;
+    if (mediaRecorder) {
+        mediaRecorder.stop();
+        if (mediaRecorder._stream) mediaRecorder._stream.getTracks().forEach(t => t.stop());
+    }
+    isRecording = false;
+    clearInterval(timerInterval);
+    document.getElementById('btnRecord').className = 'btn-record start';
+    document.getElementById('btnIcon').textContent = '🎙️';
+    document.getElementById('btnLabel').textContent = 'Start Recording';
+    document.getElementById('statusDot').className = 'status-dot connected';
+    document.getElementById('statusText').textContent = 'Stopped';
+    toast('Recording stopped', 'info');
+}
+
+function updateTimer() {
+    if (!isRecording) return;
+    const elapsed = Math.floor((Date.now() - startTime) / 1000);
+    const m = Math.floor(elapsed / 60).toString().padStart(2, '0');
+    const s = (elapsed % 60).toString().padStart(2, '0');
+    document.getElementById('timer').textContent = `${m}:${s}`;
+}
+
+// ─── Box 1: Transcript ────────────────────────────
+function addToBox1(text, timestampIso, elapsedSec) {
+    const body = document.getElementById('box1Body');
+    // Remove empty state if first entry
+    if (box1Entries === 0) body.innerHTML = '';
+    box1Entries++;
+    updateCounts();
+
+    const elapsed = elapsedSec ? formatTime(elapsedSec) : '';
+    const time = timestampIso ? new Date(timestampIso).toLocaleTimeString() : new Date().toLocaleTimeString();
+
+    const entry = document.createElement('div');
+    entry.className = 'entry entry-latest';
+    entry.id = `entry-box1-${box1Entries}`;
+    entry.innerHTML = `
+        <div class="entry-time">
+            <span class="elapsed">${elapsed}</span>
+            <span>${time}</span>
+        </div>
+        <div class="entry-text">${escapeHtml(text)}</div>
+    `;
+    body.appendChild(entry);
+    body.scrollTop = body.scrollHeight;
+
+    // Remove 'latest' from previous
+    const prev = body.querySelectorAll('.entry-latest');
+    if (prev.length > 1) prev[0].classList.remove('entry-latest');
+}
+
+function addSlideToBox1(timestampIso, elapsedSec, imageUrl) {
+    const body = document.getElementById('box1Body');
+    if (box1Entries === 0) body.innerHTML = '';
+    box1Entries++;
+    updateCounts();
+
+    const elapsed = elapsedSec ? formatTime(elapsedSec) : '';
+    const time = timestampIso ? new Date(timestampIso).toLocaleTimeString() : new Date().toLocaleTimeString();
+    const imgSrc = imageUrl.startsWith('http') ? imageUrl : `${API}${imageUrl}`;
+
+    const entry = document.createElement('div');
+    entry.className = 'entry entry-latest';
+    entry.innerHTML = `
+        <div class="entry-time">
+            <span class="elapsed">${elapsed}</span>
+            <span>${time} 📸 Slide</span>
+        </div>
+        <div class="entry-slide">
+            <img src="${imgSrc}" alt="Slide" onclick="window.open('${imgSrc}')" loading="lazy">
+            <div class="slide-label">No text detected — raw capture</div>
+        </div>
+    `;
+    body.appendChild(entry);
+    body.scrollTop = body.scrollHeight;
+
+    const prev = body.querySelectorAll('.entry-latest');
+    if (prev.length > 1) prev[0].classList.remove('entry-latest');
+}
+
+// ─── Box 2: AI Co-Learner ─────────────────────────
+function addToBox2(content, type, timestampIso, elapsedSec) {
+    const body = document.getElementById('box2Body');
+    if (box2Entries === 0) body.innerHTML = '';
+    box2Entries++;
+    updateCounts();
+
+    const elapsed = elapsedSec ? formatTime(elapsedSec) : '';
+    const time = timestampIso ? new Date(timestampIso).toLocaleTimeString() : new Date().toLocaleTimeString();
+    const entry = document.createElement('div');
+    entry.className = 'entry entry-latest';
+    entry.id = `entry-box2-${box2Entries}`;
+
+    if (type === 'insight') {
+        entry.innerHTML = `
+            <div class="entry-time">
+                <span class="elapsed">${elapsed}</span>
+                <span>${time} 💡 Insight</span>
+            </div>
+            <div class="entry-text entry-insight">${escapeHtml(content)}</div>
+        `;
+    } else if (type === 'slide_analysis') {
+        let html = `<div class="entry-time"><span class="elapsed">${elapsed}</span><span>${time} 🔍 Slide Analysis</span></div>`;
+        html += '<div class="entry-slide-analysis">';
+        if (content.explanation) html += `<div class="explanation">${escapeHtml(content.explanation)}</div>`;
+        if (content.summary) html += `<div class="summary">📌 ${escapeHtml(content.summary)}</div>`;
+        if (content.text) html += `<div class="slide-text">📄 ${escapeHtml(content.text.substring(0, 300))}${content.text.length>300?'...':''}</div>`;
+        if (content.questions && content.questions.length > 0) {
+            for (let i = 0; i < content.questions.length; i++) {
+                html += `<div class="qa"><div class="q">❓ ${escapeHtml(content.questions[i])}</div>`;
+                if (content.answers[i]) html += `<div class="a">→ ${escapeHtml(content.answers[i])}</div>`;
+                html += '</div>';
+            }
+        }
+        html += '</div>';
+        entry.innerHTML = html;
+    } else {
+        entry.innerHTML = `
+            <div class="entry-time"><span class="elapsed">${elapsed}</span><span>${time}</span></div>
+            <div class="entry-text">${escapeHtml(content)}</div>
+        `;
+    }
+
+    body.appendChild(entry);
+    body.scrollTop = body.scrollHeight;
+
+    const prev = body.querySelectorAll('.entry-latest');
+    if (prev.length > 1) prev[0].classList.remove('entry-latest');
+}
+
+// ─── AI Co-Learner Trigger ────────────────────────
+async function triggerCoLearner(transcriptChunk, slideContext, elapsedSec) {
+    if (colearnerBusy) return;
+    if (!transcriptChunk.trim() && !slideContext.trim()) return;
+    colearnerBusy = true;
+    document.getElementById('colearnerStatus').textContent = 'thinking...';
+
+    try {
+        const resp = await fetch(`${API}/co-learner`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+                session_id: sessionId,
+                transcript_chunk: transcriptChunk || '',
+                slide_context: slideContext || '',
+                elapsed_sec: elapsedSec || 0
+            })
+        });
+        const data = await resp.json();
+        if (data.insight && data.insight.trim()) {
+            addToBox2(data.insight, 'insight', data.timestamp_iso, elapsedSec);
+        }
+        document.getElementById('colearnerStatus').textContent = '';
+    } catch(e) {
+        console.error('Co-learner error:', e);
+        document.getElementById('colearnerStatus').textContent = '';
+    }
+    colearnerBusy = false;
+}
+
+// ─── Slide Capture ────────────────────────────────
+function captureSlide() {
+    document.getElementById('slideInput').click();
+}
+
+async function handleSlideCapture(input) {
+    if (!input.files || !input.files[0]) return;
+    const file = input.files[0];
+    const elapsedSec = (Date.now() - startTime) / 1000;
+    const form = new FormData();
+    form.append('image', file);
+    form.append('session_id', sessionId);
+    form.append('elapsed_sec', elapsedSec);
+
+    // Show thumbnail immediately
+    const reader = new FileReader();
+    const imgUrl = URL.createObjectURL(file);
+    reader.onload = () => addSlideThumb(imgUrl, null);
+    reader.readAsDataURL(file);
+
+    try {
+        const resp = await fetch(`${API}/analyze-slide`, { method: 'POST', body: form });
+        const data = await resp.json();
+
+        if (data.box === 'colearner' && data.analysis) {
+            // Useful info → Box 2 with analysis
+            addSlideThumb(`${API}${data.image_url}`, 'useful');
+            addToBox2(data.analysis, 'slide_analysis', data.timestamp_iso, elapsedSec);
+            // Also trigger co-learner with slide context
+            const slideText = data.analysis.text || data.analysis.summary || '';
+            if (slideText) {
+                triggerCoLearner('', slideText, elapsedSec);
+            }
+        } else {
+            // No useful info → Box 1
+            addSlideThumb(`${API}${data.image_url}`, 'raw');
+            addSlideToBox1(data.timestamp_iso, elapsedSec, data.image_url);
+        }
+    } catch(e) {
+        console.error('Slide analysis error:', e);
+        toast('Slide analysis failed', 'error');
+    }
+
+    input.value = '';
+}
+
+// ─── Slide Strip ──────────────────────────────────
+function addSlideThumb(url, analysisType) {
+    const strip = document.getElementById('slideStrip');
+    const thumb = document.createElement('div');
+    thumb.className = 'slide-thumb';
+    thumb.style.backgroundImage = `url(${url})`;
+    thumb.onclick = () => window.open(url);
+    if (analysisType === 'useful') {
+        thumb.innerHTML = '<div class="badge badge-useful">🧠</div>';
+    } else if (analysisType === 'raw') {
+        thumb.innerHTML = '<div class="badge badge-raw">📝</div>';
+    }
+    strip.appendChild(thumb);
+}
+
+// ─── Helpers ─────────────────────────────────────
+function updateCounts() {
+    document.getElementById('box1Count').textContent = `${box1Entries} entries`;
+    document.getElementById('box2Count').textContent = `${box2Entries} insights`;
+
+    // Remove empty states if entries exist
+    if (box1Entries > 0) {
+        const empty = document.getElementById('box1Body').querySelector('.empty-state');
+        if (empty) empty.remove();
+    }
+    if (box2Entries > 0) {
+        const empty = document.getElementById('box2Body').querySelector('.empty-state');
+        if (empty) empty.remove();
+    }
+}
+
+function formatTime(sec) {
+    const m = Math.floor(sec / 60);
+    const s = Math.floor(sec % 60);
+    return `${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
+}
+
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+function toast(msg, type) {
+    const el = document.createElement('div');
+    el.className = `toast ${type}`;
+    el.textContent = msg;
+    document.body.appendChild(el);
+    setTimeout(() => { el.style.opacity = '0'; setTimeout(() => el.remove(), 300); }, 3000);
+}
+
+// ─── Init ────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+    startSession();
+    // Restore stop button behavior
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && isRecording) stopAndSave();
+    });
+});
+</script>
 </body>
 </html>
