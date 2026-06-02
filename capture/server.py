@@ -80,6 +80,7 @@ logging.basicConfig(level=logging.WARNING)
 logger = logging.getLogger("capture")
 
 _http_client: httpx.AsyncClient | None = None
+_llm_semaphore = None  # lazily initialized in _call_llm
 
 
 # ═══════════════════════════════════════════
@@ -226,18 +227,30 @@ init_db()
 
 def db_execute(sql: str, params: tuple = ()) -> int:
     """Execute SQL and return lastrowid."""
-    with sqlite3.connect(str(DB_PATH)) as conn:
-        conn.execute("PRAGMA journal_mode=WAL")
-        cur = conn.execute(sql, params)
-        conn.commit()
-        return cur.lastrowid
+    conn = _get_db_conn()
+    cur = conn.execute(sql, params)
+    conn.commit()
+    return cur.lastrowid
 
 
 def db_fetch(sql: str, params: tuple = ()) -> list[dict]:
     """Fetch rows as dicts."""
-    with sqlite3.connect(str(DB_PATH)) as conn:
+    conn = _get_db_conn()
+    return [dict(row) for row in conn.execute(sql, params).fetchall()]
+
+
+import threading as _threading
+_db_local = _threading.local()
+
+def _get_db_conn():
+    """Thread-local SQLite connection with WAL mode."""
+    if not hasattr(_db_local, 'conn') or _db_local.conn is None:
+        conn = sqlite3.connect(str(DB_PATH))
+        conn.execute("PRAGMA journal_mode=WAL")
+        conn.execute("PRAGMA foreign_keys=ON")
         conn.row_factory = sqlite3.Row
-        return [dict(row) for row in conn.execute(sql, params).fetchall()]
+        _db_local.conn = conn
+    return _db_local.conn
 
 
 # Seed default class templates
@@ -945,17 +958,17 @@ async def load_entries(session_id: str, box: str | None = None):
 
 @app.get("/sessions")
 async def list_sessions():
-    sessions = db_fetch("SELECT * FROM sessions ORDER BY updated_at DESC LIMIT 500")
+    sessions = db_fetch("""
+        SELECT s.*,
+               COALESCE((SELECT COUNT(*) FROM entries e WHERE e.session_id = s.id), 0) as entry_count,
+               (SELECT e2.content FROM entries e2 WHERE e2.session_id = s.id 
+                AND e2.box = 'transcript' AND e2.content_type != 'slide_image' 
+                ORDER BY e2.id ASC LIMIT 1) as preview
+        FROM sessions s ORDER BY s.updated_at DESC LIMIT 500
+    """)
     for s in sessions:
-        s["entry_count"] = db_fetch(
-            "SELECT COUNT(*) as cnt FROM entries WHERE session_id = ?", (s["id"],)
-        )[0]["cnt"]
-        # Add preview: first transcript entry
-        preview = db_fetch(
-            "SELECT content FROM entries WHERE session_id = ? AND box = 'transcript' AND content_type != 'slide_image' ORDER BY id ASC LIMIT 1",
-            (s["id"],)
-        )
-        s["preview"] = preview[0]["content"][:120] if preview else ""
+        if s.get("preview"):
+            s["preview"] = s["preview"][:120]
     return {"sessions": sessions}
 
 
@@ -1239,18 +1252,59 @@ async def list_sessions_legacy():
 # ═══════════════════════════════════════════════════════
 
 async def _call_llm(system_prompt: str, user_message: str, max_tokens: int = 500, temperature: float = 0.5, json_mode: bool = False) -> str:
-    """Shared LLM caller using DeepSeek."""
-    global _http_client
+    """Shared LLM caller using DeepSeek — concurrency-limited."""
+    global _http_client, _llm_semaphore
     if _http_client is None:
         _http_client = httpx.AsyncClient(timeout=httpx.Timeout(30.0))
-    messages = [{"role": "system", "content": system_prompt}, {"role": "user", "content": user_message}]
-    body = {"model": COLEARNER_MODEL, "messages": messages, "max_tokens": max_tokens, "temperature": temperature}
-    if json_mode:
-        body["response_format"] = {"type": "json_object"}
-    resp = await _http_client.post(COLEARNER_URL, headers={"Authorization": f"Bearer {COLEARNER_API_KEY}", "Content-Type": "application/json"}, json=body, timeout=30.0)
-    if resp.status_code != 200:
-        raise HTTPException(502, f"LLM error: {resp.status_code}")
-    return resp.json()["choices"][0]["message"]["content"].strip()
+    if _llm_semaphore is None:
+        _llm_semaphore = asyncio.Semaphore(2)
+    async with _llm_semaphore:
+        messages = [{"role": "system", "content": system_prompt}, {"role": "user", "content": user_message}]
+        body = {"model": COLEARNER_MODEL, "messages": messages, "max_tokens": max_tokens, "temperature": temperature}
+        if json_mode:
+            body["response_format"] = {"type": "json_object"}
+        resp = await _http_client.post(COLEARNER_URL, headers={"Authorization": f"Bearer {COLEARNER_API_KEY}", "Content-Type": "application/json"}, json=body, timeout=30.0)
+        if resp.status_code != 200:
+            raise HTTPException(502, f"LLM error: {resp.status_code}")
+        return resp.json()["choices"][0]["message"]["content"].strip()
+
+
+async def _call_llm_stream(system_prompt: str, user_message: str, max_tokens: int = 500, temperature: float = 0.5):
+    """Streaming LLM caller — yields SSE chunks as tokens arrive.
+    Usage: StreamingResponse(_call_llm_stream(...), media_type="text/event-stream")
+    """
+    global _http_client, _llm_semaphore
+    if _http_client is None:
+        _http_client = httpx.AsyncClient(timeout=httpx.Timeout(30.0))
+    if _llm_semaphore is None:
+        _llm_semaphore = asyncio.Semaphore(2)
+    async with _llm_semaphore:
+        messages = [{"role": "system", "content": system_prompt}, {"role": "user", "content": user_message}]
+        body = {"model": COLEARNER_MODEL, "messages": messages, "max_tokens": max_tokens,
+                "temperature": temperature, "stream": True}
+        accumulated = []
+        async with _http_client.stream("POST", COLEARNER_URL,
+                                        headers={"Authorization": f"Bearer {COLEARNER_API_KEY}",
+                                                 "Content-Type": "application/json"},
+                                        json=body, timeout=60.0) as resp:
+            if resp.status_code != 200:
+                yield f"data: {json.dumps({'error': f'LLM error: {resp.status_code}'})}\n\n"
+                return
+            async for line in resp.aiter_lines():
+                if line.startswith("data: "):
+                    data_str = line[6:]
+                    if data_str == "[DONE]":
+                        break
+                    try:
+                        chunk = json.loads(data_str)
+                        delta = chunk.get("choices", [{}])[0].get("delta", {})
+                        token = delta.get("content", "")
+                        if token:
+                            accumulated.append(token)
+                            yield f"data: {json.dumps({'token': token})}\n\n"
+                    except json.JSONDecodeError:
+                        continue
+        yield f"data: {json.dumps({'done': True, 'full_text': ''.join(accumulated)})}\n\n"
 
 
 def _build_session_text(session_id: str, max_chars: int = 6000) -> str:
@@ -1300,7 +1354,7 @@ Be concise. Total output under 400 words. Use the same language as the source ma
 
 
 @app.post("/briefs/generate")
-async def generate_brief(req: BriefGenerateRequest):
+async def generate_brief(req: BriefGenerateRequest, stream: bool = Query(False)):
     text = ""
     if req.session_id:
         text = _build_session_text(req.session_id)
@@ -1309,6 +1363,12 @@ async def generate_brief(req: BriefGenerateRequest):
     if not COLEARNER_API_KEY:
         raise HTTPException(503, "LLM API not configured")
     user_msg = f"TOPIC: {req.topic}\n\nSOURCE MATERIAL:\n{text}" if req.topic else f"SOURCE MATERIAL:\n{text}"
+    if stream:
+        return StreamingResponse(
+            _call_llm_stream(BRIEF_SYSTEM, user_msg, max_tokens=800, temperature=0.4),
+            media_type="text/event-stream",
+            headers={"X-Stream-Format": "sse", "X-Endpoint": "briefs"}
+        )
     try:
         content = await _call_llm(BRIEF_SYSTEM, user_msg, max_tokens=800, temperature=0.4)
     except Exception as e:
@@ -1901,7 +1961,7 @@ async def research_search(req: ResearchRequest):
 # ═══════════════════════════════════════════════════════
 
 @app.post("/chat/v2")
-async def chat_v2(req: ChatRequest):
+async def chat_v2(req: ChatRequest, stream: bool = Query(False)):
     """Enhanced chat with mandatory source citations."""
     if not req.question.strip():
         return {"answer": "Please ask a question about your lectures, frameworks, or study materials.", "sources": []}
@@ -1953,8 +2013,13 @@ async def chat_v2(req: ChatRequest):
     if not context_parts:
         return {"answer": "No session context or knowledge base available. Start a lecture capture or upload materials first.", "sources": []}
     context = "\n\n---\n\n".join(context_parts)
-    # Build citation-aware system prompt
     system = CHAT_SYSTEM_PROMPT + "\n\nCRITICAL: You MUST cite specific sources when answering. If using KB content, mention the filename. If using transcript, mention 'from your lecture'. Format citations as **Source: filename** or **[Lecture Transcript]**."
+    if stream:
+        return StreamingResponse(
+            _call_llm_stream(system, f"CONTEXT:\n{context}\n\nQUESTION: {req.question}", max_tokens=500, temperature=0.5),
+            media_type="text/event-stream",
+            headers={"X-Stream-Format": "sse", "X-Endpoint": "chat"}
+        )
     try:
         resp = await _http_client.post(
             COLEARNER_URL,
@@ -2054,74 +2119,58 @@ async def serve_second_brain():
 @app.get("/second-brain/graph")
 async def proxy_graph():
     """Proxy graph API from local Second Brain server with graceful fallback."""
-    import httpx
     try:
-        async with httpx.AsyncClient() as client:
-            resp = await client.get("http://localhost:8400/graph", timeout=5.0)
-            return JSONResponse(resp.json())
+        resp = await _http_client.get("http://localhost:8400/graph", timeout=5.0)
+        return JSONResponse(resp.json())
     except Exception:
-        # Return cached data if server is down
         return JSONResponse({"nodes": [], "links": [], "updated": "unavailable", "note": "Second Brain server offline. Graph data embedded in page."})
 
 
 @app.get("/second-brain/search")
 async def proxy_search(q: str = Query(...)):
     """Proxy search API from local Second Brain server."""
-    import httpx
-    async with httpx.AsyncClient() as client:
-        resp = await client.get(f"http://localhost:8400/search?q={q}", timeout=10.0)
-        return JSONResponse(resp.json())
+    resp = await _http_client.get(f"http://localhost:8400/search?q={q}", timeout=10.0)
+    return JSONResponse(resp.json())
 
 
 @app.get("/second-brain/concept/{name}")
 async def proxy_concept(name: str):
     """Proxy concept detail API."""
-    import httpx
-    async with httpx.AsyncClient() as client:
-        resp = await client.get(f"http://localhost:8400/concept/{name}", timeout=10.0)
-        return JSONResponse(resp.json())
+    resp = await _http_client.get(f"http://localhost:8400/concept/{name}", timeout=10.0)
+    return JSONResponse(resp.json())
 
 
 @app.get("/second-brain/doc/{name:path}")
 async def proxy_doc(name: str):
     """Proxy document detail API."""
-    import httpx
-    async with httpx.AsyncClient() as client:
-        resp = await client.get(f"http://localhost:8400/doc/{name}", timeout=10.0)
-        return JSONResponse(resp.json())
+    resp = await _http_client.get(f"http://localhost:8400/doc/{name}", timeout=10.0)
+    return JSONResponse(resp.json())
 
 
 @app.get("/second-brain/stats")
 async def proxy_stats():
     """Proxy stats API."""
-    import httpx
-    async with httpx.AsyncClient() as client:
-        resp = await client.get("http://localhost:8400/stats", timeout=10.0)
-        return JSONResponse(resp.json())
+    resp = await _http_client.get("http://localhost:8400/stats", timeout=10.0)
+    return JSONResponse(resp.json())
 
 
 @app.delete("/second-brain/doc/{name:path}")
 async def proxy_delete_doc(name: str):
     """Proxy delete document from Second Brain."""
-    import httpx
-    async with httpx.AsyncClient() as client:
-        resp = await client.delete(f"http://localhost:8400/doc/{name}", timeout=15.0)
-        return JSONResponse(resp.json(), status_code=resp.status_code)
+    resp = await _http_client.delete(f"http://localhost:8400/doc/{name}", timeout=15.0)
+    return JSONResponse(resp.json(), status_code=resp.status_code)
 
 
 @app.get("/second-brain/download/{kb_name}/{filename:path}")
 async def proxy_download(kb_name: str, filename: str):
     """Proxy file download from Second Brain → DeepTutor KB."""
-    import httpx
-    from fastapi.responses import Response
     url = f"http://localhost:8400/download/{kb_name}/{filename}"
-    async with httpx.AsyncClient(timeout=30.0) as client:
-        resp = await client.get(url)
-        if resp.status_code != 200:
-            raise HTTPException(resp.status_code, "File not found")
-        content_type = resp.headers.get("content-type", "application/octet-stream")
-        return Response(content=resp.content, media_type=content_type,
-                       headers={"Content-Disposition": f'attachment; filename="{filename}"'})
+    resp = await _http_client.get(url)
+    if resp.status_code != 200:
+        raise HTTPException(resp.status_code, "File not found")
+    content_type = resp.headers.get("content-type", "application/octet-stream")
+    return Response(content=resp.content, media_type=content_type,
+                   headers={"Content-Disposition": f'attachment; filename="{filename}"'})
 
 
 @app.on_event("shutdown")
@@ -2134,4 +2183,9 @@ async def shutdown():
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 8898))
-    uvicorn.run(app, host="0.0.0.0", port=port)
+    workers = int(os.environ.get("WORKERS", "1"))
+    # Workers > 1 needs import string; PM2 handles multi-process better
+    uvicorn.run("__main__:app" if workers > 1 else app,
+                host="0.0.0.0", port=port,
+                workers=workers if workers > 1 else None,
+                reload=False)

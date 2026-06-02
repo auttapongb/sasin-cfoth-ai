@@ -1859,7 +1859,7 @@ body {
       "shared": []
     }
   ],
-  "updated": "2026-06-03T04:07:31.541419"
+  "updated": "2026-06-03T04:37:53.324584"
 }
 </script>
 </div>
@@ -2944,16 +2944,52 @@ async function api(url, opts={}) {
     return res.json();
 }
 
+// Streaming SSE reader — returns full text when done, calls onToken for each chunk
+async function streamApi(url, body, onToken) {
+    const res = await fetch(API + url + '?stream=true', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(body)
+    });
+    if (!res.ok) { const e = await res.text(); throw new Error(e); }
+    const reader = res.body.getReader();
+    const decoder = new TextDecoder();
+    let fullText = '', buffer = '';
+    while (true) {
+        const {done, value} = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, {stream: true});
+        const lines = buffer.split('\n');
+        buffer = lines.pop() || '';
+        for (const line of lines) {
+            if (line.startsWith('data: ')) {
+                try {
+                    const d = JSON.parse(line.slice(6));
+                    if (d.token) { fullText += d.token; if (onToken) onToken(d.token, fullText); }
+                    if (d.done) { return d.full_text || fullText; }
+                    if (d.error) throw new Error(d.error);
+                } catch(e) { if (e.message && !e.message.includes('JSON')) throw e; }
+            }
+        }
+    }
+    return fullText;
+}
+
 // ═══ 1. BRIEFS ═══
 async function generateBrief() {
     const topic = document.getElementById('briefTopic').value.trim();
     if (!sessionId && !topic) { alert('Enter a topic or load a session first. Briefs can be generated from a topic alone or from lecture content.'); return; }
     const btn = event.target; btn.disabled = true; btn.textContent = 'Generating...';
+    const div = document.getElementById('briefContent');
+    div.style.display = 'block';
+    div.innerHTML = '<div style="color:var(--gold);padding:16px;">▌ Generating executive brief...</div>';
     try {
-        const data = await api('/briefs/generate', {method:'POST',body:JSON.stringify({session_id:sessionId,topic})});
-        viewBrief(data.id);
+        const answer = await streamApi('/briefs/generate', {session_id: sessionId, topic}, (token, full) => {
+            div.innerHTML = '<div style="color:var(--gold);padding:16px;">▌ '+escapeHtml(full.slice(-200))+'</div>';
+        });
+        div.innerHTML = markedToHtml(answer);
         loadBriefs();
-    } catch(e) { alert('Brief generation failed: '+e.message); }
+    } catch(e) { alert(friendlyError(e, 'Generation')); }
     btn.disabled = false; btn.textContent = '+ New Brief';
 }
 async function loadBriefs() {
@@ -3263,20 +3299,18 @@ async function sendChatV2() {
     input.value = ''; input.disabled = true; btn.disabled = true;
     const msgs = document.getElementById('chatMessages');
     msgs.innerHTML += '<div class="chat-msg user">'+escapeHtml(question)+'</div>';
-    const thinking = document.createElement('div');
-    thinking.className = 'chat-msg ai thinking'; thinking.textContent = 'Thinking...';
-    msgs.appendChild(thinking);
+    const aiDiv = document.createElement('div');
+    aiDiv.className = 'chat-msg ai'; aiDiv.textContent = '▌';
+    msgs.appendChild(aiDiv);
     try {
-        const data = await api('/chat/v2', {method:'POST',body:JSON.stringify({session_id:sessionId,question})});
-        thinking.remove();
-        let answerHtml = '<div class="chat-msg ai">'+markedToHtml(data.answer)+'</div>';
-        if (data.sources && data.sources.length) {
-            answerHtml += '<div class="chat-msg ai" style="font-size:0.75rem;opacity:0.7;border-left:2px solid var(--gold);padding-left:12px;"><strong>📎 Sources:</strong> '+data.sources.map(s => escapeHtml(s.file)).join(', ')+'</div>';
-        }
-        msgs.innerHTML += answerHtml;
+        const answer = await streamApi('/chat/v2', {session_id: sessionId, question}, (token, full) => {
+            aiDiv.textContent = full + '▌';
+            msgs.scrollTop = msgs.scrollHeight;
+        });
+        aiDiv.textContent = answer;
+        aiDiv.innerHTML = markedToHtml(answer);
     } catch(e) {
-        thinking.remove();
-        msgs.innerHTML += '<div class="chat-msg ai">Error: '+escapeHtml(e.message)+'</div>';
+        aiDiv.textContent = 'Error: ' + e.message;
     }
     input.disabled = false; btn.disabled = false;
     input.focus();
