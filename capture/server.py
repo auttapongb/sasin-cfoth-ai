@@ -49,14 +49,14 @@ TRANSCRIPTS_DIR.mkdir(exist_ok=True)
 
 DB_PATH = Path("/root/sasin-capture.db")
 
-GROQ_API_KEY = os.environ["GROQ_API_KEY"]
+GROQ_API_KEY = os.environ.get("GROQ_API_KEY", "")
 GROQ_TRANSCRIBE_URL = "https://api.groq.com/openai/v1/audio/transcriptions"
 GROQ_MODEL = "whisper-large-v3"
 
-DEEPGRAM_API_KEY = os.environ["DEEPGRAM_API_KEY"]
+DEEPGRAM_API_KEY = os.environ.get("DEEPGRAM_API_KEY", "")
 DEEPGRAM_TRANSCRIBE_URL = "https://api.deepgram.com/v1/listen?model=nova-2&smart_format=true"
 
-GEMINI_API_KEY = os.environ["GEMINI_API_KEY"]
+GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "")
 GEMINI_MODEL = "gemini-2.5-flash"
 GEMINI_URL = f"https://generativelanguage.googleapis.com/v1beta/models/{GEMINI_MODEL}:generateContent"
 
@@ -137,7 +137,7 @@ def db_fetch(sql: str, params: tuple = ()) -> list[dict]:
 
 
 def create_session(session_id: str | None = None) -> str:
-    sid = session_id or datetime.now(timezone.utc).strftime("session_%Y%m%d_%H%M%S")
+    sid = session_id or datetime.now(timezone.utc).strftime("session_%Y%m%d_%H%M%S_%f")
     now = datetime.now(timezone.utc).isoformat()
     existing = db_fetch("SELECT id FROM sessions WHERE id = ?", (sid,))
     if not existing:
@@ -279,6 +279,7 @@ async def transcribe(audio: UploadFile = File(...), chunk_index: int = Form(0),
             "engine": _last_engine_used,
             "timestamp_iso": now_iso,
             "entry_id": entry_id,
+            "elapsed_sec": elapsed_sec,
         }
 
     except asyncio.TimeoutError:
@@ -780,6 +781,12 @@ async def startup():
         print(f"  ⚠️  Deepgram warm failed: {e}")
 
     init_db()
+    missing = []
+    if not GROQ_API_KEY: missing.append("GROQ_API_KEY")
+    if not DEEPGRAM_API_KEY: missing.append("DEEPGRAM_API_KEY")
+    if not GEMINI_API_KEY: missing.append("GEMINI_API_KEY")
+    if missing:
+        print(f"  WARNING: Missing API keys: {chr(44).join(missing)} - some features disabled")
     print(f"Capture v4 ready — Groq STT + Gemini Vision + AI Co-Learner ({COLEARNER_MODEL})")
     print(f"DB: {DB_PATH} ({DB_PATH.stat().st_size} bytes)")
 

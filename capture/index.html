@@ -590,7 +590,7 @@ function captureSlide() {
 async function handleSlideCapture(input) {
     if (!input.files || !input.files[0]) return;
     const file = input.files[0];
-    const elapsedSec = (Date.now() - startTime) / 1000;
+    const elapsedSec = isRecording ? (Date.now() - startTime) / 1000 : 0;
     const form = new FormData();
     form.append('image', file);
     form.append('session_id', sessionId);
