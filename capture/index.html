@@ -808,7 +808,6 @@ async function handleSlideCapture(input) {
     if (!input.files || !input.files[0]) return;
     const file = input.files[0];
     if (!sessionId) await startSession('Slide Capture');
-    document.getElementById('sessionTitle').textContent = '📸 Slide Capture';
     const elapsedSec = isRecording ? (Date.now() - startTime) / 1000 : 0;
     const form = new FormData();
     form.append('image', file);
