@@ -715,6 +715,16 @@ async def get_session_detail(session_id: str):
     return {"session": session[0], "entry_count": len(entries), "entries": entries}
 
 
+@app.post("/sessions/{session_id}/rename")
+async def rename_session(session_id: str, title: str = Form("")):
+    session = db_fetch("SELECT id FROM sessions WHERE id = ?", (session_id,))
+    if not session:
+        raise HTTPException(404, "Session not found")
+    db_execute("UPDATE sessions SET title = ?, updated_at = ? WHERE id = ?",
+               (title, datetime.now(timezone.utc).isoformat(), session_id))
+    return {"session_id": session_id, "title": title}
+
+
 # ── Legacy endpoints ──
 
 @app.get("/sessions_legacy")

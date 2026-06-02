@@ -182,6 +182,58 @@ body {
     .panel-body { padding: 6px 8px; }
     .entry { font-size: 0.8rem; padding: 6px 8px; }
 }
+/* ── Session Title ── */
+.session-title {
+    font-size: 0.75rem; color: var(--gold-light); font-weight: 500;
+    margin: 0 8px; padding: 2px 10px; border-radius: 10px;
+    background: rgba(201,168,76,0.1); border: 1px solid rgba(201,168,76,0.2);
+    cursor: pointer; max-width: 180px; overflow: hidden;
+    text-overflow: ellipsis; white-space: nowrap; transition: all 0.15s;
+}
+.session-title:hover { background: rgba(201,168,76,0.2); }
+.session-title:empty { display: none; }
+
+/* ── Load Modal ── */
+.modal-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.7);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 1000; animation: fadeIn 0.2s ease;
+}
+.modal-card {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 14px; width: 90vw; max-width: 480px;
+    max-height: 70vh; display: flex; flex-direction: column;
+    box-shadow: 0 8px 40px rgba(0,0,0,0.5);
+}
+.modal-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 18px; border-bottom: 1px solid var(--border);
+    font-weight: 600; font-size: 0.9rem; color: var(--gold);
+}
+.modal-close {
+    background: none; border: none; color: var(--dim); font-size: 1.1rem;
+    cursor: pointer; padding: 4px 8px; border-radius: 6px;
+}
+.modal-close:hover { color: var(--text); background: rgba(255,255,255,0.05); }
+.modal-body { padding: 8px; overflow-y: auto; flex: 1; }
+.session-list-item {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 12px 14px; border-radius: 10px; cursor: pointer;
+    transition: all 0.12s; border: 1px solid transparent;
+    margin-bottom: 2px;
+}
+.session-list-item:hover { background: rgba(201,168,76,0.06); border-color: var(--border); }
+.session-list-item .sli-title { font-weight: 600; font-size: 0.85rem; color: var(--text); }
+.session-list-item .sli-meta { font-size: 0.65rem; color: var(--dim); margin-top: 2px; }
+.session-list-item .sli-count {
+    font-size: 0.7rem; color: var(--gold); background: rgba(201,168,76,0.1);
+    padding: 3px 8px; border-radius: 10px; white-space: nowrap;
+}
+
+@media (max-width: 768px) {
+    .modal-card { width: 95vw; max-height: 80vh; }
+    .session-title { max-width: 120px; font-size: 0.7rem; }
+}
 </style>
 </head>
 <body>
@@ -191,6 +243,7 @@ body {
     <div class="status-dot connected" id="statusDot"></div>
     <span class="status-text" id="statusText">Ready</span>
     <div class="logo">Sasin <span>EMBA 2026</span></div>
+    <span class="session-title" id="sessionTitle" onclick="renameSession()" title="Click to rename">New Session</span>
     <span class="timer" id="timer">00:00</span>
     <button class="btn-sm" onclick="loadSessions()" title="Load past session">📂 Load</button>
     <button class="btn-sm save" onclick="saveCurrentSession()">💾 Save</button>
@@ -258,43 +311,70 @@ let lastColearnerTime = 0;
 const COLEARNER_COOLDOWN_MS = 30000; // 30 seconds between insights
 
 // ─── Session ──────────────────────────────────────
-async function startSession() {
+async function startSession(title) {
+    title = title || 'Untitled Lecture';
     const resp = await fetch(`${API}/sessions`, {
         method: 'POST',
         headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-        body: 'title=Lecture&tags=live'
+        body: 'title=' + encodeURIComponent(title) + '&tags=live'
     });
     const data = await resp.json();
     sessionId = data.session_id;
+    document.getElementById('sessionTitle').textContent = title;
     box1Entries = 0; box2Entries = 0;
     document.getElementById('box1Body').innerHTML = '';
     document.getElementById('box2Body').innerHTML = '';
     document.getElementById('slideStrip').innerHTML = '';
     updateCounts();
-    toast(`Session started: ${sessionId}`, 'info');
+    toast('Session: ' + title, 'info');
     return sessionId;
 }
 
 async function saveCurrentSession() {
     if (!sessionId) { toast('No active session', 'error'); return; }
-    toast('Session saved to database ✓', 'info');
+    downloadTranscript();
 }
 
 async function newSession() {
-    if (isRecording) return;
-    await startSession();
+    if (isRecording) { toast('Stop recording first', 'error'); return; }
+    const title = prompt('Lecture title:', '');
+    if (title === null) return; // cancelled
+    await startSession(title || 'Untitled Lecture');
 }
 
 async function loadSessions() {
+    if (isRecording) { toast('Stop recording first', 'error'); return; }
     try {
         const resp = await fetch(`${API}/sessions`);
         const data = await resp.json();
-        if (!data.sessions || data.sessions.length === 0) {
-            toast('No saved sessions found', 'info');
-            return;
+        const sessions = data.sessions || [];
+        const body = document.getElementById('loadModalBody');
+
+        if (sessions.length === 0) {
+            body.innerHTML = '<div class="empty-state"><div class="big-icon">📭</div>No saved sessions yet.<br><span style="font-size:0.7rem">Record a lecture first!</span></div>';
+        } else {
+            body.innerHTML = sessions.map(s => {
+                const title = s.title || s.id;
+                const date = new Date(s.updated_at).toLocaleDateString('en-GB', {day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'});
+                const count = s.entry_count || 0;
+                return `<div class="session-list-item" onclick="selectSession('${s.id}','${title.replace(/'/g, "\'")}')">
+                    <div><div class="sli-title">${escapeHtml(title)}</div>
+                    <div class="sli-meta">${date}</div></div>
+                    <div class="sli-count">${count} entries</div>
+                </div>`;
+            }).join('');
         }
-        const sid = data.sessions[0].id;
-        sessionId = sid;
+        document.getElementById('loadModal').style.display = 'flex';
+    } catch(e) {
+        toast('Failed to load sessions: ' + e.message, 'error');
+    }
+}
+
+async function selectSession(sid, title) {
+    closeLoadModal();
+    sessionId = sid;
+    document.getElementById('sessionTitle').textContent = title || sid;
+    try {
         const detail = await fetch(`${API}/sessions/${sid}`);
         const sdata = await detail.json();
         document.getElementById('box1Body').innerHTML = '';
@@ -305,10 +385,29 @@ async function loadSessions() {
             renderSavedEntry(e);
         }
         updateCounts();
-        toast(`Loaded: ${sdata.session.title || sid} (${sdata.entry_count} entries)`, 'info');
+        toast('Loaded: ' + title + ' (' + sdata.entry_count + ' entries)', 'info');
     } catch(e) {
-        toast('Failed to load sessions: ' + e.message, 'error');
+        toast('Failed to load session: ' + e.message, 'error');
     }
+}
+
+function closeLoadModal() {
+    document.getElementById('loadModal').style.display = 'none';
+}
+
+function renameSession() {
+    if (!sessionId) return;
+    const current = document.getElementById('sessionTitle').textContent;
+    const title = prompt('Rename session:', current);
+    if (title === null || title === current) return;
+    document.getElementById('sessionTitle').textContent = title;
+    // Update title on server
+    fetch(`${API}/sessions/${sessionId}/rename`, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+        body: 'title=' + encodeURIComponent(title)
+    }).catch(e => console.error('Rename failed:', e));
+    toast('Renamed to: ' + title, 'info');
 }
 
 function renderSavedEntry(e) {
@@ -709,5 +808,17 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 });
 </script>
+<!-- ═══ LOAD MODAL ═══ -->
+<div class="modal-overlay" id="loadModal" style="display:none" onclick="if(event.target===this)closeLoadModal()">
+  <div class="modal-card">
+    <div class="modal-header">
+      <span>📂 Load Past Session</span>
+      <button class="modal-close" onclick="closeLoadModal()">✕</button>
+    </div>
+    <div class="modal-body" id="loadModalBody">
+      <div class="empty-state"><div class="big-icon">📭</div>Loading sessions...</div>
+    </div>
+  </div>
+</div>
 </body>
 </html>
