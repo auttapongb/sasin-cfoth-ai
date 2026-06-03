@@ -29,7 +29,7 @@ from typing import Optional
 
 from fastapi import FastAPI, UploadFile, File, Form, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse, JSONResponse, HTMLResponse
+from fastapi.responses import FileResponse, JSONResponse, HTMLResponse, Response
 from pydantic import BaseModel, field_validator
 import uvicorn
 import httpx
@@ -2132,6 +2132,17 @@ async def startup():
 # Second Brain Knowledge Graph Proxy
 # ═══════════════════════════════════════════════════════════════
 
+async def _get_http_client():
+    """Lazy-init httpx client shared across proxy endpoints."""
+    global _http_client
+    if _http_client is None:
+        _http_client = httpx.AsyncClient(
+            http2=True, timeout=httpx.Timeout(30.0),
+            limits=httpx.Limits(max_keepalive_connections=10, max_connections=30),
+        )
+    return _http_client
+
+
 @app.get("/second-brain", response_class=HTMLResponse)
 async def serve_second_brain():
     """Serve the interactive knowledge graph visualization."""
@@ -2150,7 +2161,8 @@ async def serve_second_brain():
 async def proxy_graph():
     """Proxy graph API from local Second Brain server with graceful fallback."""
     try:
-        resp = await _http_client.get("http://localhost:8400/graph", timeout=5.0)
+        client = await _get_http_client()
+        resp = await client.get("http://localhost:8400/graph", timeout=5.0)
         return JSONResponse(resp.json())
     except Exception:
         return JSONResponse({"nodes": [], "links": [], "updated": "unavailable", "note": "Second Brain server offline. Graph data embedded in page."})
@@ -2168,6 +2180,19 @@ async def proxy_concept(name: str):
     """Proxy concept detail API."""
     resp = await _http_client.get(f"http://localhost:8400/concept/{name}", timeout=10.0)
     return JSONResponse(resp.json())
+
+
+@app.get("/second-brain/download/{kb_name}/{filename:path}")
+async def proxy_download(kb_name: str, filename: str):
+    """Proxy file download from Second Brain → DeepTutor KB."""
+    client = await _get_http_client()
+    url = f"http://localhost:8400/download/{kb_name}/{filename}"
+    resp = await client.get(url, timeout=10.0)
+    if resp.status_code != 200:
+        raise HTTPException(resp.status_code, f"File not found: {resp.status_code}")
+    content_type = resp.headers.get("content-type", "application/octet-stream")
+    return Response(content=resp.content, media_type=content_type,
+                   headers={"Content-Disposition": f'attachment; filename="{filename}"'})
 
 
 @app.get("/second-brain/doc/{name:path}")
@@ -2191,16 +2216,15 @@ async def proxy_delete_doc(name: str):
     return JSONResponse(resp.json(), status_code=resp.status_code)
 
 
-@app.get("/second-brain/download/{kb_name}/{filename:path}")
-async def proxy_download(kb_name: str, filename: str):
-    """Proxy file download from Second Brain → DeepTutor KB."""
-    url = f"http://localhost:8400/download/{kb_name}/{filename}"
-    resp = await _http_client.get(url)
-    if resp.status_code != 200:
-        raise HTTPException(resp.status_code, "File not found")
-    content_type = resp.headers.get("content-type", "application/octet-stream")
-    return Response(content=resp.content, media_type=content_type,
-                   headers={"Content-Disposition": f'attachment; filename="{filename}"'})
+@app.on_event("startup")
+async def startup():
+    global _http_client
+    if _http_client is None:
+        _http_client = httpx.AsyncClient(
+            http2=True, timeout=httpx.Timeout(30.0),
+            limits=httpx.Limits(max_keepalive_connections=10, max_connections=30),
+        )
+        logger.info("httpx client initialized")
 
 
 @app.on_event("shutdown")
