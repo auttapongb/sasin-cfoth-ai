@@ -26,6 +26,15 @@ body {
   display: flex; height: 100vh; overflow: hidden;
 }
 
+/* ═══ SIDEBAR RESIZER ═══ */
+#sidebar-resizer {
+  width: 5px; cursor: col-resize; background: transparent;
+  position: absolute; top: 0; right: 0; bottom: 0; z-index: 20;
+  transition: background 0.15s;
+}
+#sidebar-resizer:hover, #sidebar-resizer.active { background: var(--gold); }
+#sidebar { position: relative; }
+
 /* ═══ SIDEBAR ═══ */
 #sidebar {
   width: var(--sidebar); min-width: var(--sidebar);
@@ -191,7 +200,23 @@ body {
   #sidebar { display: none; }
   .dashboard-grid { grid-template-columns: 1fr; }
 }
+/* ═══ FULLCALENDAR OVERRIDES ═══ */
+.fc { font-size: 13px; }
+.fc .fc-toolbar-title { font-size: 16px !important; color: var(--text); }
+.fc .fc-button { background: var(--card) !important; border: 1px solid var(--border) !important; color: var(--text) !important; font-size: 12px !important; }
+.fc .fc-button-active { background: var(--gold) !important; color: #000 !important; border-color: var(--gold) !important; }
+.fc th { color: var(--dim); font-weight: 600; font-size: 11px; }
+.fc-day-today { background: rgba(251,191,36,0.05) !important; }
+.fc-event { border: none !important; padding: 2px 6px !important; font-size: 11px !important; border-radius: 4px !important; cursor: pointer; }
+.fc-event.exam { background: rgba(239,68,68,0.3) !important; color: #fca5a5 !important; }
+.fc-event.class { background: rgba(59,130,246,0.3) !important; color: #93c5fd !important; }
+.fc-event.workshop { background: rgba(139,92,246,0.3) !important; color: #c4b5fd !important; }
+.fc-event.deadline { background: rgba(249,115,22,0.3) !important; color: #fdba74 !important; }
+.fc-scrollgrid { border-color: var(--border) !important; }
+.fc-col-header-cell { background: #0d0d18; }
+.fc-daygrid-day { background: var(--bg); }
 </style>
+<script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js'></script>
 </head>
 <body>
 
@@ -230,9 +255,11 @@ body {
     <div class="menu-section-title">Module 1 — Jun/Jul 2026</div>
     <div class="menu-item" onclick="openModal('course', 'mgmt-s-0031')">
       <span class="icon">🎯</span> MGMT-S-0031
+      <span style="font-size:10px;color:var(--dim);margin-left:4px">Management &amp; Business Strategy</span>
     </div>
     <div class="menu-item" onclick="openModal('course', 'decs-s-0034')">
       <span class="icon">📈</span> DECS-S-0034
+      <span style="font-size:10px;color:var(--dim);margin-left:4px">Statistical Models &amp; Management Analysis</span>
     </div>
   </div>
 
@@ -240,15 +267,19 @@ body {
     <div class="menu-section-title">Future Modules</div>
     <div class="menu-item" onclick="openModal('course', 'mktg-s-0030')">
       <span class="icon">📣</span> MKTG-S-0030
+      <span style="font-size:10px;color:var(--dim);margin-left:4px">Marketing for a Digital Age</span>
     </div>
     <div class="menu-item" onclick="openModal('course', 'mors-s-0030')">
       <span class="icon">👥</span> MORS-S-0030
+      <span style="font-size:10px;color:var(--dim);margin-left:4px">Leadership in Organizations</span>
     </div>
     <div class="menu-item" onclick="openModal('course', 'mgmt-s-0024')">
       <span class="icon">🌍</span> MGMT-S-0024
+      <span style="font-size:10px;color:var(--dim);margin-left:4px">ESG Factors for Business</span>
     </div>
     <div class="menu-item" onclick="openModal('course', 'mgmt-s-0025')">
       <span class="icon">💡</span> MGMT-S-0025
+      <span style="font-size:10px;color:var(--dim);margin-left:4px">Creative Transformation &amp; Generative Thinking</span>
     </div>
   </div>
 
@@ -273,6 +304,7 @@ body {
       <span class="icon">👥</span> Roster
     </div>
   </div>
+  <div id="sidebar-resizer"></div>
 </nav>
 
 <!-- ═══ MAIN CONTENT ═══ -->
@@ -301,6 +333,40 @@ body {
 <script>
 // ═══ CONFIG ═══
 const API = 'https://capture.sasin.cfoth.ai';
+
+// ═══ RESIZABLE SIDEBAR ═══
+(function(){
+  const sidebar = document.getElementById('sidebar');
+  const resizer = document.getElementById('sidebar-resizer');
+  if (!sidebar || !resizer) return;
+  // Restore saved width
+  const saved = localStorage.getItem('sidebarWidth');
+  if (saved) document.documentElement.style.setProperty('--sidebar', saved + 'px');
+  let startX, startW;
+  resizer.addEventListener('mousedown', function(e){
+    startX = e.clientX;
+    startW = sidebar.offsetWidth;
+    resizer.classList.add('active');
+    document.body.style.cursor = 'col-resize';
+    document.body.style.userSelect = 'none';
+    function onMove(e2){
+      const w = Math.max(180, Math.min(500, startW + (e2.clientX - startX)));
+      document.documentElement.style.setProperty('--sidebar', w + 'px');
+    }
+    function onUp(){
+      resizer.classList.remove('active');
+      document.body.style.cursor = '';
+      document.body.style.userSelect = '';
+      localStorage.setItem('sidebarWidth', sidebar.offsetWidth);
+      document.removeEventListener('mousemove', onMove);
+      document.removeEventListener('mouseup', onUp);
+      // Trigger FullCalendar resize if open
+      if (_calendarInstance) _calendarInstance.updateSize();
+    }
+    document.addEventListener('mousemove', onMove);
+    document.addEventListener('mouseup', onUp);
+  });
+})();
 
 // Embedded calendar data - refreshed by cron
 const CALENDAR_DATA = (() => {
@@ -574,82 +640,95 @@ function closeModal() {
   showHome();
 }
 
-// ═══ CALENDAR MODAL ═══
+// ═══ CALENDAR MODAL (FullCalendar) ═══
+let _calendarInstance = null;
 async function renderCalendarModal() {
   const data = CALENDAR_DATA || {};
   const events = data.events || [];
   const syncedAt = data.synced_at || '';
-    const tagColors = { EXAM: 'tag-exam', CLASS: 'tag-class', WORKSHOP: 'tag-workshop', DEADLINE: 'tag-deadline' };
-    
-    const exams = events.filter(e => e.tags.includes('EXAM'));
-    let alertHtml = '';
-    if (exams.length) {
-      alertHtml = `<div style="background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.3);border-radius:8px;padding:12px;margin-bottom:16px;font-size:13px;color:#fca5a5">
-        ⚠️ ${exams.length} exam${exams.length>1?'s':''} ahead — ${exams.map(e => e.summary).join(', ')}
-      </div>`;
-    }
 
-    const now = new Date();
-    const eventsHtml = events.map(e => {
-      const start = new Date(e.start);
-      const daysUntil = Math.ceil((start - now) / 86400000);
-      const dateStr = e.is_all_day 
-        ? start.toLocaleDateString('en-GB', {weekday:'short',day:'numeric',month:'short'})
-        : start.toLocaleDateString('en-GB', {weekday:'short',day:'numeric',month:'short'}) + ' · ' + start.toLocaleTimeString('en-GB', {hour:'2-digit',minute:'2-digit'});
-      const tags = (e.tags||[]).map(t => `<span class="tag ${tagColors[t]||''}">${t}</span>`).join('');
-      let urgency = '';
-      if (daysUntil <= 1) urgency = '🔥 ';
-      else if (daysUntil <= 3) urgency = '⚠️ ';
-      else if (daysUntil <= 7) urgency = '📌 ';
-      return `<div class="event-item" style="cursor:default">
-        <div class="event-date"><div class="day">${urgency}${daysUntil}d</div>away</div>
-        <div style="flex:1">
-          <div style="font-weight:600;font-size:14px">${e.summary}${tags}</div>
-          <div style="font-size:12px;color:var(--dim);margin-top:2px">${dateStr}${e.location ? ' · 📍 '+e.location : ''}</div>
-          ${e.description ? `<div style="font-size:12px;color:#64748b;margin-top:4px;line-height:1.4;max-height:60px;overflow:hidden">${e.description.replace(/<[^>]*>/g,' ').substring(0,200)}</div>` : ''}
-        </div>
-      </div>`;
-    }).join('');
+  // Map tags to FullCalendar classNames
+  const fcEvents = events.map(e => {
+    const cls = (e.tags||[]).map(t => t.toLowerCase()).join(' ');
+    return {
+      title: e.summary,
+      start: e.start,
+      end: e.end || e.start,
+      allDay: e.is_all_day || false,
+      classNames: [cls],
+      extendedProps: { location: e.location, description: e.description, tags: e.tags, daysUntil: e.days_until }
+    };
+  });
 
-    return `
-      <div style="display:flex;gap:10px;margin-bottom:16px">
-        <button class="btn btn-gold" onclick="window.open('https://calendar.google.com/calendar/u/0/r?src=auttapong.budhsombatwarakul%40sasin.edu&ctz=Asia%2FBangkok','_blank')">📅 Open Google Calendar</button>
-      </div>
-      ${alertHtml}
-      <div>${eventsHtml || '<p style="color:var(--dim)">No upcoming events</p>'}</div>
-      <p style="color:var(--dim);font-size:11px;margin-top:12px">Synced: ${syncedAt.substring(0,19)} · ${events.length} events</p>
-    `;
+  const exams = events.filter(e => e.tags && e.tags.includes('EXAM'));
+  let alertHtml = exams.length 
+    ? `<div style="background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.3);border-radius:8px;padding:10px 14px;margin-bottom:16px;font-size:13px;color:#fca5a5">
+        ⚠️ ${exams.length} exam${exams.length>1?'s':''} ahead — ${exams.map(e=>e.summary).join(', ')}
+       </div>` : '';
+
+  return `
+    <div style="display:flex;gap:10px;margin-bottom:12px;flex-wrap:wrap;align-items:center">
+      <button class="btn btn-gold" onclick="window.open('https://calendar.google.com/calendar/u/0/r?src=auttapong.budhsombatwarakul%40sasin.edu&ctz=Asia%2FBangkok','_blank')">📅 Google Calendar</button>
+      <span style="font-size:11px;color:var(--dim)">${syncedAt.substring(0,10)} · ${events.length} events</span>
+      <span style="margin-left:auto;display:flex;gap:6px;align-items:center;font-size:11px">
+        <span style="color:#93c5fd">■ Class</span>
+        <span style="color:#c4b5fd">■ Workshop</span>
+        <span style="color:#fca5a5">■ Exam</span>
+        <span style="color:#fdba74">■ Deadline</span>
+      </span>
+    </div>
+    ${alertHtml}
+    <div id="calendarWidget" style="min-height:520px"></div>
+    <script>
+      (function(){
+        if (_calendarInstance) _calendarInstance.destroy();
+        var el = document.getElementById('calendarWidget');
+        var cal = new FullCalendar.Calendar(el, {
+          initialView: 'dayGridMonth',
+          headerToolbar: { left: 'prev,next today', center: 'title', right: 'dayGridMonth,timeGridWeek,listWeek' },
+          events: ${json.dumps(fcEvents)},
+          eventClick: function(info) {
+            var p = info.event.extendedProps;
+            var tags = (p.tags||[]).map(function(t){ return '<span class="tag tag-'+t.toLowerCase()+'">'+t+'</span>'; }).join('');
+            var desc = p.description ? '<p style="font-size:12px;color:var(--dim);margin-top:6px">'+p.description.replace(/<[^>]*>/g,' ').substring(0,300)+'</p>' : '';
+            alert(info.event.title + '\n' + (p.location||'') + '\n' + (p.daysUntil||'') + ' days away' + (desc ? '\n\n' + p.description.replace(/<[^>]*>/g,'').substring(0,200) : ''));
+          },
+          height: 'auto',
+          themeSystem: 'standard'
+        });
+        cal.render();
+        _calendarInstance = cal;
+      })();
+    <\/script>
+  `;
 }
 
 // ═══ CAPTURE MODAL ═══
 async function renderCaptureModal() {
   return `
-    <p style="color:var(--dim);margin-bottom:16px">Record and transcribe lectures in real-time with AI analysis.</p>
-    <div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:20px;text-align:center">
-      <p style="font-size:24px;margin-bottom:8px">🎙️</p>
-      <p style="font-weight:600;margin-bottom:12px">Lecture Capture System</p>
-      <p style="color:var(--dim);font-size:13px;margin-bottom:16px">Two-box architecture: raw transcript + AI co-learner insights</p>
-      <button class="btn btn-gold" onclick="window.open('https://capture.sasin.cfoth.ai','_blank')" style="font-size:15px;padding:12px 32px">
-        🚀 Open Full Capture App
-      </button>
-      <p style="color:var(--dim);font-size:11px;margin-top:8px">Opens in new tab with all features</p>
+    <p style="color:var(--dim);margin-bottom:16px">Record and transcribe lectures — uses your browser's built-in speech recognition (free, no API keys needed).</p>
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:24px;text-align:center">
+      <p style="font-size:32px;margin-bottom:4px">🎙️</p>
+      <p style="font-weight:600;margin-bottom:8px;font-size:16px">Lecture Capture</p>
+      <p style="color:var(--dim);font-size:13px;margin-bottom:16px">Browser STT + AI co-learner. Opens in a dedicated window.</p>
+      <button class="btn btn-gold" onclick="window.open('https://capture.sasin.cfoth.ai','_blank')" style="font-size:15px;padding:12px 32px">🚀 Open Capture</button>
     </div>
-    <div style="margin-top:16px;display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px">
-      <div style="background:var(--card);border:1px solid var(--border);border-radius:8px;padding:14px">
-        <strong>🎤 Live Transcription</strong>
-        <p style="font-size:12px;color:var(--dim);margin-top:4px">Real-time speech-to-text with Groq Whisper</p>
+    <div style="margin-top:16px;display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px">
+      <div style="background:var(--card);border:1px solid var(--border);border-radius:8px;padding:12px">
+        <strong>🎤 Browser STT</strong>
+        <p style="font-size:11px;color:var(--dim);margin-top:4px">Web Speech API — works in Chrome/Safari, zero config</p>
       </div>
-      <div style="background:var(--card);border:1px solid var(--border);border-radius:8px;padding:14px">
+      <div style="background:var(--card);border:1px solid var(--border);border-radius:8px;padding:12px">
         <strong>🤖 AI Co-Learner</strong>
-        <p style="font-size:12px;color:var(--dim);margin-top:4px">DeepSeek-powered study companion</p>
+        <p style="font-size:11px;color:var(--dim);margin-top:4px">DeepSeek answers questions from your transcript</p>
       </div>
-      <div style="background:var(--card);border:1px solid var(--border);border-radius:8px;padding:14px">
-        <strong>📸 Slide Analysis</strong>
-        <p style="font-size:12px;color:var(--dim);margin-top:4px">Gemini Vision slide understanding</p>
+      <div style="background:var(--card);border:1px solid var(--border);border-radius:8px;padding:12px">
+        <strong>📸 Slide Capture</strong>
+        <p style="font-size:11px;color:var(--dim);margin-top:4px">Screenshot + Gemini analysis</p>
       </div>
-      <div style="background:var(--card);border:1px solid var(--border);border-radius:8px;padding:14px">
-        <strong>💾 Session Management</strong>
-        <p style="font-size:12px;color:var(--dim);margin-top:4px">Save, load, and organize lectures</p>
+      <div style="background:var(--card);border:1px solid var(--border);border-radius:8px;padding:12px">
+        <strong>📱 iPad Ready</strong>
+        <p style="font-size:11px;color:var(--dim);margin-top:4px">Works on iPad Safari during lectures</p>
       </div>
     </div>
   `;
@@ -699,8 +778,9 @@ async function renderFlashcardsModal() {
       <p style="font-weight:600;margin-bottom:8px">Flashcard Study System</p>
       <p style="color:var(--dim);font-size:13px;margin-bottom:16px">Generate cards from lectures, review with spaced repetition</p>
       <button class="btn btn-gold" onclick="window.open('https://capture.sasin.cfoth.ai','_blank')" style="padding:10px 24px">
-        🚀 Open Flashcards
+        🚀 Open Flashcards (Capture App)
       </button>
+      <p style="color:var(--dim);font-size:11px;margin-top:6px">Generate cards from your lecture transcripts</p>
     </div>
   `;
 }
@@ -714,8 +794,9 @@ async function renderQuizModal() {
       <p style="font-weight:600;margin-bottom:8px">Quiz System</p>
       <p style="color:var(--dim);font-size:13px;margin-bottom:16px">Test your knowledge with AI-generated quizzes</p>
       <button class="btn btn-gold" onclick="window.open('https://capture.sasin.cfoth.ai','_blank')" style="padding:10px 24px">
-        🚀 Open Quiz
+        🚀 Open Quiz (Capture App)
       </button>
+      <p style="color:var(--dim);font-size:11px;margin-top:6px">AI-generated quizzes from your study materials</p>
     </div>
   `;
 }
