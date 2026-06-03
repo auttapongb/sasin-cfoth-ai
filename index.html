@@ -617,11 +617,8 @@ async function renderCalendarModal() {
       </div>
       ${alertHtml}
       <div>${eventsHtml || '<p style="color:var(--dim)">No upcoming events</p>'}</div>
-      <p style="color:var(--dim);font-size:11px;margin-top:12px">Synced: ${(data.synced_at||'').substring(0,19)} · ${events.length} events</p>
+      <p style="color:var(--dim);font-size:11px;margin-top:12px">Synced: ${syncedAt.substring(0,19)} · ${events.length} events</p>
     `;
-  } catch(e) {
-    return '<p style="color:var(--dim)">Calendar data unavailable. <a href="https://calendar.google.com/calendar/u/0/r?src=auttapong.budhsombatwarakul%40sasin.edu&ctz=Asia%2FBangkok" target="_blank" style="color:var(--gold)">Open Google Calendar →</a></p>';
-  }
 }
 
 // ═══ CAPTURE MODAL ═══
