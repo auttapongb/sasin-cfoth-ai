@@ -30,7 +30,7 @@ from typing import Optional
 from fastapi import FastAPI, UploadFile, File, Form, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse, HTMLResponse
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator
 import uvicorn
 import httpx
 
@@ -327,6 +327,8 @@ class SaveRequest(BaseModel):
     tags: str = ""
 
 
+VALID_BOXES = {'transcript', 'colearner', 'slide', 'notes', 'mindmap', 'action_items', 'case_analysis'}
+
 class EntryRequest(BaseModel):
     session_id: str
     box: str
@@ -336,6 +338,13 @@ class EntryRequest(BaseModel):
     elapsed_sec: float = 0
     linked_entry_id: int | None = None
     metadata: dict | None = None
+
+    @field_validator('box')
+    @classmethod
+    def validate_box(cls, v: str) -> str:
+        if v not in VALID_BOXES:
+            raise ValueError(f"box must be one of {sorted(VALID_BOXES)}, got '{v}'")
+        return v
 
 
 class CoLearnerRequest(BaseModel):
