@@ -27,7 +27,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Optional
 
-from fastapi import FastAPI, UploadFile, File, Form, HTTPException, Query
+from fastapi import FastAPI, UploadFile, File, Form, HTTPException, Query, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse, HTMLResponse, Response
 from pydantic import BaseModel, field_validator
@@ -2041,8 +2041,9 @@ async def chat_v2(req: ChatRequest, stream: bool = Query(False)):
     except Exception as e:
         logger.warning(f"KB fetch failed: {e}")
     if not context_parts:
-        return {"answer": "No session context or knowledge base available. Start a lecture capture or upload materials first.", "sources": []}
-    context = "\n\n---\n\n".join(context_parts)
+        context = "No session context or knowledge base yet. The user hasn't captured a lecture or uploaded materials. Encourage them to start a capture or upload PDFs, but still answer their question helpfully with general knowledge."
+    else:
+        context = "\n\n---\n\n".join(context_parts)
     system = CHAT_SYSTEM_PROMPT + "\n\nCRITICAL: You MUST cite specific sources when answering. If using KB content, mention the filename. If using transcript, mention 'from your lecture'. Format citations as **Source: filename** or **[Lecture Transcript]**."
     if stream:
         return StreamingResponse(
@@ -2068,14 +2069,21 @@ async def chat_v2(req: ChatRequest, stream: bool = Query(False)):
 
 # ── Serve Frontend ──
 
-_HTML_PATH = Path("/docker/hermes-bot/data/sasin-cfoth-ai/capture/index.html")
-if not _HTML_PATH.exists():
-    _HTML_PATH = Path("/data/sasin-cfoth-ai/capture/index.html")
+_CAPTURE_HTML = Path("/data/sasin-cfoth-ai/capture/index.html")
+if not _CAPTURE_HTML.exists():
+    _CAPTURE_HTML = Path("/docker/hermes-bot/data/sasin-cfoth-ai/capture/index.html")
+_HUB_HTML = Path("/data/sasin-cfoth-ai/index.html")
+
 
 @app.get("/")
-async def serve_frontend():
-    if _HTML_PATH.exists():
-        return FileResponse(str(_HTML_PATH))
+async def serve_frontend(request: Request):
+    host = request.headers.get("host", "")
+    # sasin.cfoth.ai → hub page; capture.sasin.cfoth.ai → capture app
+    if "sasin.cfoth.ai" in host and "capture" not in host:
+        if _HUB_HTML.exists():
+            return FileResponse(str(_HUB_HTML))
+    if _CAPTURE_HTML.exists():
+        return FileResponse(str(_CAPTURE_HTML))
     return HTMLResponse("<h1>Capture server running. Frontend not deployed yet.</h1>")
 
 
@@ -2148,11 +2156,22 @@ async def serve_second_brain():
     """Serve the interactive knowledge graph visualization."""
     graph_html = Path("/data/emba-second-brain/index.html")
     if graph_html.exists():
-        # Read and fix the fetch URL to use the proxy
+        # Read and fix fetch URLs to use the proxy prefix
         html = graph_html.read_text()
-        # Replace fetch('/graph' with fetch('/second-brain/graph'
         html = html.replace("fetch('/graph'", "fetch('/second-brain/graph'")
         html = html.replace('fetch("/graph"', 'fetch("/second-brain/graph"')
+        html = html.replace("fetch('/documents'", "fetch('/second-brain/documents'")
+        html = html.replace('fetch("/documents"', 'fetch("/second-brain/documents"')
+        html = html.replace("fetch('/sync'", "fetch('/second-brain/sync'")
+        html = html.replace('fetch("/sync"', 'fetch("/second-brain/sync"')
+        html = html.replace("fetch('/drive-file/'", "fetch('/second-brain/drive-file/'")
+        html = html.replace('fetch("/drive-file/"', 'fetch("/second-brain/drive-file/"')
+        html = html.replace("fetch('/doc/'", "fetch('/second-brain/doc/'")
+        html = html.replace('fetch("/doc/"', 'fetch("/second-brain/doc/"')
+        html = html.replace("fetch('/search", "fetch('/second-brain/search")
+        html = html.replace('fetch("/search', 'fetch("/second-brain/search')
+        html = html.replace("fetch('/concept/", "fetch('/second-brain/concept/")
+        html = html.replace('fetch("/concept/', 'fetch("/second-brain/concept/')
         return HTMLResponse(html)
     return HTMLResponse("<h1>Second Brain</h1><p>Graph not built yet. Run build_graph.py</p>", status_code=503)
 
@@ -2214,6 +2233,37 @@ async def proxy_delete_doc(name: str):
     """Proxy delete document from Second Brain."""
     resp = await _http_client.delete(f"http://localhost:8400/doc/{name}", timeout=15.0)
     return JSONResponse(resp.json(), status_code=resp.status_code)
+
+
+@app.get("/second-brain/documents")
+async def proxy_documents():
+    """Proxy documents list from Second Brain."""
+    resp = await _http_client.get("http://localhost:8400/documents", timeout=10.0)
+    return JSONResponse(resp.json())
+
+
+@app.post("/second-brain/sync")
+async def proxy_sync():
+    """Proxy manual sync trigger to Second Brain."""
+    resp = await _http_client.post("http://localhost:8400/sync", timeout=120.0)
+    return JSONResponse(resp.json())
+
+
+@app.delete("/second-brain/drive-file/{drive_id}")
+async def proxy_delete_drive_file(drive_id: str):
+    """Proxy drive file removal from Second Brain sync state."""
+    resp = await _http_client.delete(f"http://localhost:8400/drive-file/{drive_id}", timeout=10.0)
+    return JSONResponse(resp.json(), status_code=resp.status_code)
+
+
+@app.get("/second-brain/calendar")
+async def proxy_calendar():
+    """Proxy calendar events from Second Brain server."""
+    try:
+        resp = await _http_client.get("http://localhost:8400/calendar", timeout=10.0)
+        return JSONResponse(resp.json())
+    except Exception:
+        return JSONResponse({"events": [], "total": 0, "synced_at": None, "note": "Calendar server unavailable"})
 
 
 @app.on_event("startup")

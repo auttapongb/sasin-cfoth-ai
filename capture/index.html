@@ -53,7 +53,7 @@ body {
 .btn-sm.second-brain.uploading { opacity: 0.6; pointer-events: none; animation: dotPulse 1s infinite; }
 
 /* ── Tabs ── */
-.tabs { display: flex; gap: 2px; margin: 0 8px; }
+.tabs { display: flex; gap: 2px; margin: 0 8px; overflow-x: auto; flex-shrink: 0; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
 .tab {
     padding: 5px 14px; border: 1px solid var(--border); border-radius: 8px 8px 0 0;
     background: transparent; color: var(--dim); font-size: 0.72rem;
@@ -326,6 +326,47 @@ body {
     background: var(--bg);
 }
 #brainGraph { min-height: 500px; min-width: 100%; }
+/* Brain tab toolbar + sub-tabs */
+#brainToolbar {
+  position: absolute; top: 8px; left: 12px; right: 12px; z-index: 20;
+  display: flex; align-items: center; gap: 10px;
+  background: rgba(20,20,40,0.95); border: 1px solid var(--border);
+  border-radius: 10px; padding: 6px 12px;
+}
+#brainSyncBtn {
+  background: linear-gradient(135deg, #7C3AED, #A78BFA); color: #fff;
+  border: none; padding: 5px 14px; border-radius: 6px;
+  font-size: 12px; cursor: pointer; font-weight: 600;
+  font-family: 'Inter', sans-serif; white-space: nowrap;
+}
+#brainSyncBtn:hover { opacity: 0.9; }
+#brainSyncBtn:disabled { opacity: 0.5; cursor: not-allowed; }
+#brainSyncStatus { font-size: 11px; color: var(--dim); }
+.brain-subtabs { display: flex; gap: 2px; margin-left: 8px; }
+.brain-subtab {
+  background: transparent; border: 1px solid transparent;
+  color: var(--dim); padding: 5px 12px; border-radius: 6px;
+  font-size: 12px; cursor: pointer; font-family: 'Inter', sans-serif;
+}
+.brain-subtab:hover { color: var(--text); border-color: var(--border); }
+.brain-subtab.active {
+  color: var(--gold); border-color: var(--gold);
+  background: rgba(201,168,76,0.08);
+}
+.brain-subview { display: none; position: relative; flex: 1; min-height: 0; margin-top: 48px; }
+.brain-subview.active { display: block; }
+/* Brain documents table */
+.brain-doc-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+.brain-doc-table th { text-align: left; padding: 8px 10px; color: var(--dim); border-bottom: 1px solid var(--border); font-size: 11px; text-transform: uppercase; }
+.brain-doc-table td { padding: 8px 10px; border-bottom: 1px solid rgba(148,163,184,0.05); }
+.brain-doc-table tr:hover { background: rgba(59,130,246,0.03); }
+.brain-doc-name { color: var(--text); max-width: 260px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.brain-doc-del { background: rgba(232,93,58,0.12); color: #E85D3A; border: none; padding: 3px 10px; border-radius: 4px; font-size: 11px; cursor: pointer; }
+.brain-doc-del:hover { background: rgba(232,93,58,0.25); }
+#brainDocsView { padding: 8px 16px; overflow-y: auto; max-height: calc(100vh - 140px); }
+#brainDocsSearch { width: 100%; max-width: 300px; background: rgba(20,20,40,0.9); border: 1px solid var(--border); border-radius: 8px; padding: 7px 12px; color: var(--text); font-size: 12px; outline: none; font-family: 'Inter',sans-serif; margin-bottom: 16px; }
+.brain-section { margin-bottom: 24px; }
+.brain-section h4 { font-size: 13px; color: var(--dim); margin-bottom: 8px; }
 
 /* ── Flashcards ── */
 #flashcardCard {
@@ -381,6 +422,7 @@ body {
         <button class="tab active" id="tabCapture" onclick="switchTab('capture')">📝 Capture</button>
         <button class="tab" id="tabChat" onclick="switchTab('chat')">💬 Chat</button>
         <button class="tab" id="tabBrain" onclick="switchTab('brain')">🧠 2nd Brain</button>
+        <button class="tab" id="tabCalendar" onclick="switchTab('calendar')">📅 Calendar</button>
         <button class="tab" id="tabBriefs" onclick="switchTab('briefs')">📋 Briefs</button>
         <button class="tab" id="tabFlashcards" onclick="switchTab('flashcards')">🃏 Cards</button>
         <button class="tab" id="tabQuizzes" onclick="switchTab('quizzes')">📝 Quiz</button>
@@ -466,15 +508,60 @@ body {
 
 <!-- ═══ SECOND BRAIN VIEW ═══ -->
 <div id="brainView" class="tab-view" style="display:none;position:relative;flex:1;min-height:0;">
-    <div id="brainSearch" style="position:absolute;top:12px;left:12px;z-index:10;background:rgba(20,20,40,0.95);border:1px solid var(--border);border-radius:10px;padding:8px 14px;">
-        <input type="text" placeholder="🔍 Search concepts, documents..." id="brainSearchInput" style="background:transparent;border:none;color:var(--text);font-size:13px;outline:none;width:240px;font-family:'Inter',sans-serif;" oninput="filterBrainGraph()">
+    <!-- Toolbar -->
+    <div id="brainToolbar">
+        <button id="brainSyncBtn" onclick="triggerBrainSync()">🔄 Sync Now</button>
+        <div class="brain-subtabs">
+            <button class="brain-subtab active" onclick="switchBrainSubView('graph')">🧠 Graph</button>
+            <button class="brain-subtab" onclick="switchBrainSubView('docs')">📚 Documents</button>
+        </div>
+        <span id="brainSyncStatus"></span>
     </div>
-    <div id="brainInfo" style="position:absolute;top:12px;right:12px;z-index:10;background:rgba(20,20,40,0.95);border:1px solid var(--border);border-radius:10px;padding:12px 16px;max-width:300px;max-height:60vh;overflow-y:auto;font-size:12px;color:var(--dim);">
-        <div style="font-weight:600;color:var(--gold);margin-bottom:8px;">📚 Knowledge Graph</div>
-        <div id="brainDetail" style="line-height:1.6;">Click a node to explore</div>
-        <div id="brainStats" style="margin-top:10px;padding-top:8px;border-top:1px solid var(--border);font-size:11px;"></div>
+
+    <!-- Graph sub-view -->
+    <div id="brainGraphView" class="brain-subview active" style="margin-top:48px;position:relative;">
+        <div id="brainSearch" style="position:absolute;top:12px;left:12px;z-index:10;background:rgba(20,20,40,0.95);border:1px solid var(--border);border-radius:10px;padding:8px 14px;">
+            <input type="text" placeholder="🔍 Search concepts, documents..." id="brainSearchInput" style="background:transparent;border:none;color:var(--text);font-size:13px;outline:none;width:240px;font-family:'Inter',sans-serif;" oninput="filterBrainGraph()">
+        </div>
+        <div id="brainInfo" style="position:absolute;top:12px;right:12px;z-index:10;background:rgba(20,20,40,0.95);border:1px solid var(--border);border-radius:10px;padding:12px 16px;max-width:300px;max-height:60vh;overflow-y:auto;font-size:12px;color:var(--dim);">
+            <div style="font-weight:600;color:var(--gold);margin-bottom:8px;">📚 Knowledge Graph</div>
+            <div id="brainDetail" style="line-height:1.6;">Click a node to explore</div>
+            <div id="brainStats" style="margin-top:10px;padding-top:8px;border-top:1px solid var(--border);font-size:11px;"></div>
+        </div>
+        <svg id="brainGraph" style="width:100%;height:100%;background:#0D1117;"></svg>
     </div>
-    <svg id="brainGraph" style="width:100%;height:100%;background:#0D1117;"></svg>
+
+    <!-- Documents sub-view -->
+    <div id="brainDocsView" class="brain-subview" style="display:none;">
+        <input type="text" placeholder="🔍 Filter documents..." id="brainDocsSearch" oninput="filterBrainDocs()">
+        <div class="brain-section">
+            <h4>📁 In Google Drive <span id="brainDriveCount">(0)</span></h4>
+            <table class="brain-doc-table"><thead><tr><th>File</th><th>Folder</th><th>Modified</th><th></th></tr></thead><tbody id="brainDriveBody"></tbody></table>
+            <div id="brainDriveEmpty" style="text-align:center;padding:20px;color:var(--dim);display:none;">No Drive files synced yet. Drop files and Sync.</div>
+        </div>
+        <div class="brain-section">
+            <h4>🧠 In 2nd Brain <span id="brainBrainCount">(0)</span></h4>
+            <table class="brain-doc-table"><thead><tr><th>Document</th><th>Frameworks</th><th>Size</th><th></th></tr></thead><tbody id="brainBrainBody"></tbody></table>
+            <div id="brainBrainEmpty" style="text-align:center;padding:20px;color:var(--dim);display:none;">No documents processed yet.</div>
+        </div>
+    </div>
+
+<!-- ═══ CALENDAR VIEW ═══ -->
+<div id="calendarView" class="tab-view" style="display:none;flex-direction:column;flex:1;min-height:0;overflow-y:auto;">
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:16px;border-bottom:1px solid var(--border);">
+        <h2 style="color:var(--gold);font-family:'Playfair Display',serif;margin:0;">📅 Calendar</h2>
+        <button onclick="window.open('https://calendar.google.com/calendar/u/0/r?src=auttapong.budhsombatwarakul%40sasin.edu&amp;ctz=Asia%2FBangkok','_blank')" 
+            style="padding:8px 20px;background:var(--gold);color:#000;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;">
+            📅 Open Full Calendar
+        </button>
+    </div>
+    <div style="padding:16px;overflow-y:auto;flex:1;">
+        <div id="calendarUpcoming" style="display:flex;flex-direction:column;gap:8px;">
+            <p style="color:var(--dim);text-align:center;padding:40px;">Loading events...</p>
+        </div>
+    </div>
+</div>
+
     <script id="brainGraphData" type="application/json">
 {
   "nodes": [
@@ -1897,7 +1984,7 @@ body {
       "shared": []
     }
   ],
-  "updated": "2026-06-03T11:58:18.036716"
+  "updated": "2026-06-03T18:47:28.835066"
 }
 </script>
 </div>
@@ -2736,7 +2823,7 @@ function switchTab(tab) {
     const el = document.getElementById(tabId);
     if (el) el.classList.add('active');
     // Hide all views
-    ['captureView','chatView','brainView','briefsView','flashcardsView','quizzesView','audioView','casesView'].forEach(id => {
+    ['captureView','chatView','brainView','calendarView','briefsView','flashcardsView','quizzesView','audioView','casesView'].forEach(id => {
         const v = document.getElementById(id);
         if (!v) return;
         if (id === 'chatView') v.classList.toggle('active', tab === 'chat');
@@ -2751,6 +2838,8 @@ function switchTab(tab) {
     document.getElementById('quizzesView').style.display = tab === 'quizzes' ? 'flex' : 'none';
     document.getElementById('audioView').style.display = tab === 'audio' ? 'flex' : 'none';
     document.getElementById('casesView').style.display = tab === 'cases' ? 'flex' : 'none';
+    document.getElementById('calendarView').style.display = tab === 'calendar' ? 'flex' : 'none';
+    if (tab === 'calendar') loadCalendar();
     // Show/hide capture controls
     const isCapture = tab === 'capture';
     document.getElementById('slideStrip').style.display = isCapture ? '' : 'none';
@@ -2952,15 +3041,134 @@ function openDocInChat(docName) {
     }, 100);
 }
 
+let brainSearchTimer = null;
 function filterBrainGraph() {
     const q = (document.getElementById('brainSearchInput')?.value || '').toLowerCase();
+    // Visual node dimming (keep existing behavior)
     d3.selectAll('.brain-node').style('opacity', function() {
         const d = d3.select(this).datum();
         if (!d || !q) return 1;
         return ((d.title||'').toLowerCase().includes(q) || (d.id||'').toLowerCase().includes(q) || (d.frameworks||[]).some(f=>f.toLowerCase().includes(q))) ? 1 : 0.06;
     });
     d3.selectAll('#brainGraph line').style('opacity', q ? 0.02 : 0.3);
+
+    // API search for real results
+    clearTimeout(brainSearchTimer);
+    if (!q) {
+        document.getElementById('brainDetail').innerHTML = 'Click a node to explore';
+        return;
+    }
+    brainSearchTimer = setTimeout(() => {
+        fetch(API + '/second-brain/search?q=' + encodeURIComponent(q))
+            .then(r => r.json())
+            .then(data => {
+                let h = `<div style="font-weight:600;color:var(--gold);margin-bottom:6px;">🔍 Results for "${escapeHtml(q)}"</div>`;
+                if (data.documents && data.documents.length) {
+                    h += `<div style="font-size:10px;color:var(--dim);margin-bottom:6px;">${data.documents.length} docs</div>`;
+                    data.documents.slice(0,10).forEach(d => {
+                        h += `<div style="margin:4px 0;padding:6px;background:rgba(59,130,246,0.04);border-radius:5px;">`;
+                        h += `<div style="font-size:11px;color:var(--text);">📄 ${escapeHtml(d.title || d.name || d.id)}</div>`;
+                        if (d.frameworks && d.frameworks.length) h += d.frameworks.slice(0,3).map(f => `<span style="display:inline-block;margin:2px;padding:1px 6px;border-radius:8px;font-size:9px;background:rgba(59,130,246,0.12);color:#60a5fa;">${escapeHtml(f)}</span>`).join('');
+                        h += '</div>';
+                    });
+                }
+                if (!data.documents?.length && !data.concepts?.length) h += '<div style="font-size:11px;">No results</div>';
+                document.getElementById('brainDetail').innerHTML = h;
+            })
+            .catch(() => {});
+    }, 300);
 }
+
+// ═══ Brain sub-view switching ═══
+function switchBrainSubView(name) {
+    document.querySelectorAll('.brain-subtab').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.brain-subview').forEach(v => v.classList.remove('active'));
+    if (name === 'graph') {
+        document.querySelector('.brain-subtab:nth-child(1)').classList.add('active');
+        document.getElementById('brainGraphView').classList.add('active');
+        if (!window._brainGraphInited) { window._brainGraphInited = true; setTimeout(() => initBrainGraph(), 100); }
+    } else {
+        document.querySelector('.brain-subtab:nth-child(2)').classList.add('active');
+        document.getElementById('brainDocsView').classList.add('active');
+        document.getElementById('brainDocsView').style.display = 'block';
+        loadBrainDocs();
+    }
+}
+
+// ═══ Documents list ═══
+async function loadBrainDocs() {
+    try {
+        const resp = await fetch(API + '/second-brain/documents');
+        const data = await resp.json();
+        document.getElementById('brainDriveCount').textContent = '(' + data.drive_count + ')';
+        document.getElementById('brainBrainCount').textContent = '(' + data.brain_count + ')';
+
+        // Drive table
+        const dt = document.getElementById('brainDriveBody');
+        if (data.drive_count === 0) {
+            dt.innerHTML = '';
+            document.getElementById('brainDriveEmpty').style.display = 'block';
+        } else {
+            document.getElementById('brainDriveEmpty').style.display = 'none';
+            dt.innerHTML = data.drive_files.map(f => `<tr>
+                <td><span class="brain-doc-name" title="${escapeHtml(f.name)}">📄 ${escapeHtml(f.name)}</span></td>
+                <td><span style="display:inline-block;padding:1px 8px;border-radius:8px;font-size:10px;background:${f.folder==='MAIN'?'rgba(251,191,36,0.15)':'rgba(59,130,246,0.15)'};color:${f.folder==='MAIN'?'#fbbf24':'#60a5fa'};">⭐ ${f.folder}</span></td>
+                <td style="color:var(--dim);font-size:11px;">${fmtBrainDate(f.modified)}</td>
+                <td><button class="brain-doc-del" onclick="deleteBrainDriveFile('${f.drive_id}','${escapeHtml(f.name)}')">🗑</button></td>
+            </tr>`).join('');
+        }
+
+        // Brain table
+        const bt = document.getElementById('brainBrainBody');
+        if (data.brain_count === 0) {
+            bt.innerHTML = '';
+            document.getElementById('brainBrainEmpty').style.display = 'block';
+        } else {
+            document.getElementById('brainBrainEmpty').style.display = 'none';
+            bt.innerHTML = data.brain_files.map(f => `<tr>
+                <td><span class="brain-doc-name" title="${escapeHtml(f.title || f.name)}">${escapeHtml(f.title || f.name)}</span></td>
+                <td>${(f.frameworks||[]).slice(0,2).map(fw => `<span style="display:inline-block;margin:1px;padding:1px 6px;border-radius:8px;font-size:10px;background:rgba(59,130,246,0.12);color:#60a5fa;">${escapeHtml(fw)}</span>`).join('')}</td>
+                <td style="color:var(--dim);font-size:11px;">${fmtBrainSize(f.size)}</td>
+                <td><button class="brain-doc-del" onclick="deleteBrainDoc('${escapeHtml(f.name)}')">🗑</button></td>
+            </tr>`).join('');
+        }
+    } catch(e) { console.error('loadBrainDocs:', e); }
+}
+
+function filterBrainDocs() {
+    const q = (document.getElementById('brainDocsSearch')?.value || '').toLowerCase();
+    document.querySelectorAll('#brainDriveBody tr, #brainBrainBody tr').forEach(row => {
+        row.style.display = (!q || row.textContent.toLowerCase().includes(q)) ? '' : 'none';
+    });
+}
+
+async function deleteBrainDriveFile(id, name) {
+    if (!confirm('Remove "' + name + '" from sync tracking?')) return;
+    await fetch(API + '/drive-file/' + encodeURIComponent(id), {method:'DELETE'});
+    loadBrainDocs();
+}
+
+// ═══ Manual sync ═══
+async function triggerBrainSync() {
+    const btn = document.getElementById('brainSyncBtn');
+    const st = document.getElementById('brainSyncStatus');
+    btn.disabled = true; btn.textContent = '⏳ Syncing...'; st.textContent = '';
+    try {
+        const resp = await fetch(API + '/second-brain/sync', {method:'POST'});
+        const data = await resp.json();
+        st.textContent = data.exit_code === 0 ? '✅ Done' : '⚠️ Errors';
+        st.style.color = data.exit_code === 0 ? '#4ade80' : '#fbbf24';
+        loadBrainDocs();
+        // Reload page after sync to refresh embedded graph data
+        setTimeout(() => location.reload(), 2000);
+    } catch(e) {
+        st.textContent = '❌ Failed'; st.style.color = '#ef4444';
+    }
+    btn.disabled = false; btn.textContent = '🔄 Sync Now';
+}
+
+function fmtBrainDate(d) { if(!d) return '—'; try { return new Date(d).toLocaleDateString(); } catch { return d; } }
+function fmtBrainSize(b) { if(!b) return '—'; return b < 1024 ? b+'B' : b < 1048576 ? (b/1024).toFixed(0)+'KB' : (b/1048576).toFixed(1)+'MB'; }
 
 
 // ═══════════════════════════════════════════════════
@@ -2989,6 +3197,14 @@ async function streamApi(url, body, onToken) {
         body: JSON.stringify(body)
     });
     if (!res.ok) { const e = await res.text(); throw new Error(e); }
+    // Check if response is JSON (non-streaming fallback) instead of SSE
+    const contentType = res.headers.get('content-type') || '';
+    if (contentType.includes('application/json') || !contentType.includes('text/event-stream')) {
+        const data = await res.json();
+        const answer = data.answer || data.error || JSON.stringify(data);
+        if (onToken) onToken(answer, answer);
+        return answer;
+    }
     const reader = res.body.getReader();
     const decoder = new TextDecoder();
     let fullText = '', buffer = '';
@@ -3393,22 +3609,91 @@ async function deleteSession(id) {
 // Override chat send to use v2 when on chat tab
 const _origSendChat = sendChat;
 sendChat = function() {
-    // Always use v2 for citation-aware responses
-    return sendChatV2();
+    // Try v2 first for citation-aware responses, fall back to v1 on error
+    const input = document.getElementById('chatInput');
+    const question = input.value.trim();
+    if (!question) return;
+    
+    // Use original (non-streaming) sendChat if we know v2 has issues
+    // or try v2 and fallback. For now, use original which is more reliable.
+    return _origSendChat();
 };
 
 // ═══ 2ND BRAIN DELETE ═══
 async function deleteBrainDoc(docName) {
-    confirmDelete(`Delete "${docName}" from the knowledge graph? This removes it from the index, corpus, and DeepTutor KB.`, async () => {
+    confirmDelete(`Delete "${docName}" from the knowledge graph?`, async () => {
         try {
             await api('/second-brain/doc/' + encodeURIComponent(docName), {method:'DELETE'});
-            alert('Document deleted. Reloading graph...');
-            // Reload the page to refresh graph data
-            location.reload();
+            // If on documents sub-view, refresh the list
+            if (document.getElementById('brainDocsView').style.display !== 'none') {
+                loadBrainDocs();
+            }
+            // Reload page to refresh embedded graph data
+            setTimeout(() => location.reload(), 500);
         } catch(e) {
             alert('Delete failed: ' + e.message);
         }
     });
+}
+
+// ═══ CALENDAR ═══
+async function loadCalendar() {
+    const container = document.getElementById('calendarUpcoming');
+    try {
+        // Read from embedded data (refreshed on page load)
+        const scriptEl = document.getElementById('calendarData');
+        const data = scriptEl ? JSON.parse(scriptEl.textContent) : { events: [] };
+        const events = data.events || [];
+        
+        if (events.length === 0) {
+            container.innerHTML = '<p style="color:var(--dim);text-align:center;padding:40px;">No upcoming events</p>';
+            return;
+        }
+
+        const now = new Date();
+        const tagColors = { EXAM: '#ef4444', DEADLINE: '#f97316', CLASS: '#3b82f6', WORKSHOP: '#8b5cf6', OTHER: '#6b7280' };
+        
+        container.innerHTML = events.map(e => {
+            const start = new Date(e.start);
+            const daysUntil = Math.ceil((start - now) / 86400000);
+            const dateStr = e.is_all_day 
+                ? start.toLocaleDateString('en-GB', {weekday:'short',day:'numeric',month:'short'})
+                : start.toLocaleDateString('en-GB', {weekday:'short',day:'numeric',month:'short'}) + ' · ' + start.toLocaleTimeString('en-GB', {hour:'2-digit',minute:'2-digit'});
+            
+            let urgency = '';
+            if (daysUntil <= 1) urgency = '🔥 ';
+            else if (daysUntil <= 3) urgency = '⚠️ ';
+            else if (daysUntil <= 7) urgency = '📌 ';
+            
+            const tags = e.tags.map(t => {
+                const color = tagColors[t] || tagColors.OTHER;
+                return `<span style="display:inline-block;padding:1px 6px;border-radius:6px;font-size:9px;font-weight:600;background:${color}22;color:${color};margin-left:4px;">${t}</span>`;
+            }).join('');
+            
+            return `<div style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:12px 16px;display:flex;gap:12px;align-items:flex-start;">
+                <div style="min-width:44px;text-align:center;color:var(--dim);font-size:11px;line-height:1.3;">
+                    <div style="color:var(--gold);font-size:18px;font-weight:700;">${urgency}${daysUntil}d</div>
+                    <div>away</div>
+                </div>
+                <div style="flex:1;min-width:0;">
+                    <div style="font-weight:600;font-size:14px;color:var(--text);">${escapeHtml(e.summary)}${tags}</div>
+                    <div style="font-size:12px;color:var(--dim);margin-top:4px;">${dateStr}${e.location ? ' · 📍 '+escapeHtml(e.location) : ''}</div>
+                </div>
+            </div>`;
+        }).join('');
+        
+        // Highlight critical events
+        const critical = events.filter(e => e.tags.includes('EXAM') || e.tags.includes('DEADLINE'));
+        if (critical.length > 0 && container.firstChild) {
+            container.insertAdjacentHTML('afterbegin', 
+                `<div style="background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.3);border-radius:8px;padding:8px 12px;font-size:12px;color:#fca5a5;">
+                    ⚠️ ${critical.length} critical event${critical.length>1?'s':''} — exams & deadlines ahead
+                </div>`
+            );
+        }
+    } catch(e) {
+        container.innerHTML = `<p style="color:var(--dim);text-align:center;padding:40px;">Calendar unavailable</p>`;
+    }
 }
 
 </script>
@@ -3429,5 +3714,7 @@ async function deleteBrainDoc(docName) {
     </div>
   </div>
 </div>
+
+<script id="calendarData" type="application/json">{"synced_at": "2026-06-03T10:54:57.938463+00:00", "total": 24, "events": [{"id": "7tar233s6fug3spk5gsst3k8hh", "summary": "Sasin Next Gen Bootcamp \u2013 Designing Your SASIN Life", "start": "2026-06-05T18:00:00+07:00", "end": "2026-06-05T21:30:00+07:00", "is_all_day": false, "location": "", "description": "<p><strong>Sasin Next Gen Bootcamp at Sasin</strong></p><p><strong>Session:</strong> Designing Your SASIN Life<br><strong>Date:</strong> Friday, June 5, 2026<br><strong>Venue:</strong> Sasin Hall, 9th Floor</p><h3>Session Description</h3><p>Based on Stanford\u2019s popular <em>Designing Your Life</em> ap", "tags": ["CLASS", "WORKSHOP"], "days_until": 2, "synced_at": "2026-06-03T10:54:57.938463+00:00"}, {"id": "7et89su0o0vnoi1302s6t9hfrs", "summary": "Sasin Next Gen Bootcamp \u2013 Preparing for Quantitative Thinking in MBA/EMBA", "start": "2026-06-06T13:30:00+07:00", "end": "2026-06-06T16:30:00+07:00", "is_all_day": false, "location": "", "description": "<p><strong>Sasin Next Gen Bootcamp at Sasin</strong></p><p><strong>Session:</strong> Preparing for Quantitative Thinking in MBA/EMBA<br><strong>Date:</strong> Saturday, June 6, 2026<br><strong>Time:</strong> 1:30 PM \u2013 4:30 PM<br><strong>Venue:</strong> Sasin Hall, 9th Floor</p><h3>Session Descriptio", "tags": ["CLASS", "WORKSHOP"], "days_until": 2, "synced_at": "2026-06-03T10:54:57.938463+00:00"}, {"id": "3lkcd7p96n78nh2rnoej6cooip", "summary": "Module 1/2026-2027", "start": "2026-06-08", "end": "2026-07-12", "is_all_day": true, "location": "", "description": "", "tags": ["CLASS"], "days_until": 999, "synced_at": "2026-06-03T10:54:57.938463+00:00"}, {"id": "6je9vamn93qihcpqocvmbekdn2", "summary": "Due Date: 9 June 2026: submission to Student Experience", "start": "2026-06-09", "end": "2026-06-10", "is_all_day": true, "location": "", "description": "<a href=\"https://sasinware.sasin.edu/pluginfile.php/78266/mod_resource/content/1/2026%20MGMT-S-0031%20Business%20Strategy%20EMBA.pdf\">https://sasinware.sasin.edu/pluginfile.php/78266/mod_resource/content/1/2026%20MGMT-S-0031%20Business%20Strategy%20EMBA.pdf</a>", "tags": ["DEADLINE", "CLASS"], "days_until": 999, "synced_at": "2026-06-03T10:54:57.938463+00:00"}, {"id": "j0aodb9l91j46sm8k8f0lns49k", "summary": "MGMT-S-0031: Management and Business Strategy", "start": "2026-06-12T18:00:00+07:00", "end": "2026-06-12T21:30:00+07:00", "is_all_day": false, "location": "", "description": "<div><h2>MGMT-S-0031: Management and Business Strategy</h2></div>\n<div> Module 1, 2026</div>\n<div><i>This course is to develop the capacity of students to think strategically about business and deal with various strategic decisions in a range of organizational settings.</i></div>\n<div><b>Faculty:</b", "tags": ["CLASS"], "days_until": 9, "synced_at": "2026-06-03T10:54:57.938463+00:00"}, {"id": "4806s9k81rtlg7r897mr7gjq9s", "summary": "DECS-S-0034: Statistical Models and Managerial Analysis", "start": "2026-06-13T09:00:00+07:00", "end": "2026-06-13T12:30:00+07:00", "is_all_day": false, "location": "", "description": "<div><h2>DECS-S-0034: Statistical Models and Managerial Analysis</h2></div>\n<div> Module 1, 2026</div>\n<div><i>The goal of this course is to enable participants to be more knowledgeable with respect to the underlying statistical foundations, especially those related to linear regressions.</i></div>\n", "tags": ["CLASS"], "days_until": 9, "synced_at": "2026-06-03T10:54:57.938463+00:00"}, {"id": "50soi97qog5foosp2svbo0dkts", "summary": "MGMT-S-0031: Management and Business Strategy", "start": "2026-06-13T13:30:00+07:00", "end": "2026-06-13T17:00:00+07:00", "is_all_day": false, "location": "", "description": "<div><h2>MGMT-S-0031: Management and Business Strategy</h2></div>\n<div> Module 1, 2026</div>\n<div><i>This course is to develop the capacity of students to think strategically about business and deal with various strategic decisions in a range of organizational settings.</i></div>\n<div><b>Faculty:</b", "tags": ["CLASS"], "days_until": 9, "synced_at": "2026-06-03T10:54:57.938463+00:00"}, {"id": "h2uv8csmjtjkfg2m8ffbdmr87s", "summary": "DECS-S-0034: Statistical Models and Managerial Analysis", "start": "2026-06-19T18:00:00+07:00", "end": "2026-06-19T21:30:00+07:00", "is_all_day": false, "location": "", "description": "<div><h2>DECS-S-0034: Statistical Models and Managerial Analysis</h2></div>\n<div> Module 1, 2026</div>\n<div><i>The goal of this course is to enable participants to be more knowledgeable with respect to the underlying statistical foundations, especially those related to linear regressions.</i></div>\n", "tags": ["CLASS"], "days_until": 16, "synced_at": "2026-06-03T10:54:57.938463+00:00"}, {"id": "57nrus13599ojdcfi74d5es1c4", "summary": "MGMT-S-0031: Management and Business Strategy", "start": "2026-06-20T09:00:00+07:00", "end": "2026-06-20T12:30:00+07:00", "is_all_day": false, "location": "", "description": "<div><h2>MGMT-S-0031: Management and Business Strategy</h2></div>\n<div> Module 1, 2026</div>\n<div><i>This course is to develop the capacity of students to think strategically about business and deal with various strategic decisions in a range of organizational settings.</i></div>\n<div><b>Faculty:</b", "tags": ["CLASS"], "days_until": 16, "synced_at": "2026-06-03T10:54:57.938463+00:00"}, {"id": "qf3pqp5mspq31fcu5363n4egl4", "summary": "DECS-S-0034: Statistical Models and Managerial Analysis", "start": "2026-06-20T13:30:00+07:00", "end": "2026-06-20T17:00:00+07:00", "is_all_day": false, "location": "", "description": "<div><h2>DECS-S-0034: Statistical Models and Managerial Analysis</h2></div>\n<div> Module 1, 2026</div>\n<div><i>The goal of this course is to enable participants to be more knowledgeable with respect to the underlying statistical foundations, especially those related to linear regressions.</i></div>\n", "tags": ["CLASS"], "days_until": 16, "synced_at": "2026-06-03T10:54:57.938463+00:00"}, {"id": "s4olc4d1s6op5odh5vpirpmo18", "summary": "MGMT-S-0031: Management and Business Strategy", "start": "2026-06-26T18:00:00+07:00", "end": "2026-06-26T21:30:00+07:00", "is_all_day": false, "location": "", "description": "<div><h2>MGMT-S-0031: Management and Business Strategy</h2></div>\n<div> Module 1, 2026</div>\n<div><i>This course is to develop the capacity of students to think strategically about business and deal with various strategic decisions in a range of organizational settings.</i></div>\n<div><b>Faculty:</b", "tags": ["CLASS"], "days_until": 23, "synced_at": "2026-06-03T10:54:57.938463+00:00"}, {"id": "qp3sp7l3gpis6cuvonna1l0te0", "summary": "DECS-S-0034: Statistical Models and Managerial Analysis", "start": "2026-06-27T09:00:00+07:00", "end": "2026-06-27T12:30:00+07:00", "is_all_day": false, "location": "", "description": "<div><h2>DECS-S-0034: Statistical Models and Managerial Analysis</h2></div>\n<div> Module 1, 2026</div>\n<div><i>The goal of this course is to enable participants to be more knowledgeable with respect to the underlying statistical foundations, especially those related to linear regressions.</i></div>\n", "tags": ["CLASS"], "days_until": 23, "synced_at": "2026-06-03T10:54:57.938463+00:00"}, {"id": "6caa60j59i4jb53enn7pseee0g", "summary": "MGMT-S-0031: Management and Business Strategy", "start": "2026-06-27T13:30:00+07:00", "end": "2026-06-27T17:00:00+07:00", "is_all_day": false, "location": "", "description": "<div><h2>MGMT-S-0031: Management and Business Strategy</h2></div>\n<div> Module 1, 2026</div>\n<div><i>This course is to develop the capacity of students to think strategically about business and deal with various strategic decisions in a range of organizational settings.</i></div>\n<div><b>Faculty:</b", "tags": ["CLASS"], "days_until": 23, "synced_at": "2026-06-03T10:54:57.938463+00:00"}, {"id": "6ofvjjbq4h4l87aup2vd6q4m14", "summary": "DECS-S-0034: Statistical Models and Managerial Analysis", "start": "2026-07-03T18:00:00+07:00", "end": "2026-07-03T21:30:00+07:00", "is_all_day": false, "location": "", "description": "<div><h2>DECS-S-0034: Statistical Models and Managerial Analysis</h2></div>\n<div> Module 1, 2026</div>\n<div><i>The goal of this course is to enable participants to be more knowledgeable with respect to the underlying statistical foundations, especially those related to linear regressions.</i></div>\n", "tags": ["CLASS"], "days_until": 30, "synced_at": "2026-06-03T10:54:57.938463+00:00"}, {"id": "qs4k21nfotd65itmgj6aebtipk", "summary": "MGMT-S-0031: Management and Business Strategy", "start": "2026-07-04T09:00:00+07:00", "end": "2026-07-04T12:30:00+07:00", "is_all_day": false, "location": "", "description": "<div><h2>MGMT-S-0031: Management and Business Strategy</h2></div>\n<div> Module 1, 2026</div>\n<div><i>This course is to develop the capacity of students to think strategically about business and deal with various strategic decisions in a range of organizational settings.</i></div>\n<div><b>Faculty:</b", "tags": ["CLASS"], "days_until": 30, "synced_at": "2026-06-03T10:54:57.938463+00:00"}, {"id": "927ujhnltkmltmjlcklu6ka0uo", "summary": "DECS-S-0034: Statistical Models and Managerial Analysis", "start": "2026-07-04T13:30:00+07:00", "end": "2026-07-04T17:00:00+07:00", "is_all_day": false, "location": "", "description": "<div><h2>DECS-S-0034: Statistical Models and Managerial Analysis</h2></div>\n<div> Module 1, 2026</div>\n<div><i>The goal of this course is to enable participants to be more knowledgeable with respect to the underlying statistical foundations, especially those related to linear regressions.</i></div>\n", "tags": ["CLASS"], "days_until": 30, "synced_at": "2026-06-03T10:54:57.938463+00:00"}, {"id": "lp7j80jvl5a9ib67ou6iieve24", "summary": "MGMT-S-0031: Management and Business Strategy", "start": "2026-07-10T18:00:00+07:00", "end": "2026-07-10T21:00:00+07:00", "is_all_day": false, "location": "", "description": "<div><h2>MGMT-S-0031: Management and Business Strategy</h2></div>\n<div> Module 1, 2026</div>\n<div><i>This course is to develop the capacity of students to think strategically about business and deal with various strategic decisions in a range of organizational settings.</i></div>\n<div><b>Faculty:</b", "tags": ["CLASS"], "days_until": 37, "synced_at": "2026-06-03T10:54:57.938463+00:00"}, {"id": "p2pr9h6f6fke3ka39cp8mb3cl0", "summary": "DECS-S-0034: Statistical Models and Managerial Analysis", "start": "2026-07-11T09:00:00+07:00", "end": "2026-07-11T12:00:00+07:00", "is_all_day": false, "location": "", "description": "<div><h2>DECS-S-0034: Statistical Models and Managerial Analysis</h2></div>\n<div> Module 1, 2026</div>\n<div><i>The goal of this course is to enable participants to be more knowledgeable with respect to the underlying statistical foundations, especially those related to linear regressions.</i></div>\n", "tags": ["EXAM", "CLASS"], "days_until": 37, "synced_at": "2026-06-03T10:54:57.938463+00:00"}, {"id": "5cgh9jfhj2g5fg5kv1855oe37o", "summary": "Module 2/2026-2027", "start": "2026-07-13", "end": "2026-08-16", "is_all_day": true, "location": "", "description": "", "tags": ["CLASS"], "days_until": 999, "synced_at": "2026-06-03T10:54:57.938463+00:00"}, {"id": "675puvi2sdb39vsbqsfnb2dd8r", "summary": "Break", "start": "2026-08-16", "end": "2026-08-24", "is_all_day": true, "location": "", "description": "", "tags": ["OTHER"], "days_until": 999, "synced_at": "2026-06-03T10:54:57.938463+00:00"}, {"id": "4toqadkfuei49f9ugcl2d5s3vs", "summary": "Module 3/2026-2027", "start": "2026-08-24", "end": "2026-09-27", "is_all_day": true, "location": "", "description": "", "tags": ["CLASS"], "days_until": 999, "synced_at": "2026-06-03T10:54:57.938463+00:00"}, {"id": "2bmls0dk8lg9p59qo5ft24a1cs", "summary": "Module 4/2026-2027", "start": "2026-09-28", "end": "2026-11-01", "is_all_day": true, "location": "", "description": "", "tags": ["CLASS"], "days_until": 999, "synced_at": "2026-06-03T10:54:57.938463+00:00"}, {"id": "4jr3khgkq1de9s7g2vk4km5j2e", "summary": "Break", "start": "2026-11-01", "end": "2026-11-09", "is_all_day": true, "location": "", "description": "", "tags": ["OTHER"], "days_until": 999, "synced_at": "2026-06-03T10:54:57.938463+00:00"}, {"id": "4rc7btsdmc7k6msi3f99ofcdqp", "summary": "Module 5/2026-2027", "start": "2026-11-09", "end": "2026-12-13", "is_all_day": true, "location": "", "description": "", "tags": ["CLASS"], "days_until": 999, "synced_at": "2026-06-03T10:54:57.938463+00:00"}]}</script>
 </body>
 </html>

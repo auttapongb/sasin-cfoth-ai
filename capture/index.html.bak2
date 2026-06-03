@@ -1,0 +1,1230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Sasin Lecture Capture — Two-Box Study</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+    --gold: #C9A84C; --gold-light: #E8D48B;
+    --bg: #0A0A14; --card: #141428; --border: #252540;
+    --text: #D8D8E8; --dim: #7A7A9A;
+    --recording: #E85D3A; --success: #4CAF50; --blue: #3B82F6;
+    --box1-accent: #3B82F6; --box2-accent: #C9A84C;
+    --box1-bg: #0D1117; --box2-bg: #111118;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+    font-family: 'Inter', sans-serif;
+    background: var(--bg); color: var(--text);
+    height: 100vh; overflow: hidden;
+    display: flex; flex-direction: column;
+}
+
+/* ── Top Bar ── */
+.topbar {
+    display: flex; align-items: center; gap: 12px;
+    padding: 8px 16px; background: var(--card);
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0; z-index: 10;
+}
+.topbar .logo { font-family: 'Playfair Display', serif; font-size: 1.1rem; color: var(--gold); }
+.topbar .logo span { font-size: 0.65rem; color: var(--dim); font-family: 'Inter', sans-serif; margin-left: 4px; }
+.status-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--success); flex-shrink: 0; }
+.status-dot.recording { background: var(--recording); animation: dotPulse 1s infinite; }
+@keyframes dotPulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+.status-text { font-size: 0.75rem; color: var(--dim); }
+.timer { margin-left: auto; font-family: monospace; font-size: 0.9rem; color: var(--gold); }
+.btn-sm {
+    padding: 6px 14px; border-radius: 16px; border: 1px solid var(--border);
+    background: transparent; color: var(--text); font-size: 0.7rem;
+    font-weight: 600; cursor: pointer; font-family: 'Inter', sans-serif;
+    transition: all 0.15s; white-space: nowrap;
+}
+.btn-sm:hover { border-color: var(--gold); color: var(--gold); }
+.btn-sm.primary { background: var(--recording); border-color: var(--recording); color: white; }
+.btn-sm.primary:hover { opacity: 0.9; }
+.btn-sm.save { border-color: var(--gold); color: var(--gold); }
+.btn-sm.second-brain { border-color: #7C3AED; color: #A78BFA; }
+.btn-sm.second-brain:hover { border-color: #A78BFA; background: rgba(124,58,237,0.1); }
+.btn-sm.second-brain.uploading { opacity: 0.6; pointer-events: none; animation: dotPulse 1s infinite; }
+
+/* ── Tabs ── */
+.tabs { display: flex; gap: 2px; margin: 0 8px; }
+.tab {
+    padding: 5px 14px; border: 1px solid var(--border); border-radius: 8px 8px 0 0;
+    background: transparent; color: var(--dim); font-size: 0.72rem;
+    font-weight: 600; cursor: pointer; font-family: 'Inter', sans-serif;
+    transition: all 0.15s; border-bottom: none;
+}
+.tab:hover { color: var(--text); border-color: var(--gold); }
+.tab.active { color: var(--gold); border-color: var(--gold); background: rgba(201,168,76,0.06); }
+
+/* ── Tab View Containers ── */
+#captureView { display: flex; flex-direction: column; flex: 1; min-height: 0; overflow: hidden; }
+#chatView.chat-view.active { display: flex; flex-direction: column; flex: 1; min-height: 0; }
+
+/* ── Chat View ── */
+.chat-view {
+    display: none; flex-direction: column; height: 100%;
+    background: var(--bg);
+}
+.chat-view.active { display: flex; }
+.chat-messages {
+    flex: 1; overflow-y: auto; padding: 12px 16px;
+    display: flex; flex-direction: column; gap: 10px;
+}
+.chat-msg {
+    max-width: 85%; padding: 10px 14px; border-radius: 14px;
+    font-size: 0.85rem; line-height: 1.5; animation: fadeIn 0.2s ease;
+}
+.chat-msg.user {
+    align-self: flex-end; background: rgba(59,130,246,0.15);
+    border: 1px solid rgba(59,130,246,0.25); color: var(--text);
+    border-bottom-right-radius: 4px;
+}
+.chat-msg.ai {
+    align-self: flex-start; background: var(--card);
+    border: 1px solid var(--border); color: var(--text);
+    border-bottom-left-radius: 4px;
+}
+.chat-msg.ai.thinking { opacity: 0.5; }
+.chat-input-row {
+    display: flex; gap: 8px; padding: 10px 16px;
+    background: var(--card); border-top: 1px solid var(--border);
+}
+.chat-input-row input {
+    flex: 1; background: var(--bg); border: 1px solid var(--border);
+    border-radius: 20px; padding: 8px 16px; color: var(--text);
+    font-size: 0.85rem; font-family: 'Inter', sans-serif; outline: none;
+}
+.chat-input-row input:focus { border-color: var(--gold); }
+.chat-send {
+    width: 38px; height: 38px; border-radius: 50%; border: none;
+    background: var(--gold); color: var(--bg); font-size: 1rem;
+    cursor: pointer; flex-shrink: 0; transition: all 0.15s;
+}
+.chat-send:hover { background: var(--gold-light); }
+.chat-send:disabled { opacity: 0.4; cursor: not-allowed; }
+.chat-empty {
+    text-align: center; color: var(--dim); padding: 60px 20px;
+}
+.chat-empty .big-icon { font-size: 2.5rem; margin-bottom: 12px; opacity: 0.4; }
+
+/* ── Main Two-Panel ── */
+.main-panels {
+    display: flex; flex: 1; overflow: hidden;
+    gap: 2px; background: var(--border);
+}
+.panel {
+    flex: 1; display: flex; flex-direction: column;
+    background: var(--card); overflow: hidden;
+    min-width: 0;
+}
+.panel-header {
+    padding: 10px 14px; font-weight: 700; font-size: 0.8rem;
+    display: flex; align-items: center; gap: 8px;
+    flex-shrink: 0; letter-spacing: 0.3px;
+}
+.panel-header .icon { font-size: 1rem; }
+.box1 .panel-header { background: rgba(59,130,246,0.1); color: var(--box1-accent); border-bottom: 1px solid rgba(59,130,246,0.2); }
+.box2 .panel-header { background: rgba(201,168,76,0.1); color: var(--box2-accent); border-bottom: 1px solid rgba(201,168,76,0.2); }
+.panel-body {
+    flex: 1; overflow-y: auto; padding: 8px 12px;
+    scroll-behavior: smooth;
+}
+.panel-body::-webkit-scrollbar { width: 4px; }
+.panel-body::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+/* ── Entry Styles ── */
+.entry {
+    padding: 8px 10px; margin-bottom: 6px;
+    border-radius: 8px; animation: fadeIn 0.25s ease;
+    font-size: 0.85rem; line-height: 1.5;
+    position: relative;
+}
+@keyframes fadeIn { from { opacity:0; transform:translateY(3px) } to { opacity:1; transform:translateY(0) } }
+.entry-time {
+    font-size: 0.6rem; color: var(--dim); font-family: monospace;
+    margin-bottom: 2px; display: flex; align-items: center; gap: 6px;
+}
+.entry-time .elapsed { color: var(--gold); font-weight: 600; }
+.entry-latest { border-left: 2px solid var(--gold); padding-left: 10px; }
+.entry-latest .entry-text { color: #fff; }
+
+/* Box 1 entries */
+.box1 .entry { background: rgba(59,130,246,0.04); border: 1px solid rgba(59,130,246,0.08); }
+.box1 .entry-text { color: var(--text); white-space: pre-wrap; word-break: break-word; }
+.box1 .entry-slide { border: 1px dashed var(--border); padding: 6px; text-align: center; }
+.box1 .entry-slide img { max-width: 100%; max-height: 200px; border-radius: 6px; cursor: pointer; }
+.box1 .entry-slide .slide-label { font-size: 0.65rem; color: var(--dim); margin-top: 4px; }
+
+/* Box 2 entries */
+.box2 .entry { background: rgba(201,168,76,0.04); border: 1px solid rgba(201,168,76,0.08); }
+.box2 .entry-text { color: var(--text); }
+.box2 .entry-insight { border-left: 2px solid var(--gold); padding-left: 10px; }
+.box2 .entry-slide-analysis { }
+.box2 .entry-slide-analysis .slide-text { font-size: 0.8rem; color: var(--dim); margin-bottom: 8px; }
+.box2 .entry-slide-analysis .qa { margin-bottom: 6px; }
+.box2 .entry-slide-analysis .q { color: var(--gold-light); font-weight: 600; font-size: 0.8rem; }
+.box2 .entry-slide-analysis .a { color: var(--text); font-size: 0.8rem; padding-left: 10px; border-left: 1px solid var(--border); }
+.box2 .entry-slide-analysis .summary { font-style: italic; color: var(--dim); font-size: 0.78rem; margin-bottom: 6px; }
+.box2 .entry-slide-analysis .explanation { color: var(--text); font-size: 0.82rem; line-height: 1.6; }
+
+.empty-state {
+    text-align: center; color: var(--dim); padding: 40px 20px;
+    font-size: 0.85rem; line-height: 1.6;
+}
+.empty-state .big-icon { font-size: 2rem; margin-bottom: 10px; opacity: 0.5; }
+
+/* ── Slide Strip ── */
+.slide-strip {
+    display: flex; gap: 6px; overflow-x: auto;
+    padding: 8px 0; min-height: 50px; align-items: center;
+    flex-shrink: 0; border-top: 1px solid var(--border);
+    margin: 0 12px;
+}
+.slide-strip:empty { min-height:0; padding:0; border:none; }
+.slide-thumb {
+    flex-shrink: 0; width: 48px; height: 48px; border-radius: 6px;
+    background-size: cover; background-position: center;
+    border: 1px solid var(--border); cursor: pointer;
+    transition: all 0.15s; position: relative;
+}
+.slide-thumb:hover { border-color: var(--blue); transform: scale(1.05); }
+.slide-thumb .badge {
+    position: absolute; top: -5px; right: -5px;
+    font-size: 0.5rem; padding: 1px 5px; border-radius: 8px;
+    font-weight: 700; color: white;
+}
+.badge-useful { background: var(--box2-accent); }
+.badge-raw { background: var(--box1-accent); }
+
+/* ── Bottom Controls ── */
+.bottombar {
+    display: flex; gap: 8px; padding: 8px 16px;
+    background: var(--card); border-top: 1px solid var(--border);
+    align-items: center; flex-shrink: 0;
+}
+.btn-record {
+    height: 44px; padding: 0 20px; border-radius: 22px; border: none;
+    font-size: 0.9rem; font-weight: 600; cursor: pointer;
+    font-family: 'Inter', sans-serif; display: flex; align-items: center; gap: 6px;
+    transition: all 0.2s;
+}
+.btn-record.start { background: var(--recording); color: white; flex: 1; box-shadow: 0 2px 12px rgba(232,93,58,0.3); }
+.btn-record.start:hover { transform: translateY(-1px); }
+.btn-record.recording { background: transparent; border: 2px solid var(--recording); color: var(--recording); flex: 1; animation: borderPulse 1.5s infinite; }
+@keyframes borderPulse { 0%,100%{border-color:var(--recording)} 50%{border-color:rgba(232,93,58,0.3)} }
+.btn-slide {
+    width: 44px; height: 44px; border-radius: 22px; border: 1px solid var(--blue);
+    background: transparent; color: var(--blue); font-size: 1.2rem;
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+    transition: all 0.15s; flex-shrink: 0;
+}
+.btn-slide:hover { background: rgba(59,130,246,0.1); }
+.btn-slide:active { transform: scale(0.94); }
+.btn-slide.pdf-upload { border-color: #7C3AED; color: #A78BFA; }
+.btn-slide.pdf-upload:hover { background: rgba(124,58,237,0.15); }
+.btn-slide.pdf-upload.uploading { animation: dotPulse 1s infinite; pointer-events: none; opacity: 0.5; }
+
+/* Toast */
+.toast {
+    position: fixed; bottom: 70px; left: 50%; transform: translateX(-50%);
+    padding: 10px 20px; border-radius: 10px; font-size: 0.8rem;
+    font-weight: 500; z-index: 100; animation: slideUp 0.3s ease;
+    max-width: 90vw; text-align: center;
+}
+.toast.error { background: var(--recording); color: white; }
+.toast.info { background: var(--card); color: var(--gold); border: 1px solid var(--gold); }
+@keyframes slideUp { from { opacity:0; transform:translateX(-50%) translateY(15px) } to { opacity:1; transform:translateX(-50%) translateY(0) } }
+
+/* Mobile responsive */
+.month-badge {
+    font-size: 0.6rem; color: var(--gold); font-weight: 700;
+    padding: 4px 0; margin-top: 10px; border-top: 1px solid var(--border);
+    letter-spacing: 0.5px;
+}
+.month-badge:first-child { margin-top: 0; border-top: none; }
+#sessionSearch:focus { border-color: var(--gold) !important; }
+@media (max-width: 768px) {
+    .main-panels { flex-direction: column; }
+    .panel { flex: none; height: 50%; }
+    .topbar { padding: 6px 10px; }
+    .bottombar { padding: 6px 10px; }
+    .panel-body { padding: 6px 8px; }
+    .entry { font-size: 0.8rem; padding: 6px 8px; }
+}
+/* ── Session Title ── */
+.session-title {
+    font-size: 0.75rem; color: var(--gold-light); font-weight: 500;
+    margin: 0 8px; padding: 2px 10px; border-radius: 10px;
+    background: rgba(201,168,76,0.1); border: 1px solid rgba(201,168,76,0.2);
+    cursor: pointer; max-width: 180px; overflow: hidden;
+    text-overflow: ellipsis; white-space: nowrap; transition: all 0.15s;
+}
+.session-title:hover { background: rgba(201,168,76,0.2); }
+.session-title:empty { display: none; }
+
+/* ── Load Modal ── */
+.modal-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.7);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 1000; animation: fadeIn 0.2s ease;
+}
+.modal-card {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 14px; width: 90vw; max-width: 480px;
+    max-height: 70vh; display: flex; flex-direction: column;
+    box-shadow: 0 8px 40px rgba(0,0,0,0.5);
+}
+.modal-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 18px; border-bottom: 1px solid var(--border);
+    font-weight: 600; font-size: 0.9rem; color: var(--gold);
+}
+.modal-close {
+    background: none; border: none; color: var(--dim); font-size: 1.1rem;
+    cursor: pointer; padding: 4px 8px; border-radius: 6px;
+}
+.modal-close:hover { color: var(--text); background: rgba(255,255,255,0.05); }
+.modal-body { padding: 8px; overflow-y: auto; flex: 1; }
+.session-list-item {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 12px 14px; border-radius: 10px; cursor: pointer;
+    transition: all 0.12s; border: 1px solid transparent;
+    margin-bottom: 2px;
+}
+.session-list-item:hover { background: rgba(201,168,76,0.06); border-color: var(--border); }
+.session-list-item .sli-title { font-weight: 600; font-size: 0.85rem; color: var(--text); }
+.session-list-item .sli-meta { font-size: 0.65rem; color: var(--dim); margin-top: 2px; }
+.session-list-item .sli-count {
+    font-size: 0.7rem; color: var(--gold); background: rgba(201,168,76,0.1);
+    padding: 3px 8px; border-radius: 10px; white-space: nowrap;
+}
+
+.month-badge {
+    font-size: 0.6rem; color: var(--gold); font-weight: 700;
+    padding: 4px 0; margin-top: 10px; border-top: 1px solid var(--border);
+    letter-spacing: 0.5px;
+}
+.month-badge:first-child { margin-top: 0; border-top: none; }
+#sessionSearch:focus { border-color: var(--gold) !important; }
+@media (max-width: 768px) {
+    .modal-card { width: 95vw; max-height: 80vh; }
+    .session-title { max-width: 120px; font-size: 0.7rem; }
+}
+</style>
+</head>
+<body>
+
+<!-- ═══ TOP BAR ═══ -->
+<div class="topbar">
+    <div class="status-dot connected" id="statusDot"></div>
+    <span class="status-text" id="statusText">Ready</span>
+    <div class="logo">Sasin <span>EMBA 2026</span></div>
+    <div class="tabs">
+        <button class="tab active" id="tabCapture" onclick="switchTab('capture')">📝 Capture</button>
+        <button class="tab" id="tabChat" onclick="switchTab('chat')">💬 Chat</button>
+        <button class="tab" id="tabBrain" onclick="switchTab('brain')">🧠 Second Brain</button>
+    </div>
+    <span class="session-title" id="sessionTitle" onclick="renameSession()" title="Click to rename">New Session</span>
+    <span class="timer" id="timer">00:00</span>
+    <button class="btn-sm" onclick="loadSessions()" title="Load past session">📂 Load</button>
+    <button class="btn-sm save" onclick="saveCurrentSession()">💾 Save</button>
+    <button class="btn-sm" onclick="newSession()">✨ New</button>
+    <button class="btn-sm second-brain" id="btnSecondBrain" onclick="pushToSecondBrain()" title="Upload transcript to Second Brain">🧠 2nd Brain</button>
+</div>
+
+<!-- ═══ CAPTURE VIEW ═══ -->
+<div id="captureView" class="tab-view active">
+<!-- ═══ TWO-PANEL ═══ -->
+<div class="main-panels">
+    <!-- Box 1: Transcript -->
+    <div class="panel box1">
+        <div class="panel-header">
+            <span class="icon">📝</span> Transcript
+            <span style="font-size:0.65rem;color:var(--dim);margin-left:auto" id="box1Count">0 entries</span>
+        </div>
+        <div class="panel-body" id="box1Body">
+            <div class="empty-state">
+                <div class="big-icon">🎤</div>
+                <div>Press <strong>Start Recording</strong> to begin.<br>
+                <span style="font-size:0.7rem">Transcript appears here in real-time.</span></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Box 2: AI Co-Learner -->
+    <div class="panel box2">
+        <div class="panel-header">
+            <span class="icon">🧠</span> AI Co-Learner
+            <span style="font-size:0.65rem;color:var(--dim);margin-left:auto" id="box2Count">0 insights</span>
+            <span id="colearnerStatus" style="font-size:0.6rem;color:var(--dim)"></span>
+        </div>
+        <div class="panel-body" id="box2Body">
+            <div class="empty-state">
+                <div class="big-icon">🤖</div>
+                <div>I study alongside you.<br>
+                <span style="font-size:0.7rem">I'll explain slides, connect ideas, and think out loud.</span></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ═══ SLIDE STRIP ═══ -->
+<div class="slide-strip" id="slideStrip"></div>
+
+<!-- ═══ BOTTOM BAR ═══ -->
+<div class="bottombar">
+    <button class="btn-record start" id="btnRecord" onclick="toggleRecording()">
+        <span id="btnIcon">🎙️</span> <span id="btnLabel">Start Recording</span>
+    </button>
+    <button class="btn-sm primary" id="btnStop" onclick="stopAndSave()" style="display:none">⏹️ Stop</button>
+    <button class="btn-sm" id="btnDownload" onclick="downloadTranscript()" style="display:none">📥 Download</button>
+    <button class="btn-slide" id="btnSlide" onclick="captureSlide()" title="Capture slide">📸</button>
+    <button class="btn-slide pdf-upload" id="btnPDF" onclick="uploadPDF()" title="Upload PDF to Second Brain">📄</button>
+</div>
+
+</div><!-- /captureView -->
+
+<!-- ═══ CHAT VIEW ═══ -->
+<div id="chatView" class="chat-view">
+    <div class="chat-messages" id="chatMessages">
+        <div class="chat-empty">
+            <div class="big-icon">💬</div>
+            <div>Ask me anything about your lectures.<br>
+            <span style="font-size:0.7rem">I search transcripts, insights, and your uploaded knowledge.</span></div>
+        </div>
+    </div>
+    <div class="chat-input-row">
+        <input type="text" id="chatInput" placeholder="Ask about this session..." onkeydown="if(event.key==='Enter')sendChat()">
+        <button class="chat-send" id="chatSendBtn" onclick="sendChat()">→</button>
+    </div>
+</div>
+
+<!-- ═══ SECOND BRAIN VIEW ═══ -->
+<div id="brainView" class="tab-view" style="display:none;">
+    <iframe src="/second-brain" style="width:100%;height:calc(100vh - 56px);border:none;background:#0f172a;"></iframe>
+</div>
+
+<input type="file" id="slideInput" accept="image/*" capture="environment" style="display:none" onchange="handleSlideCapture(this)">
+<input type="file" id="pdfInput" accept=".pdf" multiple style="display:none" onchange="handlePDFUpload(this)">
+
+<!-- ═══ SCRIPTS ═══ -->
+<script>
+const API = 'https://capture.sasin.cfoth.ai';
+let isRecording = false, mediaRecorder = null, startTime = 0, timerInterval = null;
+let chunkQueue = [], queueProcessing = false;
+let chunkIndex = 0, sessionId = '', totalWords = 0;
+let box1Entries = 0, box2Entries = 0;
+let lastTranscript = ''; // for co-learner context
+let colearnerBusy = false;
+let lastColearnerTime = 0;
+const COLEARNER_COOLDOWN_MS = 30000; // 30 seconds between insights
+
+// ─── Session ──────────────────────────────────────
+async function startSession(title) {
+    title = title || 'Lecture — ' + new Date().toLocaleDateString('en-GB', {day:'numeric',month:'short',year:'numeric'});
+    const resp = await fetch(`${API}/sessions`, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+        body: 'title=' + encodeURIComponent(title) + '&tags=live'
+    });
+    const data = await resp.json();
+    sessionId = data.session_id;
+    document.getElementById('sessionTitle').textContent = title;
+    box1Entries = 0; box2Entries = 0;
+    document.getElementById('box1Body').innerHTML = '';
+    document.getElementById('box2Body').innerHTML = '';
+    document.getElementById('slideStrip').innerHTML = '';
+    updateCounts();
+    toast('Session: ' + title, 'info');
+    return sessionId;
+}
+
+async function saveCurrentSession() {
+    if (!sessionId) { toast('No active session', 'error'); return; }
+    downloadTranscript();
+}
+
+async function newSession() {
+    if (isRecording) { toast('Stop recording first', 'error'); return; }
+    const title = prompt('Lecture title:', '');
+    if (title === null) return; // cancelled
+    await startSession(title || undefined);
+}
+
+async function loadSessions() {
+    if (isRecording) { toast('Stop recording first', 'error'); return; }
+    try {
+        const resp = await fetch(`${API}/sessions`);
+        const data = await resp.json();
+        window._allSessions = data.sessions || []; const sessions = window._allSessions;
+        const body = document.getElementById('loadModalBody');
+
+        if (sessions.length === 0) {
+            body.innerHTML = '<div class="empty-state"><div class="big-icon">📭</div>No saved sessions yet.<br><span style="font-size:0.7rem">Record a lecture first!</span></div>';
+        } else {
+            let currentMonth = '';
+            body.innerHTML = sessions.map(s => {
+                const title = s.title || s.id;
+                const d = new Date(s.updated_at);
+                const date = d.toLocaleDateString('en-GB', {day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'});
+                const month = d.toLocaleDateString('en-GB', {month:'long',year:'numeric'});
+                const count = s.entry_count || 0;
+                const preview = (s.preview || '').substring(0, 80);
+                let icon = '📝';
+                const ti = (s.tags || '') + ' ' + (s.title || '');
+                if (/pdf/i.test(ti) || /\.pdf$/i.test(s.title||'')) icon = '📄';
+                else if (/slide/i.test(ti)) icon = '📸';
+                else if (/live/i.test(s.tags||'') || count > 5) icon = '🎙️';
+                const escTitle = escapeHtml(title).replace(/'/g, "&#39;");
+                const monthHeader = month !== currentMonth ? (currentMonth = month, '<div class="month-badge">' + month + '</div>') : '';
+                return monthHeader + '<div class="session-list-item">'
+                    + '<div style="flex:1;min-width:0" onclick="selectSession(\'' + s.id + '\',\'' + title.replace(/'/g, "\\'") + '\')">'
+                    + '<div class="sli-title">' + icon + ' ' + escapeHtml(title) + '</div>'
+                    + '<div class="sli-meta">' + date + (preview ? ' — ' + escapeHtml(preview) : '') + '</div></div>'
+                    + '<div style="display:flex;align-items:center;gap:6px;flex-shrink:0">'
+                    + '<div class="sli-count">' + count + '</div>'
+                    + '<button class="modal-close" onclick="event.stopPropagation();downloadSession(\'' + s.id + '\',\'' + escTitle + '\')" title="Download" style="font-size:0.9rem;padding:2px 6px">📥</button>'
+                    + '</div></div>';
+            }).join('');
+        }
+        document.getElementById('loadModal').style.display = 'flex';
+    const searchEl = document.getElementById('sessionSearch');
+    if (searchEl) searchEl.value = '';
+    } catch(e) {
+        toast('Failed to load sessions: ' + e.message, 'error');
+    }
+}
+
+async function selectSession(sid, title) {
+    closeLoadModal();
+    sessionId = sid;
+    document.getElementById('sessionTitle').textContent = title || sid;
+    try {
+        const detail = await fetch(`${API}/sessions/${sid}`);
+        const sdata = await detail.json();
+        document.getElementById('box1Body').innerHTML = '';
+        document.getElementById('box2Body').innerHTML = '';
+        document.getElementById('slideStrip').innerHTML = '';
+        box1Entries = 0; box2Entries = 0;
+        for (const e of sdata.entries) {
+            renderSavedEntry(e);
+        }
+        updateCounts();
+        toast('Loaded: ' + title + ' (' + sdata.entry_count + ' entries)', 'info');
+    } catch(e) {
+        toast('Failed to load session: ' + e.message, 'error');
+    }
+}
+
+async function downloadSession(sid, title) {
+    const a = document.createElement('a');
+    a.href = `${API}/sessions/${sid}/download`;
+    a.download = (title || 'session').replace(/[^a-zA-Z0-9ก-๙ \-]/g, '_') + '.txt';
+    a.click();
+    toast('Downloading: ' + (title || sid), 'info');
+}
+
+function filterSessions() {
+    const q = (document.getElementById('sessionSearch').value || '').toLowerCase();
+    const body = document.getElementById('loadModalBody');
+    const sessions = window._allSessions || [];
+    if (!q) {
+        // Re-render all
+        const all = body.querySelectorAll('.session-list-item, .month-badge');
+        all.forEach(el => el.style.display = '');
+        return;
+    }
+    // Show/hide items
+    let visibleMonth = '';
+    const items = body.querySelectorAll('.session-list-item');
+    const badges = body.querySelectorAll('.month-badge');
+    items.forEach((item, i) => {
+        const text = item.textContent.toLowerCase();
+        const show = text.includes(q);
+        item.style.display = show ? '' : 'none';
+    });
+    // Hide empty month badges
+    badges.forEach(badge => {
+        let next = badge.nextElementSibling;
+        let hasVisible = false;
+        while (next && !next.classList.contains('month-badge')) {
+            if (next.classList.contains('session-list-item') && next.style.display !== 'none') {
+                hasVisible = true;
+                break;
+            }
+            next = next.nextElementSibling;
+        }
+        badge.style.display = hasVisible ? '' : 'none';
+    });
+}
+
+function closeLoadModal() {
+    document.getElementById('loadModal').style.display = 'none';
+}
+
+function renameSession() {
+    if (!sessionId) return;
+    const current = document.getElementById('sessionTitle').textContent;
+    const title = prompt('Rename session:', current);
+    if (title === null || title === current) return;
+    document.getElementById('sessionTitle').textContent = title;
+    // Update title on server
+    fetch(`${API}/sessions/${sessionId}/rename`, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+        body: 'title=' + encodeURIComponent(title)
+    }).catch(e => console.error('Rename failed:', e));
+    toast('Renamed to: ' + title, 'info');
+}
+
+function renderSavedEntry(e) {
+    try {
+        if (e.box === 'transcript') {
+            if (e.content_type === 'slide_image') {
+                const meta = JSON.parse(e.metadata || '{}');
+                const imgUrl = meta.image_path ? `${API}/slides/${meta.image_path.split('/').pop()}` : '';
+                addSlideToBox1(e.timestamp_iso, e.elapsed_sec, imgUrl || `/slides/${meta.image_hash}.jpg`);
+            } else {
+                addToBox1(e.content, e.timestamp_iso, e.elapsed_sec);
+            }
+        } else if (e.box === 'colearner') {
+            if (e.content_type === 'slide_analysis') {
+                const parsed = JSON.parse(e.content);
+                addToBox2(parsed, 'slide_analysis', e.timestamp_iso, e.elapsed_sec);
+            } else {
+                addToBox2(e.content, 'insight', e.timestamp_iso, e.elapsed_sec);
+            }
+        }
+    } catch(err) {
+        console.error('Render error:', err, e);
+    }
+}
+
+// ─── Recording ────────────────────────────────────
+async function toggleRecording() {
+    if (isRecording) return;
+    if (!sessionId) await startSession();
+    try {
+        const stream = await navigator.mediaDevices.getUserMedia({
+            audio: { sampleRate: 16000, channelCount: 1, echoCancellation: true }
+        });
+                let mimeType = 'audio/webm;codecs=opus';
+        if (!MediaRecorder.isTypeSupported(mimeType)) {
+            mimeType = 'audio/webm';
+            if (!MediaRecorder.isTypeSupported(mimeType)) {
+                mimeType = 'audio/mp4';
+            }
+        }
+        mediaRecorder = new MediaRecorder(stream, { mimeType });
+        
+        // Reset queue for new recording
+        chunkQueue = [];
+        queueProcessing = false;
+        
+        async function processQueue() {
+            if (queueProcessing || chunkQueue.length === 0) return;
+            queueProcessing = true;
+            while (chunkQueue.length > 0) {
+                const chunk = chunkQueue.shift();
+                const form = new FormData();
+                form.append('audio', chunk.blob, 'chunk.webm');
+                form.append('chunk_index', chunk.index);
+                form.append('session_id', sessionId);
+                form.append('elapsed_sec', (Date.now() - startTime) / 1000);
+                const t0 = Date.now();
+                try {
+                    const resp = await fetch(`${API}/transcribe`, { method: 'POST', body: form });
+                    const data = await resp.json();
+                    const lat = Date.now() - t0;
+                    if (data.text && data.text.trim()) {
+                        addToBox1(data.text.trim(), data.timestamp_iso, data.elapsed_sec || ((Date.now()-startTime)/1000));
+                        totalWords += data.text.split(/\s+/).filter(w=>w).length;
+                        lastTranscript = data.text.trim();
+                        triggerCoLearner(data.text.trim(), '', (Date.now() - startTime) / 1000);
+                        document.getElementById('statusText').textContent = `Recording (${chunk.index + 1} chunks)`;
+                    } else if (data.error) {
+                        console.warn('Chunk', chunk.index, 'STT error:', data.error);
+                    }
+                } catch(err) {
+                    console.error('Chunk', chunk.index, 'failed:', err);
+                }
+            }
+            queueProcessing = false;
+        }
+        
+        mediaRecorder.ondataavailable = (e) => {
+            if (!isRecording) return;
+            if (e.data.size < 100) return; // lowered from 1000 — quiet audio makes small chunks
+            chunkQueue.push({ blob: e.data, index: chunkIndex++ });
+            processQueue();
+        };
+        
+        mediaRecorder.start(5000);
+        isRecording = true;
+        startTime = Date.now();
+        chunkIndex = 0;
+        totalWords = 0;
+        timerInterval = setInterval(updateTimer, 500);
+        document.getElementById('btnRecord').className = 'btn-record recording';
+        document.getElementById('btnIcon').textContent = '⏺️';
+        document.getElementById('btnLabel').textContent = 'Recording...';
+        document.getElementById('statusDot').className = 'status-dot recording';
+        document.getElementById('statusText').textContent = 'Recording (0 chunks)';
+        document.getElementById('btnStop').style.display = 'inline-flex';
+        document.getElementById('btnDownload').style.display = 'none';
+        mediaRecorder._stream = stream;
+        toast('Recording — 5s chunks', 'info');
+    } catch(e) {
+        toast('Microphone denied: ' + e.message, 'error');
+    }
+}
+
+async function stopAndSave() {
+    if (!isRecording) return;
+    if (mediaRecorder) {
+        mediaRecorder.stop();
+        if (mediaRecorder._stream) mediaRecorder._stream.getTracks().forEach(t => t.stop());
+    }
+    isRecording = false;
+    clearInterval(timerInterval);
+    document.getElementById('btnRecord').className = 'btn-record start';
+    document.getElementById('btnIcon').textContent = '🎙️';
+    document.getElementById('btnLabel').textContent = 'Start Recording';
+    document.getElementById('btnStop').style.display = 'none';
+    document.getElementById('statusDot').className = 'status-dot recording';
+    document.getElementById('statusText').textContent = 'Finishing... (' + chunkQueue.length + ' chunks left)';
+    lastColearnerTime = 0;
+    
+    // Wait for queue to drain (final chunks from stop + any in-flight)
+    const maxWait = 30000; // 30s max
+    const startWait = Date.now();
+    while (chunkQueue.length > 0 || queueProcessing) {
+        if (Date.now() - startWait > maxWait) break;
+        await new Promise(r => setTimeout(r, 200));
+        if (chunkQueue.length > 0 || queueProcessing) {
+            document.getElementById('statusText').textContent = 'Finishing... (' + chunkQueue.length + ' left)';
+        }
+    }
+    
+    document.getElementById('btnDownload').style.display = 'inline-flex';
+    document.getElementById('statusDot').className = 'status-dot connected';
+    document.getElementById('statusText').textContent = 'Stopped';
+
+    // Persist to backend
+    const elapsed = Math.floor((Date.now() - startTime) / 1000);
+    saveToBackend(elapsed);
+    toast(`Recording stopped — ${formatTime(elapsed)} captured`, 'info');
+}
+
+async function saveToBackend(duration) {
+    try {
+        const allTranscripts = [];
+        document.getElementById('box1Body').querySelectorAll('.entry-text').forEach(e => allTranscripts.push(e.textContent));
+        const fullText = allTranscripts.join('\n');
+        await fetch(`${API}/save`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+                transcript: fullText,
+                word_count: totalWords,
+                duration: duration,
+                chunks: chunkIndex,
+                timestamp: new Date().toISOString(),
+                tags: 'lecture'
+            })
+        });
+    } catch(e) {
+        console.error('Save failed:', e);
+    }
+}
+
+function updateTimer() {
+    if (!isRecording) return;
+    const elapsed = Math.floor((Date.now() - startTime) / 1000);
+    const m = Math.floor(elapsed / 60).toString().padStart(2, '0');
+    const s = (elapsed % 60).toString().padStart(2, '0');
+    document.getElementById('timer').textContent = `${m}:${s}`;
+}
+
+// ─── Box 1: Transcript ────────────────────────────
+function addToBox1(text, timestampIso, elapsedSec) {
+    const body = document.getElementById('box1Body');
+    // Remove empty state if first entry
+    if (box1Entries === 0) body.innerHTML = '';
+    box1Entries++;
+    updateCounts();
+
+    const elapsed = elapsedSec ? formatTime(elapsedSec) : '';
+    const time = timestampIso ? new Date(timestampIso).toLocaleTimeString() : new Date().toLocaleTimeString();
+
+    const entry = document.createElement('div');
+    entry.className = 'entry entry-latest';
+    entry.id = `entry-box1-${box1Entries}`;
+    entry.innerHTML = `
+        <div class="entry-time">
+            <span class="elapsed">${elapsed}</span>
+            <span>${time}</span>
+        </div>
+        <div class="entry-text">${escapeHtml(text)}</div>
+    `;
+    body.appendChild(entry);
+    body.scrollTop = body.scrollHeight;
+
+    // Remove 'latest' from previous
+    const prev = body.querySelectorAll('.entry-latest');
+    if (prev.length > 1) prev[0].classList.remove('entry-latest');
+}
+
+function addSlideToBox1(timestampIso, elapsedSec, imageUrl) {
+    const body = document.getElementById('box1Body');
+    if (box1Entries === 0) body.innerHTML = '';
+    box1Entries++;
+    updateCounts();
+
+    const elapsed = elapsedSec ? formatTime(elapsedSec) : '';
+    const time = timestampIso ? new Date(timestampIso).toLocaleTimeString() : new Date().toLocaleTimeString();
+    const imgSrc = imageUrl.startsWith('http') ? imageUrl : `${API}${imageUrl}`;
+
+    const entry = document.createElement('div');
+    entry.className = 'entry entry-latest';
+    entry.innerHTML = `
+        <div class="entry-time">
+            <span class="elapsed">${elapsed}</span>
+            <span>${time} 📸 Slide</span>
+        </div>
+        <div class="entry-slide">
+            <img src="${imgSrc}" alt="Slide" onclick="window.open('${imgSrc}')" loading="lazy">
+            <div class="slide-label">No text detected — raw capture</div>
+        </div>
+    `;
+    body.appendChild(entry);
+    body.scrollTop = body.scrollHeight;
+
+    const prev = body.querySelectorAll('.entry-latest');
+    if (prev.length > 1) prev[0].classList.remove('entry-latest');
+}
+
+// ─── Box 2: AI Co-Learner ─────────────────────────
+function addToBox2(content, type, timestampIso, elapsedSec) {
+    const body = document.getElementById('box2Body');
+    if (box2Entries === 0) body.innerHTML = '';
+    box2Entries++;
+    updateCounts();
+
+    const elapsed = elapsedSec ? formatTime(elapsedSec) : '';
+    const time = timestampIso ? new Date(timestampIso).toLocaleTimeString() : new Date().toLocaleTimeString();
+    const entry = document.createElement('div');
+    entry.className = 'entry entry-latest';
+    entry.id = `entry-box2-${box2Entries}`;
+
+    if (type === 'insight') {
+        entry.innerHTML = `
+            <div class="entry-time">
+                <span class="elapsed">${elapsed}</span>
+                <span>${time} 💡 Insight</span>
+            </div>
+            <div class="entry-text entry-insight">${escapeHtml(content)}</div>
+        `;
+    } else if (type === 'slide_analysis') {
+        let html = `<div class="entry-time"><span class="elapsed">${elapsed}</span><span>${time} 🔍 Slide Analysis</span></div>`;
+        html += '<div class="entry-slide-analysis">';
+        if (content.explanation) html += `<div class="explanation">${escapeHtml(content.explanation)}</div>`;
+        if (content.summary) html += `<div class="summary">📌 ${escapeHtml(content.summary)}</div>`;
+        if (content.text) html += `<div class="slide-text">📄 ${escapeHtml(content.text.substring(0, 300))}${content.text.length>300?'...':''}</div>`;
+        if (content.questions && content.questions.length > 0) {
+            for (let i = 0; i < content.questions.length; i++) {
+                html += `<div class="qa"><div class="q">❓ ${escapeHtml(content.questions[i])}</div>`;
+                if (content.answers[i]) html += `<div class="a">→ ${escapeHtml(content.answers[i])}</div>`;
+                html += '</div>';
+            }
+        }
+        html += '</div>';
+        entry.innerHTML = html;
+    } else {
+        entry.innerHTML = `
+            <div class="entry-time"><span class="elapsed">${elapsed}</span><span>${time}</span></div>
+            <div class="entry-text">${escapeHtml(content)}</div>
+        `;
+    }
+
+    body.appendChild(entry);
+    body.scrollTop = body.scrollHeight;
+
+    const prev = body.querySelectorAll('.entry-latest');
+    if (prev.length > 1) prev[0].classList.remove('entry-latest');
+}
+
+// ─── AI Co-Learner Trigger ────────────────────────
+async function triggerCoLearner(transcriptChunk, slideContext, elapsedSec) {
+    if (colearnerBusy) return;
+    if (!transcriptChunk.trim() && !slideContext.trim()) return;
+    // Cooldown: don't fire more than once per 30 seconds
+    const now = Date.now();
+    if (now - lastColearnerTime < COLEARNER_COOLDOWN_MS) return;
+    lastColearnerTime = now;
+    colearnerBusy = true;
+    document.getElementById('colearnerStatus').textContent = '💭 thinking...';
+
+    try {
+        const resp = await fetch(`${API}/co-learner`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+                session_id: sessionId,
+                transcript_chunk: transcriptChunk || '',
+                slide_context: slideContext || '',
+                elapsed_sec: elapsedSec || 0
+            })
+        });
+        const data = await resp.json();
+        if (data.insight && data.insight.trim()) {
+            addToBox2(data.insight, 'insight', data.timestamp_iso, elapsedSec);
+        }
+        document.getElementById('colearnerStatus').textContent = '';
+    } catch(e) {
+        console.error('Co-learner error:', e);
+        document.getElementById('colearnerStatus').textContent = '';
+    }
+    colearnerBusy = false;
+}
+
+// ─── PDF Upload ────────────────────────────────────
+function uploadPDF() {
+    document.getElementById('pdfInput').click();
+}
+
+async function handlePDFUpload(input) {
+    if (!input.files || !input.files.length) return;
+    
+    const files = Array.from(input.files);
+    const btn = document.getElementById('btnPDF');
+    btn.classList.add('uploading');
+    
+    if (!sessionId) await startSession(files[0].name.replace('.pdf',''));
+    
+    let success = 0, fail = 0;
+    const now = new Date().toISOString();
+    
+    for (const file of files) {
+        const shortName = file.name.length > 20 ? file.name.substring(0,17)+'...' : file.name;
+        btn.textContent = '⏳ ' + shortName;
+        document.getElementById('statusText').textContent = 'Uploading PDF...';
+        const form = new FormData();
+        form.append('file', file);
+        form.append('file_type', 'pdf');
+        form.append('title', file.name.replace('.pdf',''));
+        form.append('tags', 'lecture,pdf');
+        
+        try {
+            const resp = await fetch(`${API}/ingest`, { method: 'POST', body: form });
+            const data = await resp.json();
+            
+            if (data.deep_tutor_uploaded && data.text_extracted) {
+                success++;
+                const title = file.name.replace('.pdf','');
+                
+                // Box 1: Show extracted text as a transcript entry
+                const preview = data.text_extracted.substring(0, 500);
+                const fullText = data.text_extracted;
+                addToBox1('📄 ' + title + '\n\n' + preview + (fullText.length > 500 ? '\n\n... (full text in Second Brain)' : ''), now, 0);
+                
+                // Box 2: AI analyzes the PDF content
+                triggerCoLearner(fullText.substring(0, 2000), 'Document: ' + title, 0);
+                
+                toast(title + ' — ' + data.word_count + ' words indexed', 'info');
+            } else {
+                fail++;
+                console.error('PDF upload failed:', file.name, data.error || data);
+                toast(file.name + ' failed', 'error');
+            }
+        } catch(e) {
+            fail++;
+            console.error('PDF upload error:', file.name, e);
+            toast(file.name + ' error: ' + e.message, 'error');
+        }
+    }
+    
+    btn.classList.remove('uploading');
+    btn.textContent = '📄';
+    document.getElementById('statusText').textContent = isRecording ? 'Recording' : 'Ready';
+    input.value = '';
+}
+
+// ─── Slide Capture ────────────────────────────────
+function captureSlide() {
+    document.getElementById('slideInput').click();
+}
+
+async function handleSlideCapture(input) {
+    if (!input.files || !input.files[0]) return;
+    const file = input.files[0];
+    if (!sessionId) await startSession('Slide Capture');
+    const elapsedSec = isRecording ? (Date.now() - startTime) / 1000 : 0;
+    const form = new FormData();
+    form.append('image', file);
+    form.append('session_id', sessionId);
+    form.append('elapsed_sec', elapsedSec);
+
+    // Show thumbnail with loading state
+    const imgUrl = URL.createObjectURL(file);
+    const thumbDiv = addSlideThumb(imgUrl, 'processing');
+    thumbDiv.classList.add('processing');
+    document.getElementById('btnSlide').textContent = '🔍';
+    document.getElementById('btnSlide').classList.add('uploading');
+    document.getElementById('statusText').textContent = 'Analyzing slide...';
+
+    try {
+        const resp = await fetch(`${API}/analyze-slide`, { method: 'POST', body: form });
+        const data = await resp.json();
+
+        // Remove processing thumb
+        thumbDiv.remove();
+
+        document.getElementById('btnSlide').textContent = '📸';
+        document.getElementById('btnSlide').classList.remove('uploading');
+        document.getElementById('statusText').textContent = isRecording ? 'Recording' : 'Ready';
+        
+        if (data.box === 'colearner' && data.analysis) {
+            // Useful info → Box 2
+            addSlideThumb(`${API}${data.image_url}`, 'useful');
+            addToBox2(data.analysis, 'slide_analysis', data.timestamp_iso, elapsedSec);
+            // Also trigger co-learner with slide context
+            const slideText = data.analysis.text || data.analysis.summary || '';
+            if (slideText) {
+                triggerCoLearner('', slideText, elapsedSec);
+            }
+        } else {
+            // No useful info → Box 1
+            addSlideThumb(`${API}${data.image_url}`, 'raw');
+            addSlideToBox1(data.timestamp_iso, elapsedSec, data.image_url);
+        }
+    } catch(e) {
+        console.error('Slide analysis error:', e);
+        document.getElementById('btnSlide').textContent = '📸';
+        document.getElementById('btnSlide').classList.remove('uploading');
+        toast('Slide analysis failed', 'error');
+    }
+
+    input.value = '';
+}
+
+// ─── Slide Strip ──────────────────────────────────
+function addSlideThumb(url, analysisType) {
+    // Remove any processing thumb for this URL
+    const strip = document.getElementById('slideStrip');
+    const existing = strip.querySelectorAll('.slide-thumb.processing');
+    existing.forEach(e => e.remove());
+    const thumb = document.createElement('div');
+    thumb.className = 'slide-thumb';
+    thumb.style.backgroundImage = `url(${url})`;
+    thumb.onclick = () => window.open(url);
+    if (analysisType === 'useful') {
+        thumb.innerHTML = '<div class="badge badge-useful">🧠</div>';
+    } else if (analysisType === 'raw') {
+        thumb.innerHTML = '<div class="badge badge-raw">📝</div>';
+    } else if (analysisType === 'processing') {
+        // keep it bare for loading state
+    }
+    strip.appendChild(thumb);
+    return thumb;
+}
+
+// ─── Helpers ─────────────────────────────────────
+function updateCounts() {
+    document.getElementById('box1Count').textContent = `${box1Entries} entries`;
+    document.getElementById('box2Count').textContent = `${box2Entries} insights`;
+
+    // Remove empty states if entries exist
+    if (box1Entries > 0) {
+        const empty = document.getElementById('box1Body').querySelector('.empty-state');
+        if (empty) empty.remove();
+    }
+    if (box2Entries > 0) {
+        const empty = document.getElementById('box2Body').querySelector('.empty-state');
+        if (empty) empty.remove();
+    }
+}
+
+function formatTime(sec) {
+    const m = Math.floor(sec / 60);
+    const s = Math.floor(sec % 60);
+    return `${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
+}
+
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+function toast(msg, type) {
+    const el = document.createElement('div');
+    el.className = `toast ${type}`;
+    el.textContent = msg;
+    document.body.appendChild(el);
+    setTimeout(() => { el.style.opacity = '0'; setTimeout(() => el.remove(), 300); }, 3000);
+}
+
+// ─── Second Brain ─────────────────────────────────
+async function pushToSecondBrain() {
+    if (!sessionId) { toast('No active session', 'error'); return; }
+    
+    const allText = [];
+    document.getElementById('box1Body').querySelectorAll('.entry-text').forEach(e => allText.push(e.textContent));
+    if (!allText.length) { toast('Nothing to upload — record first', 'error'); return; }
+    
+    const fullTranscript = allText.join('\n\n');
+    const title = document.getElementById('sessionTitle').textContent || 'Untitled';
+    const btn = document.getElementById('btnSecondBrain');
+    btn.classList.add('uploading');
+    btn.textContent = '⏳ Uploading...';
+    
+    try {
+        // Create a text file blob and send to second brain
+        const blob = new Blob([fullTranscript], {type: 'text/plain'});
+        const form = new FormData();
+        form.append('file', blob, title.replace(/[^a-zA-Z0-9ก-๙\s]/g, '_') + '.txt');
+        form.append('file_type', 'text');
+        form.append('title', title);
+        form.append('tags', 'lecture,capture');
+        
+        const resp = await fetch(`${API}/ingest`, {
+            method: 'POST',
+            body: form
+        });
+        const data = await resp.json();
+        
+        btn.classList.remove('uploading');
+        btn.textContent = '🧠 2nd Brain';
+        
+        if (data.deep_tutor_uploaded) {
+            const words = data.word_count || 0;
+            toast(`Sent to Second Brain — ${words} words indexed`, 'info');
+        } else if (data.error) {
+            toast('Upload failed: ' + data.error, 'error');
+        } else {
+            toast('Text extracted but KB upload failed — check DeepTutor', 'error');
+        }
+    } catch(e) {
+        btn.classList.remove('uploading');
+        btn.textContent = '🧠 2nd Brain';
+        toast('Second Brain unreachable: ' + e.message, 'error');
+    }
+}
+
+// ─── Download ─────────────────────────────────────
+function downloadTranscript() {
+    const allText = [];
+    document.getElementById('box1Body').querySelectorAll('.entry-text').forEach(e => allText.push(e.textContent));
+    if (!allText.length) { toast('Nothing to download', 'error'); return; }
+    const blob = new Blob([allText.join('\n\n')], {type: 'text/plain'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = `transcript-${sessionId || 'lecture'}.txt`;
+    a.click(); URL.revokeObjectURL(url);
+    toast('Downloaded ✓', 'info');
+}
+
+// ─── Tab Switching ────────────────────────────────
+function switchTab(tab) {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.getElementById('tab' + tab.charAt(0).toUpperCase() + tab.slice(1)).classList.add('active');
+    document.getElementById('captureView').style.display = tab === 'capture' ? '' : 'none';
+    document.getElementById('chatView').classList.toggle('active', tab === 'chat');
+    document.getElementById('brainView').style.display = tab === 'brain' ? '' : 'none';
+    if (tab === 'chat') {
+        document.getElementById('slideStrip').style.display = 'none';
+        document.querySelector('.bottombar').style.display = 'none';
+        document.getElementById('chatInput').focus();
+    } else if (tab === 'brain') {
+        document.getElementById('slideStrip').style.display = 'none';
+        document.querySelector('.bottombar').style.display = 'none';
+    } else {
+        document.getElementById('slideStrip').style.display = '';
+        document.querySelector('.bottombar').style.display = '';
+    }
+}
+
+// ─── Chat ─────────────────────────────────────────
+async function sendChat() {
+    const input = document.getElementById('chatInput');
+    const btn = document.getElementById('chatSendBtn');
+    const question = input.value.trim();
+    if (!question) return;
+    
+    input.value = '';
+    input.disabled = true;
+    btn.disabled = true;
+    
+    const msgs = document.getElementById('chatMessages');
+    // Remove empty state
+    const empty = msgs.querySelector('.chat-empty');
+    if (empty) empty.remove();
+    
+    // User message
+    msgs.innerHTML += '<div class="chat-msg user">' + escapeHtml(question) + '</div>';
+    
+    // Thinking indicator
+    const thinkId = 'think-' + Date.now();
+    msgs.innerHTML += '<div class="chat-msg ai thinking" id="' + thinkId + '">Thinking...</div>';
+    msgs.scrollTop = msgs.scrollHeight;
+    
+    try {
+        const resp = await fetch(`${API}/chat`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ session_id: sessionId, question: question })
+        });
+        const data = await resp.json();
+        
+        // Remove thinking
+        document.getElementById(thinkId)?.remove();
+        
+        // AI response
+        const answer = data.answer || 'Sorry, I could not answer that.';
+        msgs.innerHTML += '<div class="chat-msg ai">' + escapeHtml(answer) + '</div>';
+    } catch(e) {
+        document.getElementById(thinkId)?.remove();
+        msgs.innerHTML += '<div class="chat-msg ai">Error: ' + escapeHtml(e.message) + '</div>';
+    }
+    
+    msgs.scrollTop = msgs.scrollHeight;
+    input.disabled = false;
+    btn.disabled = false;
+    input.focus();
+}
+
+// ─── Init ────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+    startSession();
+    // Restore stop button behavior
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && isRecording) stopAndSave();
+    });
+});
+</script>
+<!-- ═══ LOAD MODAL ═══ -->
+<div class="modal-overlay" id="loadModal" style="display:none" onclick="if(event.target===this)closeLoadModal()">
+  <div class="modal-card">
+    <div class="modal-header">
+      <span>📂 Sessions</span>
+      <input type="text" id="sessionSearch" placeholder="Search..." 
+        oninput="filterSessions()"
+        style="background:var(--bg);border:1px solid var(--border);border-radius:8px;
+        padding:4px 10px;color:var(--text);font-size:0.75rem;width:140px;
+        font-family:Inter,sans-serif;outline:none">
+      <button class="modal-close" onclick="closeLoadModal()">✕</button>
+    </div>
+    <div class="modal-body" id="loadModalBody">
+      <div class="empty-state"><div class="big-icon">📭</div>Loading sessions...</div>
+    </div>
+  </div>
+</div>
+</body>
+</html>
