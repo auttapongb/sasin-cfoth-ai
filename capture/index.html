@@ -6,408 +6,496 @@
 <title>Sasin Lecture Capture — Two-Box Study</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:wght@600;700;800&display=swap" rel="stylesheet">
-<script src="https://d3js.org/d3.v7.min.js"></script>
+<script src="https://d3js.org/d3.v7.min.js">
+// ─── Mobile Menu Toggle ───────────────────────────
+function toggleMobileMenu() {
+    const nav = document.getElementById('tabsNav');
+    const btn = document.getElementById('hamburgerBtn');
+    if (nav) {
+        nav.classList.toggle('mobile-open');
+        btn.textContent = nav.classList.contains('mobile-open') ? '✕' : '☰';
+    }
+}
+// Close mobile menu when a tab is clicked
+document.addEventListener('click', function(e) {
+    if (e.target.classList.contains('tab')) {
+        const nav = document.getElementById('tabsNav');
+        const btn = document.getElementById('hamburgerBtn');
+        if (nav && nav.classList.contains('mobile-open')) {
+            nav.classList.remove('mobile-open');
+            if (btn) btn.textContent = '☰';
+        }
+    }
+});
+
+</script>
 <style>
 :root {
-    --gold: #C9A84C; --gold-light: #E8D48B;
-    --bg: #0A0A14; --card: #141428; --border: #252540;
-    --text: #D8D8E8; --dim: #7A7A9A;
-    --recording: #E85D3A; --success: #4CAF50; --blue: #3B82F6;
-    --box1-accent: #3B82F6; --box2-accent: #C9A84C;
-    --box1-bg: #0D1117; --box2-bg: #111118;
-}
-* { margin:0; padding:0; box-sizing:border-box; }
-body {
-    font-family: 'Inter', sans-serif;
-    background: var(--bg); color: var(--text);
-    height: 100vh; overflow: hidden;
-    display: flex; flex-direction: column;
+    --bg: #080C14;
+    --surface: #111827;
+    --surface2: #1A2235;
+    --border: #1E2D45;
+    --border-light: #263550;
+    --gold: #D4A843;
+    --gold-dim: #B8922F;
+    --gold-bg: rgba(212,168,67,0.08);
+    --teal: #14B8A6;
+    --teal-bg: rgba(20,184,166,0.08);
+    --coral: #F04E3B;
+    --coral-bg: rgba(240,78,59,0.08);
+    --blue: #60A5FA;
+    --blue-bg: rgba(96,165,250,0.08);
+    --purple: #A78BFA;
+    --purple-bg: rgba(167,139,250,0.08);
+    --text: #E2E8F0;
+    --text-dim: #8899B4;
+    --text-muted: #5A6D85;
+    --green: #34D399;
+    --green-bg: rgba(52,211,153,0.08);
+    --radius: 12px;
+    --radius-sm: 8px;
+    --radius-lg: 16px;
+    --shadow: 0 2px 12px rgba(0,0,0,0.3);
+    --font: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    --transition: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* ── Top Bar ── */
+* { margin:0; padding:0; box-sizing:border-box; }
+html, body { display: flex; flex-direction: column;
+    font-family: var(--font);
+    background: var(--bg); color: var(--text);
+    height: 100vh; height: 100dvh;
+    overflow: hidden;
+    -webkit-font-smoothing: antialiased;
+    -webkit-tap-highlight-color: transparent;
+}
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border-light); border-radius: 4px; }
+
+/* ═══ TOP BAR ═══ */
 .topbar {
-    display: flex; align-items: center; gap: 12px;
-    padding: 8px 16px; background: var(--card);
-    border-bottom: 1px solid var(--border);
-    flex-shrink: 0; z-index: 10;
+    display: flex; align-items: center; gap: 10px;
+    padding: 8px 14px; background: var(--surface);
+    border-bottom: 1px solid var(--border); flex-shrink: 0;
+    min-height: 52px; z-index: 50; position: relative;
 }
-.topbar .logo { font-family: 'Playfair Display', serif; font-size: 1.1rem; color: var(--gold); }
-.topbar .logo span { font-size: 0.65rem; color: var(--dim); font-family: 'Inter', sans-serif; margin-left: 4px; }
-.status-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--success); flex-shrink: 0; }
-.status-dot.recording { background: var(--recording); animation: dotPulse 1s infinite; }
-@keyframes dotPulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
-.status-text { font-size: 0.75rem; color: var(--dim); }
-.timer { margin-left: auto; font-family: monospace; font-size: 0.9rem; color: var(--gold); }
+.hamburger {
+    display: none; width: 40px; height: 40px; border-radius: var(--radius-sm);
+    background: transparent; border: 1px solid var(--border);
+    color: var(--text-dim); font-size: 1.3rem; cursor: pointer;
+    align-items: center; justify-content: center; flex-shrink: 0;
+}
+.hamburger:hover { border-color: var(--gold); color: var(--gold); }
+
+.status-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--green); flex-shrink: 0; transition: background var(--transition); }
+.status-dot.recording { background: var(--coral); animation: dotPulse 1s infinite; }
+.status-dot.error { background: #ff4444; }
+.status-dot.connected { background: var(--green); }
+@keyframes dotPulse { 0%,100%{opacity:1;box-shadow:0 0 0 0 rgba(240,78,59,0.4)} 50%{opacity:0.5;box-shadow:0 0 0 6px rgba(240,78,59,0)} }
+
+.status-text { font-size: 0.72rem; color: var(--text-dim); font-weight: 500; white-space: nowrap; }
+
+.logo { font-family: 'Playfair Display', Georgia, serif; font-size: 1.05rem; color: var(--gold); font-weight: 700; white-space: nowrap; }
+.logo span { font-size: 0.6rem; color: var(--text-muted); font-family: var(--font); font-weight: 400; margin-left: 3px; }
+
+.timer { margin-left: auto; font-family: 'SF Mono', 'Fira Code', monospace; font-size: 0.85rem; color: var(--gold); font-weight: 600; white-space: nowrap; }
+
 .btn-sm {
-    padding: 6px 14px; border-radius: 16px; border: 1px solid var(--border);
-    background: transparent; color: var(--text); font-size: 0.7rem;
-    font-weight: 600; cursor: pointer; font-family: 'Inter', sans-serif;
-    transition: all 0.15s; white-space: nowrap;
+    padding: 6px 12px; border-radius: 20px; border: 1px solid var(--border-light);
+    background: transparent; color: var(--text-dim); font-size: 0.68rem;
+    font-weight: 600; cursor: pointer; font-family: var(--font);
+    transition: all var(--transition); white-space: nowrap;
+    min-height: 32px; display: inline-flex; align-items: center; gap: 4px;
 }
-.btn-sm:hover { border-color: var(--gold); color: var(--gold); }
-.btn-sm.primary { background: var(--recording); border-color: var(--recording); color: white; }
-.btn-sm.primary:hover { opacity: 0.9; }
+.btn-sm:hover { border-color: var(--gold); color: var(--gold); background: var(--gold-bg); }
+.btn-sm.primary { background: var(--coral); border-color: var(--coral); color: #fff; }
+.btn-sm.primary:hover { background: #d43d2a; opacity: 1; }
 .btn-sm.save { border-color: var(--gold); color: var(--gold); }
-.btn-sm.second-brain { border-color: #7C3AED; color: #A78BFA; }
-.btn-sm.second-brain:hover { border-color: #A78BFA; background: rgba(124,58,237,0.1); }
+.btn-sm.second-brain { border-color: var(--purple); color: var(--purple); }
+.btn-sm.second-brain:hover { border-color: var(--purple); background: var(--purple-bg); }
 .btn-sm.second-brain.uploading { opacity: 0.6; pointer-events: none; animation: dotPulse 1s infinite; }
 
-/* ── Tabs ── */
-.tabs { display: flex; gap: 2px; margin: 0 8px; overflow-x: auto; flex-shrink: 0; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+/* Engine Badge */
+.engine-badge {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 5px 12px; border-radius: 20px; border: 1px solid var(--border-light);
+    background: transparent; color: var(--text-dim); font-size: 0.65rem;
+    font-weight: 600; cursor: pointer; font-family: var(--font);
+    transition: all var(--transition); white-space: nowrap;
+}
+.engine-badge:hover { border-color: var(--gold); color: var(--gold); }
+.engine-badge.faster { border-color: var(--green); color: var(--green); background: var(--green-bg); }
+.engine-badge.groq { border-color: var(--blue); color: var(--blue); background: var(--blue-bg); }
+.engine-badge.auto { border-color: var(--gold); color: var(--gold); background: var(--gold-bg); }
+.engine-badge.tiny { border-color: var(--green); color: var(--green); background: var(--green-bg); }
+.engine-badge.thai { border-color: var(--coral); color: #FF8A65; background: var(--coral-bg); }
+.engine-badge .eng-icon { font-size: 0.7rem; }
+
+.engine-popup {
+    display: none; position: absolute; top: 48px; left: 100px;
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 6px; z-index: 200;
+    box-shadow: 0 8px 40px rgba(0,0,0,0.5); min-width: 200px;
+}
+.engine-popup.show { display: block; }
+.engine-option {
+    display: flex; align-items: center; gap: 8px;
+    padding: 8px 12px; border-radius: 6px; cursor: pointer;
+    font-size: 0.7rem; color: var(--text-dim); transition: all 0.15s;
+}
+.engine-option:hover { background: var(--gold-bg); color: var(--text); }
+.engine-option.active { color: var(--gold); font-weight: 700; background: var(--gold-bg); }
+.engine-option .opt-name { font-weight: 600; }
+.engine-option .opt-desc { color: var(--text-muted); font-size: 0.6rem; }
+
+/* ═══ TABS ═══ */
+.tabs-nav {
+    display: flex; align-items: center; gap: 2px; overflow-x: auto;
+    flex-shrink: 0; scrollbar-width: none; padding: 0 2px;
+}
+.tabs-nav::-webkit-scrollbar { display: none; }
 .tab {
-    padding: 5px 14px; border: 1px solid var(--border); border-radius: 8px 8px 0 0;
-    background: transparent; color: var(--dim); font-size: 0.72rem;
-    font-weight: 600; cursor: pointer; font-family: 'Inter', sans-serif;
-    transition: all 0.15s; border-bottom: none;
+    padding: 7px 14px; border: 1px solid transparent; border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+    background: transparent; color: var(--text-muted); font-size: 0.7rem;
+    font-weight: 600; cursor: pointer; font-family: var(--font);
+    transition: all var(--transition); white-space: nowrap; min-height: 36px;
+    display: inline-flex; align-items: center; gap: 4px;
 }
-.tab:hover { color: var(--text); border-color: var(--gold); }
-.tab.active { color: var(--gold); border-color: var(--gold); background: rgba(201,168,76,0.06); }
+.tab:hover { color: var(--text-dim); border-color: var(--border-light); }
+.tab.active { color: var(--gold); border-color: var(--gold); background: var(--gold-bg); }
 
-/* ── Tab View Containers ── */
-#captureView { display: flex; flex-direction: column; flex: 1; min-height: 0; overflow: hidden; }
-#chatView.chat-view.active { display: flex; flex-direction: column; flex: 1; min-height: 0; }
+/* Session title */
+.session-title {
+    font-size: 0.7rem; color: var(--gold); font-weight: 500;
+    padding: 4px 10px; border-radius: 20px;
+    background: var(--gold-bg); border: 1px solid rgba(212,168,67,0.2);
+    cursor: pointer; max-width: 160px; overflow: hidden;
+    text-overflow: ellipsis; white-space: nowrap; transition: all var(--transition);
+}
+.session-title:hover { background: rgba(212,168,67,0.15); }
+.session-title:empty { display: none; }
 
-/* ── Chat View ── */
-.chat-view {
-    display: none; flex-direction: column; height: 100%;
-    background: var(--bg);
+/* ═══ TAB CONTENT ═══ */
+.tab-view {
+    display: none; flex-direction: column; flex: 1; min-height: 0;
+    overflow: hidden; background: var(--bg);
 }
-.chat-view.active { display: flex; }
-.chat-messages {
-    flex: 1; overflow-y: auto; padding: 12px 16px;
-    display: flex; flex-direction: column; gap: 10px;
-}
-.chat-msg {
-    max-width: 85%; padding: 10px 14px; border-radius: 14px;
-    font-size: 0.85rem; line-height: 1.5; animation: fadeIn 0.2s ease;
-}
-.chat-msg.user {
-    align-self: flex-end; background: rgba(59,130,246,0.15);
-    border: 1px solid rgba(59,130,246,0.25); color: var(--text);
-    border-bottom-right-radius: 4px;
-}
-.chat-msg.ai {
-    align-self: flex-start; background: var(--card);
-    border: 1px solid var(--border); color: var(--text);
-    border-bottom-left-radius: 4px;
-}
-.chat-msg.ai.thinking { opacity: 0.5; }
-.chat-input-row {
-    display: flex; gap: 8px; padding: 10px 16px;
-    background: var(--card); border-top: 1px solid var(--border);
-}
-.chat-input-row input {
-    flex: 1; background: var(--bg); border: 1px solid var(--border);
-    border-radius: 20px; padding: 8px 16px; color: var(--text);
-    font-size: 0.85rem; font-family: 'Inter', sans-serif; outline: none;
-}
-.chat-input-row input:focus { border-color: var(--gold); }
-.chat-send {
-    width: 38px; height: 38px; border-radius: 50%; border: none;
-    background: var(--gold); color: var(--bg); font-size: 1rem;
-    cursor: pointer; flex-shrink: 0; transition: all 0.15s;
-}
-.chat-send:hover { background: var(--gold-light); }
-.chat-send:disabled { opacity: 0.4; cursor: not-allowed; }
-.chat-empty {
-    text-align: center; color: var(--dim); padding: 60px 20px;
-}
-.chat-empty .big-icon { font-size: 2.5rem; margin-bottom: 12px; opacity: 0.4; }
+.tab-view.active { display: flex; }
 
-/* ── Main Two-Panel ── */
+/* ═══ MAIN TWO-PANEL ═══ */
 .main-panels {
-    display: flex; flex: 1; overflow: hidden;
-    gap: 2px; background: var(--border);
+    display: flex; flex: 1; overflow: hidden; gap: 1px;
+    background: var(--border);
 }
 .panel {
     flex: 1; display: flex; flex-direction: column;
-    background: var(--card); overflow: hidden;
-    min-width: 0;
+    background: var(--surface); overflow: hidden; min-width: 0;
 }
 .panel-header {
-    padding: 10px 14px; font-weight: 700; font-size: 0.8rem;
+    padding: 10px 16px; font-weight: 700; font-size: 0.75rem;
     display: flex; align-items: center; gap: 8px;
-    flex-shrink: 0; letter-spacing: 0.3px;
+    flex-shrink: 0; letter-spacing: 0.3px; text-transform: uppercase;
 }
-.panel-header .icon { font-size: 1rem; }
-.box1 .panel-header { background: rgba(59,130,246,0.1); color: var(--box1-accent); border-bottom: 1px solid rgba(59,130,246,0.2); }
-.box2 .panel-header { background: rgba(201,168,76,0.1); color: var(--box2-accent); border-bottom: 1px solid rgba(201,168,76,0.2); }
-.panel-body {
-    flex: 1; overflow-y: auto; padding: 8px 12px;
-    scroll-behavior: smooth;
+.panel-header .icon { font-size: 0.9rem; }
+.box1 .panel-header { background: var(--blue-bg); color: var(--blue); border-bottom: 1px solid rgba(96,165,250,0.15); }
+.box2 .panel-header { background: var(--gold-bg); color: var(--gold); border-bottom: 1px solid rgba(212,168,67,0.15); }
+.panel-body { display: flex; flex-direction: column;
+    flex: 1; overflow-y: auto; padding: 10px 14px; scroll-behavior: smooth;
 }
-.panel-body::-webkit-scrollbar { width: 4px; }
-.panel-body::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
 
-/* ── Entry Styles ── */
+/* Entries */
 .entry {
-    padding: 8px 10px; margin-bottom: 6px;
-    border-radius: 8px; animation: fadeIn 0.25s ease;
-    font-size: 0.85rem; line-height: 1.5;
-    position: relative;
+    padding: 10px 12px; margin-bottom: 8px;
+    border-radius: var(--radius-sm); animation: fadeIn 0.3s ease;
+    font-size: 0.82rem; line-height: 1.55; position: relative;
 }
-@keyframes fadeIn { from { opacity:0; transform:translateY(3px) } to { opacity:1; transform:translateY(0) } }
-.entry-time {
-    font-size: 0.6rem; color: var(--dim); font-family: monospace;
-    margin-bottom: 2px; display: flex; align-items: center; gap: 6px;
-}
+@keyframes fadeIn { from { opacity:0; transform:translateY(4px) } to { opacity:1; transform:translateY(0) } }
+.entry-time { font-size: 0.6rem; color: var(--text-muted); font-family: monospace; margin-bottom: 3px; display: flex; align-items: center; gap: 6px; }
 .entry-time .elapsed { color: var(--gold); font-weight: 600; }
-.entry-latest { border-left: 2px solid var(--gold); padding-left: 10px; }
-.entry-latest .entry-text { color: #fff; }
-
-/* Box 1 entries */
-.box1 .entry { background: rgba(59,130,246,0.04); border: 1px solid rgba(59,130,246,0.08); }
+.entry-latest { border-left: 2px solid var(--gold); padding-left: 12px; }
+.box1 .entry { background: var(--blue-bg); border: 1px solid rgba(96,165,250,0.08); }
 .box1 .entry-text { color: var(--text); white-space: pre-wrap; word-break: break-word; }
-.box1 .entry-slide { border: 1px dashed var(--border); padding: 6px; text-align: center; }
+.box1 .entry-slide { border: 1px dashed var(--border-light); padding: 6px; text-align: center; border-radius: 6px; }
 .box1 .entry-slide img { max-width: 100%; max-height: 200px; border-radius: 6px; cursor: pointer; }
-.box1 .entry-slide .slide-label { font-size: 0.65rem; color: var(--dim); margin-top: 4px; }
+.box1 .entry-slide .slide-label { font-size: 0.6rem; color: var(--text-dim); margin-top: 4px; }
 
-/* Box 2 entries */
-.box2 .entry { background: rgba(201,168,76,0.04); border: 1px solid rgba(201,168,76,0.08); }
+.box2 .entry { background: var(--gold-bg); border: 1px solid rgba(212,168,67,0.08); }
 .box2 .entry-text { color: var(--text); }
 .box2 .entry-insight { border-left: 2px solid var(--gold); padding-left: 10px; }
-.box2 .entry-slide-analysis { }
-.box2 .entry-slide-analysis .slide-text { font-size: 0.8rem; color: var(--dim); margin-bottom: 8px; }
+.box2 .entry-slide-analysis .explanation { color: var(--text); font-size: 0.8rem; line-height: 1.6; }
+.box2 .entry-slide-analysis .summary { font-style: italic; color: var(--text-dim); font-size: 0.75rem; margin-bottom: 6px; }
 .box2 .entry-slide-analysis .qa { margin-bottom: 6px; }
-.box2 .entry-slide-analysis .q { color: var(--gold-light); font-weight: 600; font-size: 0.8rem; }
-.box2 .entry-slide-analysis .a { color: var(--text); font-size: 0.8rem; padding-left: 10px; border-left: 1px solid var(--border); }
-.box2 .entry-slide-analysis .summary { font-style: italic; color: var(--dim); font-size: 0.78rem; margin-bottom: 6px; }
-.box2 .entry-slide-analysis .explanation { color: var(--text); font-size: 0.82rem; line-height: 1.6; }
+.box2 .entry-slide-analysis .q { color: var(--gold); font-weight: 600; font-size: 0.78rem; }
+.box2 .entry-slide-analysis .a { color: var(--text); font-size: 0.78rem; padding-left: 10px; border-left: 1px solid var(--border-light); }
 
-.empty-state {
-    text-align: center; color: var(--dim); padding: 40px 20px;
-    font-size: 0.85rem; line-height: 1.6;
-}
-.empty-state .big-icon { font-size: 2rem; margin-bottom: 10px; opacity: 0.5; }
+.empty-state { text-align: center; color: var(--text-muted); padding: 40px 20px; font-size: 0.82rem; line-height: 1.6; }
+.empty-state .big-icon { font-size: 2.2rem; margin-bottom: 12px; opacity: 0.4; }
 
-/* ── Slide Strip ── */
+/* Slide Strip */
 .slide-strip {
-    display: flex; gap: 6px; overflow-x: auto;
-    padding: 8px 0; min-height: 50px; align-items: center;
-    flex-shrink: 0; border-top: 1px solid var(--border);
-    margin: 0 12px;
+    display: flex; gap: 8px; overflow-x: auto; padding: 8px 0;
+    min-height: 50px; align-items: center; flex-shrink: 0;
+    border-top: 1px solid var(--border); margin: 0 14px;
 }
 .slide-strip:empty { min-height:0; padding:0; border:none; }
 .slide-thumb {
-    flex-shrink: 0; width: 48px; height: 48px; border-radius: 6px;
+    flex-shrink: 0; width: 52px; height: 52px; border-radius: var(--radius-sm);
     background-size: cover; background-position: center;
-    border: 1px solid var(--border); cursor: pointer;
-    transition: all 0.15s; position: relative;
+    border: 2px solid var(--border-light); cursor: pointer;
+    transition: all var(--transition); position: relative;
 }
-.slide-thumb:hover { border-color: var(--blue); transform: scale(1.05); }
+.slide-thumb:hover { border-color: var(--blue); transform: scale(1.06); }
 .slide-thumb .badge {
-    position: absolute; top: -5px; right: -5px;
-    font-size: 0.5rem; padding: 1px 5px; border-radius: 8px;
-    font-weight: 700; color: white;
+    position: absolute; top: -6px; right: -6px;
+    font-size: 0.5rem; padding: 1px 6px; border-radius: 10px;
+    font-weight: 700; color: #fff;
 }
-.badge-useful { background: var(--box2-accent); }
-.badge-raw { background: var(--box1-accent); }
+.badge-useful { background: var(--gold); }
+.badge-raw { background: var(--blue); }
 
-/* ── Bottom Controls ── */
+/* ═══ BOTTOM BAR ═══ */
 .bottombar {
-    display: flex; gap: 8px; padding: 8px 16px;
-    background: var(--card); border-top: 1px solid var(--border);
-    align-items: center; flex-shrink: 0;
+    display: flex; gap: 8px; padding: 10px 14px;
+    background: var(--surface); border-top: 1px solid var(--border);
+    align-items: center; flex-shrink: 0; min-height: 60px;
 }
 .btn-record {
-    height: 44px; padding: 0 20px; border-radius: 22px; border: none;
-    font-size: 0.9rem; font-weight: 600; cursor: pointer;
-    font-family: 'Inter', sans-serif; display: flex; align-items: center; gap: 6px;
-    transition: all 0.2s;
+    height: 48px; padding: 0 24px; border-radius: 24px; border: none;
+    font-size: 0.9rem; font-weight: 700; cursor: pointer;
+    font-family: var(--font); display: flex; align-items: center; gap: 8px;
+    transition: all var(--transition); letter-spacing: 0.3px;
 }
-.btn-record.start { background: var(--recording); color: white; flex: 1; box-shadow: 0 2px 12px rgba(232,93,58,0.3); }
-.btn-record.start:hover { transform: translateY(-1px); }
-.btn-record.recording { background: transparent; border: 2px solid var(--recording); color: var(--recording); flex: 1; animation: borderPulse 1.5s infinite; }
-@keyframes borderPulse { 0%,100%{border-color:var(--recording)} 50%{border-color:rgba(232,93,58,0.3)} }
-.btn-slide {
-    width: 44px; height: 44px; border-radius: 22px; border: 1px solid var(--blue);
-    background: transparent; color: var(--blue); font-size: 1.2rem;
+.btn-record.start { background: var(--coral); color: #fff; flex: 1; box-shadow: 0 4px 20px rgba(240,78,59,0.35); }
+.btn-record.start:hover { transform: translateY(-1px); box-shadow: 0 6px 24px rgba(240,78,59,0.45); }
+.btn-record.start:active { transform: scale(0.98); }
+.btn-record.recording { background: transparent; border: 2px solid var(--coral); color: var(--coral); flex: 1; animation: borderPulse 1.5s infinite; }
+@keyframes borderPulse { 0%,100%{border-color:var(--coral);box-shadow:0 0 20px rgba(240,78,59,0.2)} 50%{border-color:rgba(240,78,59,0.3);box-shadow:0 0 8px rgba(240,78,59,0.05)} }
+
+.btn-icon {
+    width: 48px; height: 48px; border-radius: 50%; border: 1px solid var(--border-light);
+    background: transparent; color: var(--text-dim); font-size: 1.2rem;
     cursor: pointer; display: flex; align-items: center; justify-content: center;
-    transition: all 0.15s; flex-shrink: 0;
+    transition: all var(--transition); flex-shrink: 0;
 }
-.btn-slide:hover { background: rgba(59,130,246,0.1); }
-.btn-slide:active { transform: scale(0.94); }
-.btn-slide.pdf-upload { border-color: #7C3AED; color: #A78BFA; }
-.btn-slide.pdf-upload:hover { background: rgba(124,58,237,0.15); }
-.btn-slide.pdf-upload.uploading { animation: dotPulse 1s infinite; pointer-events: none; opacity: 0.5; }
+.btn-icon:hover { border-color: var(--gold); color: var(--gold); background: var(--gold-bg); }
+.btn-icon.blue { border-color: var(--blue); color: var(--blue); }
+.btn-icon.blue:hover { background: var(--blue-bg); }
+.btn-icon.purple { border-color: var(--purple); color: var(--purple); }
+.btn-icon.purple:hover { background: var(--purple-bg); }
+
+/* Chat */
+.chat-view { display: none; flex-direction: column; height: 100%; background: var(--bg); }
+.chat-view.active { display: flex; }
+.chat-messages { flex: 1; overflow-y: auto; padding: 14px 16px; display: flex; flex-direction: column; gap: 10px; }
+.chat-msg { max-width: 85%; padding: 10px 14px; border-radius: 14px; font-size: 0.84rem; line-height: 1.5; animation: fadeIn 0.2s ease; }
+.chat-msg.user { align-self: flex-end; background: var(--blue-bg); border: 1px solid rgba(96,165,250,0.2); border-bottom-right-radius: 4px; }
+.chat-msg.ai { align-self: flex-start; background: var(--surface2); border: 1px solid var(--border-light); border-bottom-left-radius: 4px; }
+.chat-input-row { display: flex; gap: 8px; padding: 10px 14px; background: var(--surface); border-top: 1px solid var(--border); }
+.chat-input-row input {
+    flex: 1; background: var(--bg); border: 1px solid var(--border-light);
+    border-radius: 24px; padding: 10px 18px; color: var(--text);
+    font-size: 0.85rem; font-family: var(--font); outline: none;
+}
+.chat-input-row input:focus { border-color: var(--gold); }
+.chat-send {
+    width: 42px; height: 42px; border-radius: 50%; border: none;
+    background: var(--gold); color: var(--bg); font-size: 1.1rem;
+    cursor: pointer; flex-shrink: 0; transition: all var(--transition);
+    display: flex; align-items: center; justify-content: center;
+}
+.chat-send:hover { background: #c49630; }
+.chat-send:disabled { opacity: 0.4; cursor: not-allowed; }
+.chat-empty { text-align: center; color: var(--text-dim); padding: 60px 20px; }
+.chat-empty .big-icon { font-size: 2.5rem; margin-bottom: 12px; opacity: 0.3; }
 
 /* Toast */
 .toast {
-    position: fixed; bottom: 70px; left: 50%; transform: translateX(-50%);
-    padding: 10px 20px; border-radius: 10px; font-size: 0.8rem;
-    font-weight: 500; z-index: 100; animation: slideUp 0.3s ease;
-    max-width: 90vw; text-align: center;
+    position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%);
+    padding: 10px 22px; border-radius: 24px; font-size: 0.78rem;
+    font-weight: 600; z-index: 999; animation: slideUp 0.3s ease;
+    max-width: 90vw; text-align: center; box-shadow: var(--shadow);
+    pointer-events: none;
 }
-.toast.error { background: var(--recording); color: white; }
-.toast.info { background: var(--card); color: var(--gold); border: 1px solid var(--gold); }
-@keyframes slideUp { from { opacity:0; transform:translateX(-50%) translateY(15px) } to { opacity:1; transform:translateX(-50%) translateY(0) } }
+.toast.error { background: var(--coral); color: #fff; }
+.toast.info { background: var(--surface2); color: var(--gold); border: 1px solid var(--border-light); }
+@keyframes slideUp { from { opacity:0; transform:translateX(-50%) translateY(16px) } to { opacity:1; transform:translateX(-50%) translateY(0) } }
 
-/* Mobile responsive */
-.month-badge {
-    font-size: 0.6rem; color: var(--gold); font-weight: 700;
-    padding: 4px 0; margin-top: 10px; border-top: 1px solid var(--border);
-    letter-spacing: 0.5px;
-}
-.month-badge:first-child { margin-top: 0; border-top: none; }
-#sessionSearch:focus { border-color: var(--gold) !important; }
-@media (max-width: 768px) {
-    .main-panels { flex-direction: column; }
-    .panel { flex: none; height: 50%; }
-    .topbar { padding: 6px 10px; }
-    .bottombar { padding: 6px 10px; }
-    .panel-body { padding: 6px 8px; }
-    .entry { font-size: 0.8rem; padding: 6px 8px; }
-}
-/* ── Session Title ── */
-.session-title {
-    font-size: 0.75rem; color: var(--gold-light); font-weight: 500;
-    margin: 0 8px; padding: 2px 10px; border-radius: 10px;
-    background: rgba(201,168,76,0.1); border: 1px solid rgba(201,168,76,0.2);
-    cursor: pointer; max-width: 180px; overflow: hidden;
-    text-overflow: ellipsis; white-space: nowrap; transition: all 0.15s;
-}
-.session-title:hover { background: rgba(201,168,76,0.2); }
-.session-title:empty { display: none; }
-
-/* ── Load Modal ── */
+/* Modals */
 .modal-overlay {
-    position: fixed; inset: 0; background: rgba(0,0,0,0.7);
-    display: flex; align-items: center; justify-content: center;
-    z-index: 1000; animation: fadeIn 0.2s ease;
+    display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.75);
+    z-index: 500; align-items: center; justify-content: center;
+    backdrop-filter: blur(4px);
 }
+.modal-overlay.show { display: flex; }
 .modal-card {
-    background: var(--card); border: 1px solid var(--border);
-    border-radius: 14px; width: 90vw; max-width: 480px;
-    max-height: 70vh; display: flex; flex-direction: column;
-    box-shadow: 0 8px 40px rgba(0,0,0,0.5);
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: var(--radius-lg); width: 92vw; max-width: 480px;
+    max-height: 75vh; display: flex; flex-direction: column;
+    box-shadow: 0 16px 48px rgba(0,0,0,0.6);
 }
 .modal-header {
     display: flex; align-items: center; justify-content: space-between;
-    padding: 14px 18px; border-bottom: 1px solid var(--border);
-    font-weight: 600; font-size: 0.9rem; color: var(--gold);
+    padding: 16px 20px; border-bottom: 1px solid var(--border);
+    font-weight: 700; font-size: 0.9rem; color: var(--gold);
 }
-.modal-close {
-    background: none; border: none; color: var(--dim); font-size: 1.1rem;
-    cursor: pointer; padding: 4px 8px; border-radius: 6px;
-}
-.modal-close:hover { color: var(--text); background: rgba(255,255,255,0.05); }
-.modal-body { padding: 8px; overflow-y: auto; flex: 1; }
+.modal-close { background: none; border: none; color: var(--text-dim); font-size: 1.1rem; cursor: pointer; padding: 4px 8px; border-radius: 6px; }
+.modal-close:hover { color: #fff; background: rgba(255,255,255,0.05); }
+.modal-body { display: flex; flex-direction: column; padding: 10px 14px; overflow-y: auto; flex: 1; }
+
 .session-list-item {
     display: flex; align-items: center; justify-content: space-between;
-    padding: 12px 14px; border-radius: 10px; cursor: pointer;
-    transition: all 0.12s; border: 1px solid transparent;
-    margin-bottom: 2px;
+    padding: 14px 16px; border-radius: var(--radius-sm); cursor: pointer;
+    transition: all 0.12s; border: 1px solid transparent; margin-bottom: 2px;
 }
-.session-list-item:hover { background: rgba(201,168,76,0.06); border-color: var(--border); }
+.session-list-item:hover { background: var(--gold-bg); border-color: var(--border-light); }
 .session-list-item .sli-title { font-weight: 600; font-size: 0.85rem; color: var(--text); }
-.session-list-item .sli-meta { font-size: 0.65rem; color: var(--dim); margin-top: 2px; }
+.session-list-item .sli-meta { font-size: 0.65rem; color: var(--text-dim); margin-top: 2px; }
 .session-list-item .sli-count {
-    font-size: 0.7rem; color: var(--gold); background: rgba(201,168,76,0.1);
-    padding: 3px 8px; border-radius: 10px; white-space: nowrap;
+    font-size: 0.7rem; color: var(--gold); background: var(--gold-bg);
+    padding: 3px 10px; border-radius: 12px; white-space: nowrap;
 }
 
 .month-badge {
     font-size: 0.6rem; color: var(--gold); font-weight: 700;
     padding: 4px 0; margin-top: 10px; border-top: 1px solid var(--border);
-    letter-spacing: 0.5px;
+    letter-spacing: 0.5px; text-transform: uppercase;
 }
 .month-badge:first-child { margin-top: 0; border-top: none; }
 #sessionSearch:focus { border-color: var(--gold) !important; }
-@media (max-width: 768px) {
-    .modal-card { width: 95vw; max-height: 80vh; }
-    .session-title { max-width: 120px; font-size: 0.7rem; }
-}
-/* ── v5: New Tab Views ── */
-.tab-view {
-    display: none; flex-direction: column; flex: 1; min-height: 0; overflow-y: auto;
-}
-.tab-view.active { display: flex; }
-#brainView, #briefsView, #flashcardsView, #quizzesView, #audioView, #casesView {
-    background: var(--bg);
-}
-#brainGraph { min-height: 500px; min-width: 100%; }
-/* Brain tab toolbar + sub-tabs */
+
+/* Brain */
+#brainView { background: var(--bg); }
 #brainToolbar {
-  position: absolute; top: 8px; left: 12px; right: 12px; z-index: 20;
-  display: flex; align-items: center; gap: 10px;
-  background: rgba(20,20,40,0.95); border: 1px solid var(--border);
-  border-radius: 10px; padding: 6px 12px;
+    display: flex; align-items: center; gap: 10px;
+    background: var(--surface); border-bottom: 1px solid var(--border);
+    padding: 8px 14px; flex-shrink: 0; flex-wrap: wrap;
 }
 #brainSyncBtn {
-  background: linear-gradient(135deg, #7C3AED, #A78BFA); color: #fff;
-  border: none; padding: 5px 14px; border-radius: 6px;
-  font-size: 12px; cursor: pointer; font-weight: 600;
-  font-family: 'Inter', sans-serif; white-space: nowrap;
+    background: linear-gradient(135deg, #7C3AED, #A78BFA); color: #fff;
+    border: none; padding: 7px 16px; border-radius: 20px;
+    font-size: 0.72rem; cursor: pointer; font-weight: 600; font-family: var(--font);
 }
 #brainSyncBtn:hover { opacity: 0.9; }
 #brainSyncBtn:disabled { opacity: 0.5; cursor: not-allowed; }
-#brainSyncStatus { font-size: 11px; color: var(--dim); }
-.brain-subtabs { display: flex; gap: 2px; margin-left: 8px; }
+#brainSyncStatus { font-size: 0.68rem; color: var(--text-dim); }
+.brain-subtabs { display: flex; gap: 2px; }
 .brain-subtab {
-  background: transparent; border: 1px solid transparent;
-  color: var(--dim); padding: 5px 12px; border-radius: 6px;
-  font-size: 12px; cursor: pointer; font-family: 'Inter', sans-serif;
+    background: transparent; border: 1px solid transparent;
+    color: var(--text-muted); padding: 6px 14px; border-radius: 20px;
+    font-size: 0.7rem; cursor: pointer; font-family: var(--font); font-weight: 600;
 }
-.brain-subtab:hover { color: var(--text); border-color: var(--border); }
-.brain-subtab.active {
-  color: var(--gold); border-color: var(--gold);
-  background: rgba(201,168,76,0.08);
-}
-.brain-subview { display: none; position: relative; flex: 1; min-height: 0; margin-top: 48px; }
+.brain-subtab:hover { color: var(--text-dim); border-color: var(--border-light); }
+.brain-subtab.active { color: var(--gold); border-color: var(--gold); background: var(--gold-bg); }
+.brain-subview { display: none; position: relative; flex: 1; min-height: 400px; }
 .brain-subview.active { display: block; }
-/* Brain documents table */
-.brain-doc-table { width: 100%; border-collapse: collapse; font-size: 12px; }
-.brain-doc-table th { text-align: left; padding: 8px 10px; color: var(--dim); border-bottom: 1px solid var(--border); font-size: 11px; text-transform: uppercase; }
-.brain-doc-table td { padding: 8px 10px; border-bottom: 1px solid rgba(148,163,184,0.05); }
-.brain-doc-table tr:hover { background: rgba(59,130,246,0.03); }
+#brainGraphView.active { height: calc(100vh - 160px); min-height: 400px; }
+#brainGraph { min-height: 400px; width: 100%; background: var(--bg); }
+#brainInfo {
+    position: absolute; top: 10px; right: 10px; z-index: 20;
+    background: rgba(17,24,39,0.97); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 12px 16px;
+    max-width: 300px; max-height: 60vh; overflow-y: auto;
+    font-size: 0.72rem; color: var(--text-dim);
+}
+#brainInfo.collapsed { max-width: 36px; min-width: 36px; padding: 8px; overflow: hidden; max-height: 36px; }
+#brainInfo.collapsed #brainDetail,
+#brainInfo.collapsed #brainStats,
+#brainInfo.collapsed .brain-info-title,
+#brainInfo.collapsed #brainCloseBtn { display: none; }
+#brainCollapseBtn {
+    position: absolute; top: 8px; right: 8px;
+    background: rgba(255,255,255,0.08); border: none; color: var(--text-dim);
+    width: 24px; height: 24px; border-radius: 4px; cursor: pointer;
+    font-size: 0.7rem; display: flex; align-items: center; justify-content: center; z-index: 5;
+}
+#brainCloseBtn {
+    position: absolute; top: 8px; right: 36px;
+    background: rgba(255,255,255,0.06); border: none; color: var(--text-dim);
+    width: 22px; height: 22px; border-radius: 4px; cursor: pointer;
+    font-size: 0.7rem; display: flex; align-items: center; justify-content: center; z-index: 5;
+}
+.brain-doc-table { width: 100%; border-collapse: collapse; font-size: 0.72rem; }
+.brain-doc-table th { text-align: left; padding: 8px 10px; color: var(--text-dim); border-bottom: 1px solid var(--border); font-size: 0.65rem; text-transform: uppercase; }
+.brain-doc-table td { padding: 8px 10px; border-bottom: 1px solid rgba(148,163,184,0.04); }
+.brain-doc-table tr:hover { background: var(--blue-bg); }
 .brain-doc-name { color: var(--text); max-width: 260px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.brain-doc-del { background: rgba(232,93,58,0.12); color: #E85D3A; border: none; padding: 3px 10px; border-radius: 4px; font-size: 11px; cursor: pointer; }
-.brain-doc-del:hover { background: rgba(232,93,58,0.25); }
-#brainDocsView { padding: 8px 16px; overflow-y: auto; max-height: calc(100vh - 140px); }
-#brainDocsSearch { width: 100%; max-width: 300px; background: rgba(20,20,40,0.9); border: 1px solid var(--border); border-radius: 8px; padding: 7px 12px; color: var(--text); font-size: 12px; outline: none; font-family: 'Inter',sans-serif; margin-bottom: 16px; }
+.brain-doc-del { background: var(--coral-bg); color: var(--coral); border: none; padding: 4px 12px; border-radius: 4px; font-size: 0.68rem; cursor: pointer; }
+.brain-doc-del:hover { background: rgba(240,78,59,0.25); }
+#brainDocsView { padding: 10px 16px; overflow-y: auto; max-height: calc(100vh - 140px); }
+#brainDocsSearch { width: 100%; max-width: 300px; background: var(--bg); border: 1px solid var(--border-light); border-radius: 20px; padding: 8px 16px; color: var(--text); font-size: 0.75rem; outline: none; font-family: var(--font); margin-bottom: 16px; }
 .brain-section { margin-bottom: 24px; }
-.brain-section h4 { font-size: 13px; color: var(--dim); margin-bottom: 8px; }
+.brain-section h4 { font-size: 0.78rem; color: var(--text-dim); margin-bottom: 8px; font-weight: 600; }
 
-/* ── Flashcards ── */
+/* Briefs, Flashcards, Quizzes, Audio, Cases */
+#briefsView, #flashcardsView, #quizzesView, #audioView, #casesView { background: var(--bg); padding: 0; }
+#briefsView h2, #flashcardsView h2, #quizzesView h2, #audioView h2, #casesView h2 {
+    font-family: 'Playfair Display', Georgia, serif; color: var(--gold); font-size: 1.1rem;
+}
+
 #flashcardCard {
-    perspective: 1000px;
+    width: 100%; max-width: 500px; min-height: 220px;
+    background: var(--surface2); border: 2px solid var(--gold);
+    border-radius: var(--radius-lg); padding: 28px;
+    text-align: center; cursor: pointer; transition: transform 0.3s;
+    display: flex; align-items: center; justify-content: center; flex-direction: column;
 }
-#flashcardCard:hover {
-    transform: scale(1.02);
+#flashcardCard:hover { transform: scale(1.02); }
+#flashcardFront { font-size: 1.1rem; font-weight: 600; line-height: 1.5; }
+#flashcardBack { display: none; font-size: 0.9rem; color: var(--text-dim); margin-top: 16px; line-height: 1.6; }
+#flashcardSource { display: none; font-size: 0.68rem; color: var(--text-muted); margin-top: 12px; font-style: italic; }
+
+#briefsList, #flashcardsList, #quizList, #audioList, #casesList {
+    padding: 8px 16px; display: flex; flex-direction: column; gap: 8px;
+}
+#briefContent, #quizTaker, #audioPlayer, #caseContent {
+    display: none; padding: 16px; margin: 8px 16px;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); white-space: pre-wrap;
+    font-size: 0.84rem; line-height: 1.6;
+    color: var(--text);
 }
 
-/* ── Modal Overlay ── */
-.modal-overlay {
-    display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-    background: rgba(0,0,0,0.7); z-index: 100;
-    align-items: center; justify-content: center;
-}
-.modal-card {
-    background: var(--card); border: 1px solid var(--gold);
-    border-radius: 16px; padding: 24px; max-width: 500px; width: 90%;
-    max-height: 80vh; overflow-y: auto;
-}
-.modal-header {
-    display: flex; align-items: center; gap: 12px; margin-bottom: 16px;
-}
-.modal-header span { color: var(--gold); font-weight: 600; }
-.modal-close {
-    margin-left: auto; background: none; border: none;
-    color: var(--dim); font-size: 1.2rem; cursor: pointer;
-}
-.modal-body { max-height: 60vh; overflow-y: auto; }
-
-/* ── Responsive Tab Bar ── */
-@media (max-width: 900px) {
-    .tabs { flex-wrap: wrap; gap: 1px; }
-    .tab { font-size: 0.65rem; padding: 4px 8px; }
-}
-@media (max-width: 600px) {
-    .topbar { flex-wrap: wrap; gap: 6px; }
-    .topbar .logo { font-size: 0.9rem; }
-    .btn-sm { font-size: 0.65rem; padding: 4px 10px; }
+/* ═══ RESPONSIVE ═══ */
+@media (max-width: 1024px) {
+    .topbar { padding: 6px 10px; gap: 6px; min-height: 48px; }
+    .topbar .tabs-nav { display: none; }
+    .topbar .tabs-nav.mobile-open {
+        display: flex; position: absolute; top: 48px; left: 0; right: 0;
+        background: var(--surface2); border-bottom: 1px solid var(--border);
+        padding: 6px 8px; z-index: 100; flex-wrap: wrap; gap: 2px;
+        box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+    }
+    .hamburger { display: flex; }
+    .topbar .btn-sm.hide-mobile { display: none; }
+    .topbar .session-title { max-width: 100px; font-size: 0.65rem; }
+    .logo { font-size: 0.9rem; }
+    .main-panels { flex-direction: column; }
+    .panel { flex: none; height: 50%; }
+    .panel-body { display: flex; flex-direction: column; padding: 8px 10px; }
+    .entry { font-size: 0.78rem; padding: 8px 10px; }
+    .bottombar { padding: 8px 10px; min-height: 54px; }
+    .btn-record { height: 44px; font-size: 0.82rem; }
+    .btn-icon { width: 42px; height: 42px; }
     #flashcardCard { min-height: 180px; padding: 20px; }
     #flashcardFront { font-size: 1rem; }
+    .modal-card { width: 95vw; }
+}
+
+@media (max-width: 600px) {
+    .topbar { flex-wrap: wrap; gap: 4px; padding: 6px 8px; }
+    .topbar .btn-sm { font-size: 0.6rem; padding: 4px 8px; }
+    .topbar .engine-badge { font-size: 0.58rem; padding: 4px 8px; }
+    .logo { font-size: 0.8rem; }
+    .logo span { display: none; }
+    .session-title { max-width: 80px; }
+    .btn-record { height: 40px; font-size: 0.78rem; padding: 0 16px; }
+    .btn-icon { width: 38px; height: 38px; font-size: 1rem; }
+    .panel-header { padding: 8px 10px; font-size: 0.7rem; }
+    .entry { font-size: 0.75rem; }
+    #brainToolbar { flex-wrap: wrap; gap: 6px; padding: 6px 8px; }
+    #brainSyncBtn { font-size: 0.65rem; padding: 5px 10px; }
+    .brain-subtab { font-size: 0.65rem; padding: 4px 10px; }
 }
 </style>
 </head>
@@ -415,14 +503,17 @@ body {
 
 <!-- ═══ TOP BAR ═══ -->
 <div class="topbar">
+    <button class="hamburger" id="hamburgerBtn" onclick="toggleMobileMenu()" title="Menu">☰</button>
     <div class="status-dot connected" id="statusDot"></div>
     <span class="status-text" id="statusText">Ready</span>
+    <button class="engine-badge" id="engineBadge" onclick="toggleEngine()" title="Click to switch transcription engine">
+        <span class="eng-icon">🔊</span><span class="eng-label" id="engLabel">faster-whisper</span>
+    </button>
     <div class="logo">Sasin <span>EMBA 2026</span></div>
-    <div class="tabs">
+    <div class="tabs-nav" id="tabsNav">
         <button class="tab active" id="tabCapture" onclick="switchTab('capture')">📝 Capture</button>
         <button class="tab" id="tabChat" onclick="switchTab('chat')">💬 Chat</button>
         <button class="tab" id="tabBrain" onclick="switchTab('brain')">🧠 2nd Brain</button>
-        <button class="tab" id="tabCalendar" onclick="switchTab('calendar')">📅 Calendar</button>
         <button class="tab" id="tabBriefs" onclick="switchTab('briefs')">📋 Briefs</button>
         <button class="tab" id="tabFlashcards" onclick="switchTab('flashcards')">🃏 Cards</button>
         <button class="tab" id="tabQuizzes" onclick="switchTab('quizzes')">📝 Quiz</button>
@@ -431,12 +522,30 @@ body {
     </div>
     <span class="session-title" id="sessionTitle" onclick="renameSession()" title="Click to rename">New Session</span>
     <span class="timer" id="timer">00:00</span>
-    <button class="btn-sm" onclick="loadSessions()" title="Load past session">📂 Load</button>
-    <button class="btn-sm save" onclick="saveCurrentSession()">💾 Save</button>
-    <button class="btn-sm" onclick="newSession()">✨ New</button>
-    <button class="btn-sm second-brain" id="btnSecondBrain" onclick="pushToSecondBrain()" title="Upload transcript to Second Brain">🧠 2nd Brain</button>
-    <button class="btn-sm" onclick="extractActions()" title="Extract action items">✅ Actions</button>
-    <button class="btn-sm" onclick="showSchedule()" title="Study schedule">📅 Schedule</button>
+    <button class="btn-sm hide-mobile" onclick="loadSessions()" title="Load past session">📂 Load</button>
+    <button class="btn-sm save hide-mobile" onclick="saveCurrentSession()">💾 Save</button>
+    <button class="btn-sm hide-mobile" onclick="newSession()">✨ New</button>
+    <button class="btn-sm second-brain hide-mobile" id="btnSecondBrain" onclick="pushToSecondBrain()" title="Upload transcript to Second Brain">🧠 2nd Brain</button>
+    <button class="btn-sm hide-mobile" onclick="extractActions()" title="Extract action items">✅ Actions</button>
+    <button class="btn-sm hide-mobile" onclick="showSchedule()" title="Study schedule">📅 Schedule</button>
+</div>
+
+<!-- Engine Selector Popup -->
+<div class="engine-popup" id="enginePopup">
+    <div style="font-size:0.6rem;color:var(--dim);padding:4px 12px;">MODEL (click ⚡ badge to toggle)</div>
+    <div class="engine-option" onclick="selectModel('tiny.en')" id="optTiny">
+        <span>⚡</span><span class="opt-name">tiny.en</span><span class="opt-desc">fastest · English only</span>
+    </div>
+    <div class="engine-option" onclick="selectModel('base.en')" id="optBase">
+        <span>🎯</span><span class="opt-name">base.en 🇹🇭</span><span class="opt-desc">better with Thai accent</span>
+    </div>
+    <div style="font-size:0.6rem;color:var(--dim);padding:8px 12px 4px;border-top:1px solid var(--border);margin-top:4px;">ENGINE</div>
+    <div class="engine-option" onclick="selectEngineFull('faster_whisper')" id="optFW">
+        <span>💻</span><span class="opt-name">faster-whisper</span><span class="opt-desc">local · offline</span>
+    </div>
+    <div class="engine-option" onclick="selectEngineFull('groq')" id="optGroq">
+        <span>☁️</span><span class="opt-name">Groq API</span><span class="opt-desc">cloud · large-v3</span>
+    </div>
 </div>
 
 <!-- ═══ CAPTURE VIEW ═══ -->
@@ -485,8 +594,8 @@ body {
     </button>
     <button class="btn-sm primary" id="btnStop" onclick="stopAndSave()" style="display:none">⏹️ Stop</button>
     <button class="btn-sm" id="btnDownload" onclick="downloadTranscript()" style="display:none">📥 Download</button>
-    <button class="btn-slide" id="btnSlide" onclick="captureSlide()" title="Capture slide">📸</button>
-    <button class="btn-slide pdf-upload" id="btnPDF" onclick="uploadPDF()" title="Upload PDF to Second Brain">📄</button>
+    <button class="btn-icon blue" id="btnSlide" onclick="captureSlide()" title="Capture slide">📸</button>
+    <button class="btn-icon purple" id="btnPDF" onclick="uploadPDF()" title="Upload PDF to Second Brain">📄</button>
 </div>
 
 </div><!-- /captureView -->
@@ -524,11 +633,13 @@ body {
             <input type="text" placeholder="🔍 Search concepts, documents..." id="brainSearchInput" style="background:transparent;border:none;color:var(--text);font-size:13px;outline:none;width:240px;font-family:'Inter',sans-serif;" oninput="filterBrainGraph()">
         </div>
         <div id="brainInfo" style="position:absolute;top:12px;right:12px;z-index:10;background:rgba(20,20,40,0.95);border:1px solid var(--border);border-radius:10px;padding:12px 16px;max-width:300px;max-height:60vh;overflow-y:auto;font-size:12px;color:var(--dim);">
-            <div style="font-weight:600;color:var(--gold);margin-bottom:8px;">📚 Knowledge Graph</div>
+            <button id="brainCollapseBtn" onclick="toggleBrainPanel()" title="Collapse panel">◀</button>
+            <button id="brainCloseBtn" onclick="closeBrainPanel()" title="Close panel">✕</button>
+            <div class="brain-info-title" style="font-weight:600;color:var(--gold);margin-bottom:8px;">📚 Knowledge Graph</div>
             <div id="brainDetail" style="line-height:1.6;">Click a node to explore</div>
             <div id="brainStats" style="margin-top:10px;padding-top:8px;border-top:1px solid var(--border);font-size:11px;"></div>
         </div>
-        <svg id="brainGraph" style="width:100%;height:100%;background:#0D1117;"></svg>
+        <svg id="brainGraph" style="width:100%;min-height:500px;background:#0D1117;"></svg>
     </div>
 
     <!-- Documents sub-view -->
@@ -546,1447 +657,7 @@ body {
         </div>
     </div>
 
-<!-- ═══ CALENDAR VIEW ═══ -->
-<div id="calendarView" class="tab-view" style="display:none;flex-direction:column;flex:1;min-height:0;overflow-y:auto;">
-    <div style="display:flex;align-items:center;justify-content:space-between;padding:16px;border-bottom:1px solid var(--border);">
-        <h2 style="color:var(--gold);font-family:'Playfair Display',serif;margin:0;">📅 Calendar</h2>
-        <button onclick="window.open('https://calendar.google.com/calendar/u/0/r?src=auttapong.budhsombatwarakul%40sasin.edu&amp;ctz=Asia%2FBangkok','_blank')" 
-            style="padding:8px 20px;background:var(--gold);color:#000;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;">
-            📅 Open Full Calendar
-        </button>
-    </div>
-    <div style="padding:16px;overflow-y:auto;flex:1;">
-        <div id="calendarUpcoming" style="display:flex;flex-direction:column;gap:8px;">
-            <p style="color:var(--dim);text-align:center;padding:40px;">Loading events...</p>
-        </div>
-    </div>
-</div>
-
-    <script id="brainGraphData" type="application/json">
-{
-  "nodes": [
-    {
-      "id": "2026-06-01-test-lecture.enriched.txt",
-      "type": "document",
-      "title": "2026-06-01-test-lecture",
-      "frameworks": [],
-      "topics": [
-        "Finance",
-        "Operations"
-      ],
-      "group": "doc",
-      "related": [],
-      "size": 987,
-      "preview": "---\ntitle: 2026-06-01-test-lecture\ndate: 2026-06-01\ntype: lecture_transcript\nsource: Sasin Capture Server\n---\n\nThis is a test lecture on Financial Accounting.\n\nToday we covered the fundamental accounting equation: Assets = Liabilities + Equity. \nThis equation must always balance and forms the founda"
-    },
-    {
-      "id": "demo_session_001.txt",
-      "type": "document",
-      "title": "Untitled",
-      "frameworks": [
-        "Five Forces",
-        "Porter's Five Forces"
-      ],
-      "topics": [
-        "Marketing",
-        "Operations"
-      ],
-      "group": "doc",
-      "related": [
-        "test_lecture.txt"
-      ],
-      "size": 657,
-      "preview": "# demo_session_001\nTags: lecture,capture\nSource: demo_session_001.txt\nProcessed: 2026-06-02T20:51:55.344047\nType: text\n\nToday we discussed Porter's Five Forces framework. The five forces are: Threat of New Entrants, Bargaining Power of Suppliers, Bargaining Power of Buyers, Threat of Substitutes, an"
-    },
-    {
-      "id": "lecture_20260601_195810.json.txt",
-      "type": "document",
-      "title": "Untitled",
-      "frameworks": [
-        "BCG Matrix"
-      ],
-      "topics": [
-        "Operations"
-      ],
-      "group": "doc",
-      "related": [
-        "test_lecture.txt"
-      ],
-      "size": 349,
-      "preview": "# lecture_20260601_195810.json.txt\nTags: lecture-transcript\nSource: lecture_20260601_195810.json.txt\nProcessed: 2026-06-01T19:58:10.965922\nType: text\n\nBCG Matrix classifies business units into four categories: Stars (high growth high share), Cash Cows (low growth high share), Question Marks (high gr"
-    },
-    {
-      "id": "lecture_20260601_201949.json.txt",
-      "type": "document",
-      "title": "Untitled",
-      "frameworks": [
-        "Ansoff Matrix"
-      ],
-      "topics": [
-        "Operations"
-      ],
-      "group": "doc",
-      "related": [],
-      "size": 274,
-      "preview": "# lecture_20260601_201949.json.txt\nTags: lecture-transcript\nSource: lecture_20260601_201949.json.txt\nProcessed: 2026-06-01T20:19:49.273451\nType: text\n\nAnsoff Matrix has four growth strategies: market penetration, market development, product development, and diversification."
-    },
-    {
-      "id": "lecture_20260601_202021.json.txt",
-      "type": "document",
-      "title": "Untitled",
-      "frameworks": [
-        "PEST",
-        "PESTEL"
-      ],
-      "topics": [
-        "Economics",
-        "Operations",
-        "Strategy"
-      ],
-      "group": "doc",
-      "related": [
-        "test_lecture.txt"
-      ],
-      "size": 342,
-      "preview": "# lecture_20260601_202021.json.txt\nTags: lecture-transcript\nSource: lecture_20260601_202021.json.txt\nProcessed: 2026-06-01T20:20:21.934916\nType: text\n\nPESTEL analysis examines Political, Economic, Social, Technological, Environmental, and Legal factors affecting an industry. It helps strategic plann"
-    },
-    {
-      "id": "lecture_20260601_204040.json.txt",
-      "type": "document",
-      "title": "Untitled",
-      "frameworks": [],
-      "topics": [
-        "Operations"
-      ],
-      "group": "doc",
-      "related": [],
-      "size": 232,
-      "preview": "# lecture_20260601_204040.json.txt\nTags: lecture-transcript\nSource: lecture_20260601_204040.json.txt\nProcessed: 2026-06-01T20:40:40.505961\nType: text\n\nDeepTutor RAG pipeline end-to-end verification test for EMBA 2026 knowledge base."
-    },
-    {
-      "id": "lecture_20260601_212826.json.txt",
-      "type": "document",
-      "title": "Untitled",
-      "frameworks": [],
-      "topics": [
-        "Marketing",
-        "Operations",
-        "Strategy"
-      ],
-      "group": "doc",
-      "related": [],
-      "size": 273,
-      "preview": "# lecture_20260601_212826.json.txt\nTags: lecture-transcript\nSource: lecture_20260601_212826.json.txt\nProcessed: 2026-06-01T21:28:26.485361\nType: text\n\nThis is professor speaking about EMBA marketing strategy and consumer behavior analysis in real-time lecture capture test."
-    },
-    {
-      "id": "lecture_20260601_212931.json.txt",
-      "type": "document",
-      "title": "Untitled",
-      "frameworks": [],
-      "topics": [
-        "Operations"
-      ],
-      "group": "doc",
-      "related": [],
-      "size": 151,
-      "preview": "# lecture_20260601_212931.json.txt\nTags: lecture-transcript\nSource: lecture_20260601_212931.json.txt\nProcessed: 2026-06-01T21:29:31.320048\nType: text"
-    },
-    {
-      "id": "lecture_20260601_213014.json.txt",
-      "type": "document",
-      "title": "Untitled",
-      "frameworks": [],
-      "topics": [
-        "Operations"
-      ],
-      "group": "doc",
-      "related": [],
-      "size": 151,
-      "preview": "# lecture_20260601_213014.json.txt\nTags: lecture-transcript\nSource: lecture_20260601_213014.json.txt\nProcessed: 2026-06-01T21:30:14.171543\nType: text"
-    },
-    {
-      "id": "lecture_20260601_213932.json.txt",
-      "type": "document",
-      "title": "Untitled",
-      "frameworks": [],
-      "topics": [
-        "Marketing",
-        "Operations",
-        "Strategy"
-      ],
-      "group": "doc",
-      "related": [],
-      "size": 194,
-      "preview": "# lecture_20260601_213932.json.txt\nTags: marketing,lecture-4,slides\nSource: lecture_20260601_213932.json.txt\nProcessed: 2026-06-01T21:39:32.743038\nType: text\n\nTest lecture on marketing strategy."
-    },
-    {
-      "id": "lecture_20260601_214121.json.txt",
-      "type": "document",
-      "title": "Untitled",
-      "frameworks": [],
-      "topics": [
-        "Operations"
-      ],
-      "group": "doc",
-      "related": [],
-      "size": 272,
-      "preview": "# lecture_20260601_214121.json.txt\nTags: lecture-transcript\nSource: lecture_20260601_214121.json.txt\nProcessed: 2026-06-01T21:41:22.082303\nType: text\n\nto generate social media campaigns, product images, and even entire websites, and it's as easy as clicking a few buttons."
-    },
-    {
-      "id": "lecture_20260602_083054.enriched.txt",
-      "type": "document",
-      "title": "lecture_20260602_083054",
-      "frameworks": [],
-      "topics": [],
-      "group": "doc",
-      "related": [],
-      "size": 165,
-      "preview": "---\ntitle: lecture_20260602_083054\ndate: 2026-06-02\ntype: lecture_transcript\nsource: Sasin Capture Server\n---\n\nวันนี้ดิวอาชาบอกว่า อันนี้ทั้งหมดที่มีคอร์ส หรือ ที่มี"
-    },
-    {
-      "id": "lecture_20260602_105752.enriched.txt",
-      "type": "document",
-      "title": "lecture_20260602_105752",
-      "frameworks": [],
-      "topics": [],
-      "group": "doc",
-      "related": [],
-      "size": 2053,
-      "preview": "---\ntitle: lecture_20260602_105752\ndate: 2026-06-02\ntype: lecture_transcript\nsource: Sasin Capture Server\n---\n\nอยู่ที่ภูเขา แมมลอทนะคะวันนี้เป็นวันแรกที่เราจะไปเล่นกัน\nเดี๋ยวเราไปกินข้าว แล้วก็เต้นตัว แล้วไปเล่นกันดีกว่า\nอันนี้ก่อนจะพักไลค์\nSo what?\nสวัสดีครับ ผมได้ไปชาติ ไม่เคยอ่านค่ะ ครับ\nThank yo"
-    },
-    {
-      "id": "lecture_20260602_151930.enriched.txt",
-      "type": "document",
-      "title": "lecture_20260602_151930",
-      "frameworks": [],
-      "topics": [],
-      "group": "doc",
-      "related": [],
-      "size": 111,
-      "preview": "---\ntitle: lecture_20260602_151930\ndate: 2026-06-02\ntype: lecture_transcript\nsource: Sasin Capture Server\n---"
-    },
-    {
-      "id": "lecture_20260602_225640.enriched.txt",
-      "type": "document",
-      "title": "lecture_20260602_225640",
-      "frameworks": [],
-      "topics": [],
-      "group": "doc",
-      "related": [],
-      "size": 126,
-      "preview": "---\ntitle: lecture_20260602_225640\ndate: 2026-06-02\ntype: lecture_transcript\nsource: Sasin Capture Server\n---\n\ntest transcript"
-    },
-    {
-      "id": "lecture_20260602_225652.enriched.txt",
-      "type": "document",
-      "title": "lecture_20260602_225652",
-      "frameworks": [],
-      "topics": [
-        "Data & Analytics"
-      ],
-      "group": "doc",
-      "related": [],
-      "size": 166,
-      "preview": "---\ntitle: lecture_20260602_225652\ndate: 2026-06-02\ntype: lecture_transcript\nsource: Sasin Capture Server\n---\n\nThis is a test lecture about machine learning concepts."
-    },
-    {
-      "id": "marketing.txt",
-      "type": "document",
-      "title": "Untitled",
-      "frameworks": [
-        "4Ps",
-        "Marketing Mix",
-        "STP"
-      ],
-      "topics": [
-        "Leadership",
-        "Marketing",
-        "Operations",
-        "Strategy"
-      ],
-      "group": "doc",
-      "related": [],
-      "size": 509,
-      "preview": "# Marketing\nTags: lecture\nSource: marketing.pdf\nProcessed: 2026-06-02T08:05:28.168854\nType: pdf\n\nMarketing Management - Kotler\nThe Marketing Mix (4Ps):\n1. Product - what you offer to customers\n2. Price - what customers pay\n3. Place - where and how customers buy\n4. Promotion - how you communicate val"
-    },
-    {
-      "id": "test.txt",
-      "type": "document",
-      "title": "Untitled",
-      "frameworks": [],
-      "topics": [
-        "Operations"
-      ],
-      "group": "doc",
-      "related": [],
-      "size": 121,
-      "preview": "# Test\nTags: test\nSource: test.txt\nProcessed: 2026-06-01T16:09:02.631882\nType: text\n\nHello EMBA 2026 - Second Brain Test"
-    },
-    {
-      "id": "test_lecture.txt",
-      "type": "document",
-      "title": "Untitled",
-      "frameworks": [
-        "BCG Matrix",
-        "Blue Ocean",
-        "Blue Ocean Strategy",
-        "Five Forces",
-        "PEST",
-        "PESTLE",
-        "Porter Five Forces",
-        "SWOT",
-        "SWOT Analysis"
-      ],
-      "topics": [
-        "Leadership",
-        "Operations",
-        "Strategy"
-      ],
-      "group": "doc",
-      "related": [
-        "demo_session_001.txt",
-        "lecture_20260601_195810.json.txt",
-        "lecture_20260601_202021.json.txt"
-      ],
-      "size": 537,
-      "preview": "# Strategic Management Frameworks\nTags: lecture,strategy\nSource: test_lecture.pdf\nProcessed: 2026-06-02T08:02:58.792817\nType: pdf\n\nSasin EMBA 2026 - Lecture Notes\nTopic: Strategic Management Frameworks\n1. Porter Five Forces - industry competitiveness analysis\n2. SWOT Analysis - internal strengths/we"
-    },
-    {
-      "id": "test_transcript.txt",
-      "type": "document",
-      "title": "Untitled",
-      "frameworks": [
-        "CAPM"
-      ],
-      "topics": [
-        "Finance",
-        "Operations"
-      ],
-      "group": "doc",
-      "related": [],
-      "size": 237,
-      "preview": "# CAPM Test\nTags: lecture,test\nSource: test_transcript.txt\nProcessed: 2026-06-02T07:51:35.502227\nType: text\n\nThe CAPM model calculates expected return as risk-free rate plus beta times market risk premium. Beta measures systematic risk."
-    },
-    {
-      "id": "concept:4Ps",
-      "type": "framework",
-      "title": "4Ps",
-      "docs": [
-        "marketing.txt"
-      ],
-      "group": "framework"
-    },
-    {
-      "id": "concept:Ansoff Matrix",
-      "type": "framework",
-      "title": "Ansoff Matrix",
-      "docs": [
-        "lecture_20260601_201949.json.txt"
-      ],
-      "group": "framework"
-    },
-    {
-      "id": "concept:BCG Matrix",
-      "type": "framework",
-      "title": "BCG Matrix",
-      "docs": [
-        "lecture_20260601_195810.json.txt",
-        "test_lecture.txt"
-      ],
-      "group": "framework"
-    },
-    {
-      "id": "concept:Blue Ocean",
-      "type": "framework",
-      "title": "Blue Ocean",
-      "docs": [
-        "test_lecture.txt"
-      ],
-      "group": "framework"
-    },
-    {
-      "id": "concept:Blue Ocean Strategy",
-      "type": "framework",
-      "title": "Blue Ocean Strategy",
-      "docs": [
-        "test_lecture.txt"
-      ],
-      "group": "framework"
-    },
-    {
-      "id": "concept:CAPM",
-      "type": "framework",
-      "title": "CAPM",
-      "docs": [
-        "test_transcript.txt"
-      ],
-      "group": "framework"
-    },
-    {
-      "id": "concept:Five Forces",
-      "type": "framework",
-      "title": "Five Forces",
-      "docs": [
-        "demo_session_001.txt",
-        "test_lecture.txt"
-      ],
-      "group": "framework"
-    },
-    {
-      "id": "concept:Marketing Mix",
-      "type": "framework",
-      "title": "Marketing Mix",
-      "docs": [
-        "marketing.txt"
-      ],
-      "group": "framework"
-    },
-    {
-      "id": "concept:PEST",
-      "type": "framework",
-      "title": "PEST",
-      "docs": [
-        "lecture_20260601_202021.json.txt",
-        "test_lecture.txt"
-      ],
-      "group": "framework"
-    },
-    {
-      "id": "concept:PESTEL",
-      "type": "framework",
-      "title": "PESTEL",
-      "docs": [
-        "lecture_20260601_202021.json.txt"
-      ],
-      "group": "framework"
-    },
-    {
-      "id": "concept:PESTLE",
-      "type": "framework",
-      "title": "PESTLE",
-      "docs": [
-        "test_lecture.txt"
-      ],
-      "group": "framework"
-    },
-    {
-      "id": "concept:Porter Five Forces",
-      "type": "framework",
-      "title": "Porter Five Forces",
-      "docs": [
-        "test_lecture.txt"
-      ],
-      "group": "framework"
-    },
-    {
-      "id": "concept:Porter's Five Forces",
-      "type": "framework",
-      "title": "Porter's Five Forces",
-      "docs": [
-        "demo_session_001.txt"
-      ],
-      "group": "framework"
-    },
-    {
-      "id": "concept:STP",
-      "type": "framework",
-      "title": "STP",
-      "docs": [
-        "marketing.txt"
-      ],
-      "group": "framework"
-    },
-    {
-      "id": "concept:SWOT",
-      "type": "framework",
-      "title": "SWOT",
-      "docs": [
-        "test_lecture.txt"
-      ],
-      "group": "framework"
-    },
-    {
-      "id": "concept:SWOT Analysis",
-      "type": "framework",
-      "title": "SWOT Analysis",
-      "docs": [
-        "test_lecture.txt"
-      ],
-      "group": "framework"
-    },
-    {
-      "id": "topic:Data & Analytics",
-      "type": "topic",
-      "title": "Data & Analytics",
-      "docs": [
-        "lecture_20260602_225652.enriched.txt"
-      ],
-      "group": "topic"
-    },
-    {
-      "id": "topic:Economics",
-      "type": "topic",
-      "title": "Economics",
-      "docs": [
-        "lecture_20260601_202021.json.txt"
-      ],
-      "group": "topic"
-    },
-    {
-      "id": "topic:Finance",
-      "type": "topic",
-      "title": "Finance",
-      "docs": [
-        "2026-06-01-test-lecture.enriched.txt",
-        "test_transcript.txt"
-      ],
-      "group": "topic"
-    },
-    {
-      "id": "topic:Leadership",
-      "type": "topic",
-      "title": "Leadership",
-      "docs": [
-        "marketing.txt",
-        "test_lecture.txt"
-      ],
-      "group": "topic"
-    },
-    {
-      "id": "topic:Marketing",
-      "type": "topic",
-      "title": "Marketing",
-      "docs": [
-        "demo_session_001.txt",
-        "lecture_20260601_212826.json.txt",
-        "lecture_20260601_213932.json.txt",
-        "marketing.txt"
-      ],
-      "group": "topic"
-    },
-    {
-      "id": "topic:Operations",
-      "type": "topic",
-      "title": "Operations",
-      "docs": [
-        "2026-06-01-test-lecture.enriched.txt",
-        "demo_session_001.txt",
-        "lecture_20260601_195810.json.txt",
-        "lecture_20260601_201949.json.txt",
-        "lecture_20260601_202021.json.txt",
-        "lecture_20260601_204040.json.txt",
-        "lecture_20260601_212826.json.txt",
-        "lecture_20260601_212931.json.txt",
-        "lecture_20260601_213014.json.txt",
-        "lecture_20260601_213932.json.txt",
-        "lecture_20260601_214121.json.txt",
-        "marketing.txt",
-        "test.txt",
-        "test_lecture.txt",
-        "test_transcript.txt"
-      ],
-      "group": "topic"
-    },
-    {
-      "id": "topic:Strategy",
-      "type": "topic",
-      "title": "Strategy",
-      "docs": [
-        "lecture_20260601_202021.json.txt",
-        "lecture_20260601_212826.json.txt",
-        "lecture_20260601_213932.json.txt",
-        "marketing.txt",
-        "test_lecture.txt"
-      ],
-      "group": "topic"
-    }
-  ],
-  "links": [
-    {
-      "source": "marketing.txt",
-      "target": "concept:4Ps",
-      "type": "contains"
-    },
-    {
-      "source": "lecture_20260601_201949.json.txt",
-      "target": "concept:Ansoff Matrix",
-      "type": "contains"
-    },
-    {
-      "source": "lecture_20260601_195810.json.txt",
-      "target": "concept:BCG Matrix",
-      "type": "contains"
-    },
-    {
-      "source": "test_lecture.txt",
-      "target": "concept:BCG Matrix",
-      "type": "contains"
-    },
-    {
-      "source": "test_lecture.txt",
-      "target": "concept:Blue Ocean",
-      "type": "contains"
-    },
-    {
-      "source": "test_lecture.txt",
-      "target": "concept:Blue Ocean Strategy",
-      "type": "contains"
-    },
-    {
-      "source": "test_transcript.txt",
-      "target": "concept:CAPM",
-      "type": "contains"
-    },
-    {
-      "source": "demo_session_001.txt",
-      "target": "concept:Five Forces",
-      "type": "contains"
-    },
-    {
-      "source": "test_lecture.txt",
-      "target": "concept:Five Forces",
-      "type": "contains"
-    },
-    {
-      "source": "marketing.txt",
-      "target": "concept:Marketing Mix",
-      "type": "contains"
-    },
-    {
-      "source": "lecture_20260601_202021.json.txt",
-      "target": "concept:PEST",
-      "type": "contains"
-    },
-    {
-      "source": "test_lecture.txt",
-      "target": "concept:PEST",
-      "type": "contains"
-    },
-    {
-      "source": "lecture_20260601_202021.json.txt",
-      "target": "concept:PESTEL",
-      "type": "contains"
-    },
-    {
-      "source": "test_lecture.txt",
-      "target": "concept:PESTLE",
-      "type": "contains"
-    },
-    {
-      "source": "test_lecture.txt",
-      "target": "concept:Porter Five Forces",
-      "type": "contains"
-    },
-    {
-      "source": "demo_session_001.txt",
-      "target": "concept:Porter's Five Forces",
-      "type": "contains"
-    },
-    {
-      "source": "marketing.txt",
-      "target": "concept:STP",
-      "type": "contains"
-    },
-    {
-      "source": "test_lecture.txt",
-      "target": "concept:SWOT",
-      "type": "contains"
-    },
-    {
-      "source": "test_lecture.txt",
-      "target": "concept:SWOT Analysis",
-      "type": "contains"
-    },
-    {
-      "source": "lecture_20260602_225652.enriched.txt",
-      "target": "topic:Data & Analytics",
-      "type": "belongs_to"
-    },
-    {
-      "source": "lecture_20260601_202021.json.txt",
-      "target": "topic:Economics",
-      "type": "belongs_to"
-    },
-    {
-      "source": "2026-06-01-test-lecture.enriched.txt",
-      "target": "topic:Finance",
-      "type": "belongs_to"
-    },
-    {
-      "source": "test_transcript.txt",
-      "target": "topic:Finance",
-      "type": "belongs_to"
-    },
-    {
-      "source": "marketing.txt",
-      "target": "topic:Leadership",
-      "type": "belongs_to"
-    },
-    {
-      "source": "test_lecture.txt",
-      "target": "topic:Leadership",
-      "type": "belongs_to"
-    },
-    {
-      "source": "demo_session_001.txt",
-      "target": "topic:Marketing",
-      "type": "belongs_to"
-    },
-    {
-      "source": "lecture_20260601_212826.json.txt",
-      "target": "topic:Marketing",
-      "type": "belongs_to"
-    },
-    {
-      "source": "lecture_20260601_213932.json.txt",
-      "target": "topic:Marketing",
-      "type": "belongs_to"
-    },
-    {
-      "source": "marketing.txt",
-      "target": "topic:Marketing",
-      "type": "belongs_to"
-    },
-    {
-      "source": "2026-06-01-test-lecture.enriched.txt",
-      "target": "topic:Operations",
-      "type": "belongs_to"
-    },
-    {
-      "source": "demo_session_001.txt",
-      "target": "topic:Operations",
-      "type": "belongs_to"
-    },
-    {
-      "source": "lecture_20260601_195810.json.txt",
-      "target": "topic:Operations",
-      "type": "belongs_to"
-    },
-    {
-      "source": "lecture_20260601_201949.json.txt",
-      "target": "topic:Operations",
-      "type": "belongs_to"
-    },
-    {
-      "source": "lecture_20260601_202021.json.txt",
-      "target": "topic:Operations",
-      "type": "belongs_to"
-    },
-    {
-      "source": "lecture_20260601_204040.json.txt",
-      "target": "topic:Operations",
-      "type": "belongs_to"
-    },
-    {
-      "source": "lecture_20260601_212826.json.txt",
-      "target": "topic:Operations",
-      "type": "belongs_to"
-    },
-    {
-      "source": "lecture_20260601_212931.json.txt",
-      "target": "topic:Operations",
-      "type": "belongs_to"
-    },
-    {
-      "source": "lecture_20260601_213014.json.txt",
-      "target": "topic:Operations",
-      "type": "belongs_to"
-    },
-    {
-      "source": "lecture_20260601_213932.json.txt",
-      "target": "topic:Operations",
-      "type": "belongs_to"
-    },
-    {
-      "source": "lecture_20260601_214121.json.txt",
-      "target": "topic:Operations",
-      "type": "belongs_to"
-    },
-    {
-      "source": "marketing.txt",
-      "target": "topic:Operations",
-      "type": "belongs_to"
-    },
-    {
-      "source": "test.txt",
-      "target": "topic:Operations",
-      "type": "belongs_to"
-    },
-    {
-      "source": "test_lecture.txt",
-      "target": "topic:Operations",
-      "type": "belongs_to"
-    },
-    {
-      "source": "test_transcript.txt",
-      "target": "topic:Operations",
-      "type": "belongs_to"
-    },
-    {
-      "source": "lecture_20260601_202021.json.txt",
-      "target": "topic:Strategy",
-      "type": "belongs_to"
-    },
-    {
-      "source": "lecture_20260601_212826.json.txt",
-      "target": "topic:Strategy",
-      "type": "belongs_to"
-    },
-    {
-      "source": "lecture_20260601_213932.json.txt",
-      "target": "topic:Strategy",
-      "type": "belongs_to"
-    },
-    {
-      "source": "marketing.txt",
-      "target": "topic:Strategy",
-      "type": "belongs_to"
-    },
-    {
-      "source": "test_lecture.txt",
-      "target": "topic:Strategy",
-      "type": "belongs_to"
-    },
-    {
-      "source": "2026-06-01-test-lecture.enriched.txt",
-      "target": "demo_session_001.txt",
-      "type": "related",
-      "shared": []
-    },
-    {
-      "source": "2026-06-01-test-lecture.enriched.txt",
-      "target": "lecture_20260601_195810.json.txt",
-      "type": "related",
-      "shared": []
-    },
-    {
-      "source": "2026-06-01-test-lecture.enriched.txt",
-      "target": "lecture_20260601_201949.json.txt",
-      "type": "related",
-      "shared": []
-    },
-    {
-      "source": "2026-06-01-test-lecture.enriched.txt",
-      "target": "lecture_20260601_202021.json.txt",
-      "type": "related",
-      "shared": []
-    },
-    {
-      "source": "2026-06-01-test-lecture.enriched.txt",
-      "target": "lecture_20260601_204040.json.txt",
-      "type": "related",
-      "shared": []
-    },
-    {
-      "source": "2026-06-01-test-lecture.enriched.txt",
-      "target": "lecture_20260601_212826.json.txt",
-      "type": "related",
-      "shared": []
-    },
-    {
-      "source": "2026-06-01-test-lecture.enriched.txt",
-      "target": "lecture_20260601_212931.json.txt",
-      "type": "related",
-      "shared": []
-    },
-    {
-      "source": "2026-06-01-test-lecture.enriched.txt",
-      "target": "lecture_20260601_213014.json.txt",
-      "type": "related",
-      "shared": []
-    },
-    {
-      "source": "2026-06-01-test-lecture.enriched.txt",
-      "target": "lecture_20260601_213932.json.txt",
-      "type": "related",
-      "shared": []
-    },
-    {
-      "source": "2026-06-01-test-lecture.enriched.txt",
-      "target": "lecture_20260601_214121.json.txt",
-      "type": "related",
-      "shared": []
-    },
-    {
-      "source": "2026-06-01-test-lecture.enriched.txt",
-      "target": "marketing.txt",
-      "type": "related",
-      "shared": []
-    },
-    {
-      "source": "2026-06-01-test-lecture.enriched.txt",
-      "target": "test.txt",
-      "type": "related",
-      "shared": []
-    },
-    {
-      "source": "2026-06-01-test-lecture.enriched.txt",
-      "target": "test_lecture.txt",
-      "type": "related",
-      "shared": []
-    },
-    {
-      "source": "2026-06-01-test-lecture.enriched.txt",
-      "target": "test_transcript.txt",
-      "type": "related",
-      "shared": []
-    },
-    {
-      "source": "demo_session_001.txt",
-      "target": "lecture_20260601_195810.json.txt",
-      "type": "related",
-      "shared": []
-    },
-    {
-      "source": "demo_session_001.txt",
-      "target": "lecture_20260601_201949.json.txt",
-      "type": "related",
-      "shared": []
-    },
-    {
-      "source": "demo_session_001.txt",
-      "target": "lecture_20260601_202021.json.txt",
-      "type": "related",
-      "shared": []
-    },
-    {
-      "source": "demo_session_001.txt",
-      "target": "lecture_20260601_204040.json.txt",
-      "type": "related",
-      "shared": []
-    },
-    {
-      "source": "demo_session_001.txt",
-      "target": "lecture_20260601_212826.json.txt",
-      "type": "related",
-      "shared": []
-    },
-    {
-      "source": "demo_session_001.txt",
-      "target": "lecture_20260601_212931.json.txt",
-      "type": "related",
-      "shared": []
-    },
-    {
-      "source": "demo_session_001.txt",
-      "target": "lecture_20260601_213014.json.txt",
-      "type": "related",
-      "shared": []
-    },
-    {
-      "source": "demo_session_001.txt",
-      "target": "lecture_20260601_213932.json.txt",
-      "type": "related",
-      "shared": []
-    },
-    {
-      "source": "demo_session_001.txt",
-      "target": "lecture_20260601_214121.json.txt",
-      "type": "related",
-      "shared": []
-    },
-    {
-      "source": "demo_session_001.txt",
-      "target": "marketing.txt",
-      "type": "related",
-      "shared": []
-    },
-    {
-      "source": "demo_session_001.txt",
-      "target": "test.txt",
-      "type": "related",
-      "shared": []
-    },
-    {
-      "source": "demo_session_001.txt",
-      "target": "test_lecture.txt",
-      "type": "related",
-      "shared": [
-        "Five Forces"
-      ]
-    },
-    {
-      "source": "demo_session_001.txt",
-      "target": "test_transcript.txt",
-      "type": "related",
-      "shared": []
-    },
-    {
-      "source": "lecture_20260601_195810.json.txt",
-      "target": "lecture_20260601_201949.json.txt",
-      "type": "related",
-      "shared": []
-    },
-    {
-      "source": "lecture_20260601_195810.json.txt",
-      "target": "lecture_20260601_202021.json.txt",
-      "type": "related",
-      "shared": []
-    },
-    {
-      "source": "lecture_20260601_195810.json.txt",
-      "target": "lecture_20260601_204040.json.txt",
-      "type": "related",
-      "shared": []
-    },
-    {
-      "source": "lecture_20260601_195810.json.txt",
-      "target": "lecture_20260601_212826.json.txt",
-      "type": "related",
-      "shared": []
-    },
-    {
-      "source": "lecture_20260601_195810.json.txt",
-      "target": "lecture_20260601_212931.json.txt",
-      "type": "related",
-      "shared": []
-    },
-    {
-      "source": "lecture_20260601_195810.json.txt",
-      "target": "lecture_20260601_213014.json.txt",
-      "type": "related",
-      "shared": []
-    },
-    {
-      "source": "lecture_20260601_195810.json.txt",
-      "target": "lecture_20260601_213932.json.txt",
-      "type": "related",
-      "shared": []
-    },
-    {
-      "source": "lecture_20260601_195810.json.txt",
-      "target": "lecture_20260601_214121.json.txt",
-      "type": "related",
-      "shared": []
-    },
-    {
-      "source": "lecture_20260601_195810.json.txt",
-      "target": "marketing.txt",
-      "type": "related",
-      "shared": []
-    },
-    {
-      "source": "lecture_20260601_195810.json.txt",
-      "target": "test.txt",
-      "type": "related",
-      "shared": []
-    },
-    {
-      "source": "lecture_20260601_195810.json.txt",
-      "target": "test_lecture.txt",
-      "type": "related",
-      "shared": [
-        "BCG Matrix"
-      ]
-    },
-    {
-      "source": "lecture_20260601_195810.json.txt",
-      "target": "test_transcript.txt",
-      "type": "related",
-      "shared": []
-    },
-    {
-      "source": "lecture_20260601_201949.json.txt",
-      "target": "lecture_20260601_202021.json.txt",
-      "type": "related",
-      "shared": []
-    },
-    {
-      "source": "lecture_20260601_201949.json.txt",
-      "target": "lecture_20260601_204040.json.txt",
-      "type": "related",
-      "shared": []
-    },
-    {
-      "source": "lecture_20260601_201949.json.txt",
-      "target": "lecture_20260601_212826.json.txt",
-      "type": "related",
-      "shared": []
-    },
-    {
-      "source": "lecture_20260601_201949.json.txt",
-      "target": "lecture_20260601_212931.json.txt",
-      "type": "related",
-      "shared": []
-    },
-    {
-      "source": "lecture_20260601_201949.json.txt",
-      "target": "lecture_20260601_213014.json.txt",
-      "type": "related",
-      "shared": []
-    },
-    {
-      "source": "lecture_20260601_201949.json.txt",
-      "target": "lecture_20260601_213932.json.txt",
-      "type": "related",
-      "shared": []
-    },
-    {
-      "source": "lecture_20260601_201949.json.txt",
-      "target": "lecture_20260601_214121.json.txt",
-      "type": "related",
-      "shared": []
-    },
-    {
-      "source": "lecture_20260601_201949.json.txt",
-      "target": "marketing.txt",
-      "type": "related",
-      "shared": []
-    },
-    {
-      "source": "lecture_20260601_201949.json.txt",
-      "target": "test.txt",
-      "type": "related",
-      "shared": []
-    },
-    {
-      "source": "lecture_20260601_201949.json.txt",
-      "target": "test_lecture.txt",
-      "type": "related",
-      "shared": []
-    },
-    {
-      "source": "lecture_20260601_201949.json.txt",
-      "target": "test_transcript.txt",
-      "type": "related",
-      "shared": []
-    },
-    {
-      "source": "lecture_20260601_202021.json.txt",
-      "target": "lecture_20260601_204040.json.txt",
-      "type": "related",
-      "shared": []
-    },
-    {
-      "source": "lecture_20260601_202021.json.txt",
-      "target": "lecture_20260601_212826.json.txt",
-      "type": "related",
-      "shared": []
-    },
-    {
-      "source": "lecture_20260601_202021.json.txt",
-      "target": "lecture_20260601_212931.json.txt",
-      "type": "related",
-      "shared": []
-    },
-    {
-      "source": "lecture_20260601_202021.json.txt",
-      "target": "lecture_20260601_213014.json.txt",
-      "type": "related",
-      "shared": []
-    },
-    {
-      "source": "lecture_20260601_202021.json.txt",
-      "target": "lecture_20260601_213932.json.txt",
-      "type": "related",
-      "shared": []
-    },
-    {
-      "source": "lecture_20260601_202021.json.txt",
-      "target": "lecture_20260601_214121.json.txt",
-      "type": "related",
-      "shared": []
-    },
-    {
-      "source": "lecture_20260601_202021.json.txt",
-      "target": "marketing.txt",
-      "type": "related",
-      "shared": []
-    },
-    {
-      "source": "lecture_20260601_202021.json.txt",
-      "target": "test.txt",
-      "type": "related",
-      "shared": []
-    },
-    {
-      "source": "lecture_20260601_202021.json.txt",
-      "target": "test_lecture.txt",
-      "type": "related",
-      "shared": [
-        "PEST"
-      ]
-    },
-    {
-      "source": "lecture_20260601_202021.json.txt",
-      "target": "test_transcript.txt",
-      "type": "related",
-      "shared": []
-    },
-    {
-      "source": "lecture_20260601_204040.json.txt",
-      "target": "lecture_20260601_212826.json.txt",
-      "type": "related",
-      "shared": []
-    },
-    {
-      "source": "lecture_20260601_204040.json.txt",
-      "target": "lecture_20260601_212931.json.txt",
-      "type": "related",
-      "shared": []
-    },
-    {
-      "source": "lecture_20260601_204040.json.txt",
-      "target": "lecture_20260601_213014.json.txt",
-      "type": "related",
-      "shared": []
-    },
-    {
-      "source": "lecture_20260601_204040.json.txt",
-      "target": "lecture_20260601_213932.json.txt",
-      "type": "related",
-      "shared": []
-    },
-    {
-      "source": "lecture_20260601_204040.json.txt",
-      "target": "lecture_20260601_214121.json.txt",
-      "type": "related",
-      "shared": []
-    },
-    {
-      "source": "lecture_20260601_204040.json.txt",
-      "target": "marketing.txt",
-      "type": "related",
-      "shared": []
-    },
-    {
-      "source": "lecture_20260601_204040.json.txt",
-      "target": "test.txt",
-      "type": "related",
-      "shared": []
-    },
-    {
-      "source": "lecture_20260601_204040.json.txt",
-      "target": "test_lecture.txt",
-      "type": "related",
-      "shared": []
-    },
-    {
-      "source": "lecture_20260601_204040.json.txt",
-      "target": "test_transcript.txt",
-      "type": "related",
-      "shared": []
-    },
-    {
-      "source": "lecture_20260601_212826.json.txt",
-      "target": "lecture_20260601_212931.json.txt",
-      "type": "related",
-      "shared": []
-    },
-    {
-      "source": "lecture_20260601_212826.json.txt",
-      "target": "lecture_20260601_213014.json.txt",
-      "type": "related",
-      "shared": []
-    },
-    {
-      "source": "lecture_20260601_212826.json.txt",
-      "target": "lecture_20260601_213932.json.txt",
-      "type": "related",
-      "shared": []
-    },
-    {
-      "source": "lecture_20260601_212826.json.txt",
-      "target": "lecture_20260601_214121.json.txt",
-      "type": "related",
-      "shared": []
-    },
-    {
-      "source": "lecture_20260601_212826.json.txt",
-      "target": "marketing.txt",
-      "type": "related",
-      "shared": []
-    },
-    {
-      "source": "lecture_20260601_212826.json.txt",
-      "target": "test.txt",
-      "type": "related",
-      "shared": []
-    },
-    {
-      "source": "lecture_20260601_212826.json.txt",
-      "target": "test_lecture.txt",
-      "type": "related",
-      "shared": []
-    },
-    {
-      "source": "lecture_20260601_212826.json.txt",
-      "target": "test_transcript.txt",
-      "type": "related",
-      "shared": []
-    },
-    {
-      "source": "lecture_20260601_212931.json.txt",
-      "target": "lecture_20260601_213014.json.txt",
-      "type": "related",
-      "shared": []
-    },
-    {
-      "source": "lecture_20260601_212931.json.txt",
-      "target": "lecture_20260601_213932.json.txt",
-      "type": "related",
-      "shared": []
-    },
-    {
-      "source": "lecture_20260601_212931.json.txt",
-      "target": "lecture_20260601_214121.json.txt",
-      "type": "related",
-      "shared": []
-    },
-    {
-      "source": "lecture_20260601_212931.json.txt",
-      "target": "marketing.txt",
-      "type": "related",
-      "shared": []
-    },
-    {
-      "source": "lecture_20260601_212931.json.txt",
-      "target": "test.txt",
-      "type": "related",
-      "shared": []
-    },
-    {
-      "source": "lecture_20260601_212931.json.txt",
-      "target": "test_lecture.txt",
-      "type": "related",
-      "shared": []
-    },
-    {
-      "source": "lecture_20260601_212931.json.txt",
-      "target": "test_transcript.txt",
-      "type": "related",
-      "shared": []
-    },
-    {
-      "source": "lecture_20260601_213014.json.txt",
-      "target": "lecture_20260601_213932.json.txt",
-      "type": "related",
-      "shared": []
-    },
-    {
-      "source": "lecture_20260601_213014.json.txt",
-      "target": "lecture_20260601_214121.json.txt",
-      "type": "related",
-      "shared": []
-    },
-    {
-      "source": "lecture_20260601_213014.json.txt",
-      "target": "marketing.txt",
-      "type": "related",
-      "shared": []
-    },
-    {
-      "source": "lecture_20260601_213014.json.txt",
-      "target": "test.txt",
-      "type": "related",
-      "shared": []
-    },
-    {
-      "source": "lecture_20260601_213014.json.txt",
-      "target": "test_lecture.txt",
-      "type": "related",
-      "shared": []
-    },
-    {
-      "source": "lecture_20260601_213014.json.txt",
-      "target": "test_transcript.txt",
-      "type": "related",
-      "shared": []
-    },
-    {
-      "source": "lecture_20260601_213932.json.txt",
-      "target": "lecture_20260601_214121.json.txt",
-      "type": "related",
-      "shared": []
-    },
-    {
-      "source": "lecture_20260601_213932.json.txt",
-      "target": "marketing.txt",
-      "type": "related",
-      "shared": []
-    },
-    {
-      "source": "lecture_20260601_213932.json.txt",
-      "target": "test.txt",
-      "type": "related",
-      "shared": []
-    },
-    {
-      "source": "lecture_20260601_213932.json.txt",
-      "target": "test_lecture.txt",
-      "type": "related",
-      "shared": []
-    },
-    {
-      "source": "lecture_20260601_213932.json.txt",
-      "target": "test_transcript.txt",
-      "type": "related",
-      "shared": []
-    },
-    {
-      "source": "lecture_20260601_214121.json.txt",
-      "target": "marketing.txt",
-      "type": "related",
-      "shared": []
-    },
-    {
-      "source": "lecture_20260601_214121.json.txt",
-      "target": "test.txt",
-      "type": "related",
-      "shared": []
-    },
-    {
-      "source": "lecture_20260601_214121.json.txt",
-      "target": "test_lecture.txt",
-      "type": "related",
-      "shared": []
-    },
-    {
-      "source": "lecture_20260601_214121.json.txt",
-      "target": "test_transcript.txt",
-      "type": "related",
-      "shared": []
-    },
-    {
-      "source": "marketing.txt",
-      "target": "test.txt",
-      "type": "related",
-      "shared": []
-    },
-    {
-      "source": "marketing.txt",
-      "target": "test_lecture.txt",
-      "type": "related",
-      "shared": []
-    },
-    {
-      "source": "marketing.txt",
-      "target": "test_transcript.txt",
-      "type": "related",
-      "shared": []
-    },
-    {
-      "source": "test.txt",
-      "target": "test_lecture.txt",
-      "type": "related",
-      "shared": []
-    },
-    {
-      "source": "test.txt",
-      "target": "test_transcript.txt",
-      "type": "related",
-      "shared": []
-    },
-    {
-      "source": "test_lecture.txt",
-      "target": "test_transcript.txt",
-      "type": "related",
-      "shared": []
-    }
-  ],
-  "updated": "2026-06-03T18:47:28.835066"
-}
-</script>
+    
 </div>
 
 <input type="file" id="slideInput" accept="image/*" capture="environment" style="display:none" onchange="handleSlideCapture(this)">
@@ -2000,6 +671,7 @@ body {
 <h2 style="color:var(--gold);font-family:'Playfair Display',serif;margin:0;">📋 Executive Briefs</h2>
 <button class="btn-sm primary" onclick="generateBrief()" style="margin-left:auto;">+ New Brief</button>
 </div>
+<p style="padding:4px 16px 0;font-size:0.75rem;color:var(--dim);margin:0;">AI-generated summaries of lecture sessions — key frameworks, concepts, and discussion questions for quick pre-class review.</p>
 <div style="padding:12px;display:flex;gap:8px;flex-wrap:wrap;">
 <input id="briefTopic" placeholder="Topic (optional, uses current session)" style="flex:1;min-width:200px;background:var(--bg);border:1px solid var(--border);color:var(--text);padding:6px 12px;border-radius:8px;font-family:Inter;font-size:0.8rem;">
 <select id="briefTemplate" style="background:var(--bg);border:1px solid var(--border);color:var(--text);padding:6px 12px;border-radius:8px;font-size:0.8rem;"><option value="">No template</option></select>
@@ -2018,6 +690,7 @@ body {
 <button class="btn-sm primary" onclick="reviewFlashcards()">Review Due</button>
 </div>
 </div>
+<p style="padding:4px 16px 0;font-size:0.75rem;color:var(--dim);margin:0;">Flashcards with AI-optimized scheduling (FSRS) — review key terms and concepts when you're about to forget them, not before.</p>
 <div id="flashcardReview" style="display:none;flex-direction:column;align-items:center;justify-content:center;flex:1;padding:24px;">
 <div id="flashcardCard" style="width:100%;max-width:500px;min-height:250px;background:var(--card);border:2px solid var(--gold);border-radius:16px;padding:32px;text-align:center;cursor:pointer;transition:transform 0.3s;display:flex;align-items:center;justify-content:center;flex-direction:column;">
 <div id="flashcardFront" style="font-size:1.15rem;font-weight:600;line-height:1.5;"></div>
@@ -2041,6 +714,7 @@ body {
 <h2 style="color:var(--gold);font-family:'Playfair Display',serif;margin:0;">📝 Quizzes</h2>
 <button class="btn-sm primary" onclick="generateQuiz()" style="margin-left:auto;">+ Generate Quiz</button>
 </div>
+<p style="padding:4px 16px 0;font-size:0.75rem;color:var(--dim);margin:0;">Self-assessment quizzes auto-generated from your lecture transcripts — test your understanding before exams.</p>
 <div style="padding:8px 16px;display:flex;gap:8px;">
 <select id="quizType" style="background:var(--bg);border:1px solid var(--border);color:var(--text);padding:6px 12px;border-radius:8px;font-size:0.8rem;">
 <option value="mcq">Multiple Choice</option>
@@ -2059,6 +733,7 @@ body {
 <h2 style="color:var(--gold);font-family:'Playfair Display',serif;margin:0;">🎧 Audio Overviews</h2>
 <button class="btn-sm primary" onclick="generateAudio()" style="margin-left:auto;">+ Generate Podcast</button>
 </div>
+<p style="padding:4px 16px 0;font-size:0.75rem;color:var(--dim);margin:0;">AI-generated podcast-style audio summaries — listen during your commute or while reviewing notes on the go.</p>
 <div style="padding:8px 16px;display:flex;gap:8px;">
 <select id="audioStyle" style="background:var(--bg);border:1px solid var(--border);color:var(--text);padding:6px 12px;border-radius:8px;font-size:0.8rem;">
 <option value="podcast">Podcast (2 hosts)</option><option value="summary">Summary</option><option value="lecture">Lecture Notes</option></select>
@@ -2073,6 +748,7 @@ body {
 <h2 style="color:var(--gold);font-family:'Playfair Display',serif;margin:0;">📊 Case Studies</h2>
 <button class="btn-sm primary" onclick="analyzeCase()" style="margin-left:auto;">+ New Analysis</button>
 </div>
+<p style="padding:4px 16px 0;font-size:0.75rem;color:var(--dim);margin:0;">Step-by-step business case analysis with framework recommendations — apply strategy tools to real companies.</p>
 <div style="padding:8px 16px;display:flex;gap:8px;flex-wrap:wrap;">
 <input id="caseCompany" placeholder="Company name" style="flex:1;min-width:150px;background:var(--bg);border:1px solid var(--border);color:var(--text);padding:6px 12px;border-radius:8px;font-size:0.8rem;">
 <input id="caseIndustry" placeholder="Industry" style="flex:1;min-width:120px;background:var(--bg);border:1px solid var(--border);color:var(--text);padding:6px 12px;border-radius:8px;font-size:0.8rem;">
@@ -2294,7 +970,11 @@ function renderSavedEntry(e) {
 // ─── Recording ────────────────────────────────────
 async function toggleRecording() {
     if (isRecording) return;
-    if (!sessionId) await startSession();
+    if (!sessionId) {
+        const title = prompt('📝 Name this recording:', '');
+        if (title === null) return; // cancelled
+        await startSession(title || undefined);
+    }
     try {
         const stream = await navigator.mediaDevices.getUserMedia({
             audio: { sampleRate: 16000, channelCount: 1, echoCancellation: true }
@@ -2334,7 +1014,12 @@ async function toggleRecording() {
                         triggerCoLearner(data.text.trim(), '', (Date.now() - startTime) / 1000);
                         document.getElementById('statusText').textContent = `Recording (${chunk.index + 1} chunks)`;
                     } else if (data.error) {
-                        console.warn('Chunk', chunk.index, 'STT error:', data.error);
+                        console.warn('Chunk', chunk.index, 'error:', data.error);
+                        const errText = data.error === "audio_conversion_failed" ? "Audio conversion failed"
+                            : data.error === "timeout" ? "Transcription timed out"
+                            : "Error: " + data.error;
+                        document.getElementById("statusText").textContent = errText;
+                        document.getElementById("statusDot").className = "status-dot error";
                     }
                 } catch(err) {
                     console.error('Chunk', chunk.index, 'failed:', err);
@@ -2748,6 +1433,24 @@ function escapeHtml(text) {
     return div.innerHTML;
 }
 
+function renderMarkdown(text) {
+    if (!text) return '';
+    let html = escapeHtml(text);
+    // Bold: **text** -> <strong>
+    html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+    // Italic: *text* (single asterisk, not double)
+    html = html.replace(/(?<!\*)\*(?!\*)(.+?)(?<!\*)\*(?!\*)/g, '<em>$1</em>');
+    // Inline code
+    html = html.replace(/`(.+?)`/g, '<code>$1</code>');
+    // Headers: ### text
+    html = html.replace(/### (.+?)(<br>|$)/g, '<h4>$1</h4>');
+    // Bullet points with -
+    html = html.replace(/(?:^|<br>)- (.+?)(?=<br>|$)/g, '<br>• $1');
+    // Newlines
+    html = html.replace(/\n/g, '<br>');
+    return html;
+}
+
 function toast(msg, type) {
     const el = document.createElement('div');
     el.className = `toast ${type}`;
@@ -2823,7 +1526,7 @@ function switchTab(tab) {
     const el = document.getElementById(tabId);
     if (el) el.classList.add('active');
     // Hide all views
-    ['captureView','chatView','brainView','calendarView','briefsView','flashcardsView','quizzesView','audioView','casesView'].forEach(id => {
+    ['captureView','chatView','brainView','briefsView','flashcardsView','quizzesView','audioView','casesView'].forEach(id => {
         const v = document.getElementById(id);
         if (!v) return;
         if (id === 'chatView') v.classList.toggle('active', tab === 'chat');
@@ -2838,8 +1541,6 @@ function switchTab(tab) {
     document.getElementById('quizzesView').style.display = tab === 'quizzes' ? 'flex' : 'none';
     document.getElementById('audioView').style.display = tab === 'audio' ? 'flex' : 'none';
     document.getElementById('casesView').style.display = tab === 'cases' ? 'flex' : 'none';
-    document.getElementById('calendarView').style.display = tab === 'calendar' ? 'flex' : 'none';
-    if (tab === 'calendar') loadCalendar();
     // Show/hide capture controls
     const isCapture = tab === 'capture';
     document.getElementById('slideStrip').style.display = isCapture ? '' : 'none';
@@ -2847,7 +1548,26 @@ function switchTab(tab) {
     if (tab === 'chat') document.getElementById('chatInput').focus();
     if (tab === 'brain') { 
         document.getElementById('brainView').style.display = 'flex';
-        if (!window._brainGraphInited) { window._brainGraphInited = true; requestAnimationFrame(() => requestAnimationFrame(() => initBrainGraph())); }
+        if (!window._brainGraphInited) { 
+            window._brainGraphInited = true; 
+            // Wait until brain view is actually visible with dimensions
+            setTimeout(() => {
+                const v = document.getElementById('brainGraphView');
+                if (v) v.style.display = 'block';
+                initBrainGraph();
+            }, 200);
+        }
+        // Auto-collapse info panel on mobile
+        if (!window._brainPanelAutoDone && window.innerWidth <= 768) {
+            window._brainPanelAutoDone = true;
+            brainPanelCollapsed = true;
+            setTimeout(() => {
+                const panel = document.getElementById("brainInfo");
+                const btn = document.getElementById("brainCollapseBtn");
+                if(panel) panel.classList.add("collapsed");
+                if(btn) { btn.textContent = "▶"; btn.title = "Show details"; }
+            }, 400);
+        }
     }
     if (tab === 'briefs') loadBriefs();
     if (tab === 'flashcards') { loadFlashcardStats(); loadFlashcardsList(); }
@@ -2881,10 +1601,13 @@ async function sendChat() {
     msgs.scrollTop = msgs.scrollHeight;
     
     try {
+        // Include live transcript from DOM (not yet saved to backend)
+        const liveTranscript = [...document.querySelectorAll('#box1Body .entry-text')]
+            .map(e => e.textContent).join('\n').slice(-3000);
         const resp = await fetch(`${API}/chat`, {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({ session_id: sessionId, question: question })
+            body: JSON.stringify({ session_id: sessionId, question: question, transcript: liveTranscript })
         });
         const data = await resp.json();
         
@@ -2893,7 +1616,7 @@ async function sendChat() {
         
         // AI response
         const answer = data.answer || 'Sorry, I could not answer that.';
-        msgs.innerHTML += '<div class="chat-msg ai">' + escapeHtml(answer) + '</div>';
+        msgs.innerHTML += '<div class="chat-msg ai">' + renderMarkdown(answer) + '</div>';
     } catch(e) {
         document.getElementById(thinkId)?.remove();
         msgs.innerHTML += '<div class="chat-msg ai">Error: ' + escapeHtml(e.message) + '</div>';
@@ -2906,8 +1629,104 @@ async function sendChat() {
 }
 
 // ─── Init ────────────────────────────────────────
+// ─── Engine Selector ──────────────────────────
+let currentEngine = 'faster_whisper';
+let currentModel = 'tiny.en';  // default: fastest
+
+async function checkEngineStatus() {
+    try {
+        const [engResp, modelResp] = await Promise.all([
+            fetch(`${API}/engine/status`),
+            fetch(`${API}/model/status`)
+        ]);
+        const eng = await engResp.json();
+        const mod = await modelResp.json();
+        currentEngine = eng.engine;
+        currentModel = mod.model;
+        updateEngineBadge();
+    } catch(e) { /* server may not have endpoints yet */ }
+}
+
+function updateEngineBadge() {
+    const badge = document.getElementById('engineBadge');
+    const label = document.getElementById('engLabel');
+    const icon = badge?.querySelector('.eng-icon');
+    if (!badge || !label || !icon) return;
+    
+    badge.className = 'engine-badge';
+    
+    // Model indicator
+    if (currentModel === 'tiny.en') {
+        label.textContent = 'tiny.en';
+        icon.textContent = '⚡';
+        badge.classList.add('tiny');
+    } else if (currentModel === 'base.en') {
+        label.textContent = 'base.en 🇹🇭';
+        icon.textContent = '🎯';
+        badge.classList.add('thai');
+    } else {
+        label.textContent = currentModel;
+        icon.textContent = '🔊';
+    }
+    
+    // Engine indicator
+    if (currentEngine === 'groq') {
+        badge.classList.add('groq');
+        label.textContent = 'Groq ☁️';
+        icon.textContent = '☁️';
+    }
+}
+
+function toggleEngine() {
+    // Single click: toggle model (tiny.en ↔ base.en)
+    // This is the primary toggle — fast click for Thai mode
+    const newModel = currentModel === 'tiny.en' ? 'base.en' : 'tiny.en';
+    selectModel(newModel);
+}
+
+async function selectModel(model) {
+    currentModel = model;
+    updateEngineBadge();
+    document.getElementById('enginePopup')?.classList.remove('show');
+    
+    try {
+        const resp = await fetch(`${API}/model/set?model=${model}`, { method: 'POST' });
+        const data = await resp.json();
+        showToast(`${data.message}`, 'success');
+    } catch(e) {
+        showToast(`Model: ${model} (API not available)`, 'warning');
+    }
+}
+
+async function selectEngineFull(engine) {
+    // Popup option: switch the engine entirely
+    currentEngine = engine;
+    updateEngineBadge();
+    document.getElementById('enginePopup')?.classList.remove('show');
+    
+    try {
+        await fetch(`${API}/engine/set?engine=${engine}`, { method: 'POST' });
+        showToast(`Engine: ${engine}`, 'success');
+    } catch(e) {
+        showToast(`Engine: ${engine}`, 'warning');
+    }
+}
+
+function showToast(msg, type) {
+    const toast = document.createElement('div');
+    toast.style.cssText = `position:fixed;bottom:20px;right:20px;padding:10px 20px;border-radius:8px;
+        background:${type==='success'?'#1b5e20':'#5d4037'};color:white;font-size:0.75rem;z-index:9999;
+        transition:opacity 0.3s;opacity:1;`;
+    toast.textContent = msg;
+    document.body.appendChild(toast);
+    setTimeout(() => { toast.style.opacity = '0'; setTimeout(() => toast.remove(), 300); }, 2500);
+}
+
+// Poll engine status on init
 document.addEventListener('DOMContentLoaded', () => {
     startSession();
+    checkEngineStatus();  // poll current engine
+    setInterval(checkEngineStatus, 30000);  // refresh every 30s
     // Restore stop button behavior
     document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape' && isRecording) stopAndSave();
@@ -2918,25 +1737,38 @@ document.addEventListener('DOMContentLoaded', () => {
 let brainSim = null;
 
 function initBrainGraph() {
-    const scriptEl = document.getElementById('brainGraphData');
-    if (!scriptEl) return;
-    try {
-        const graphData = JSON.parse(scriptEl.textContent.trim());
-        if (graphData.placeholder) return;
-        renderBrainGraph(graphData);
-        document.getElementById('brainStats').textContent = 
-            `${graphData.nodes.filter(n=>n.group==='doc').length} docs · ${graphData.nodes.filter(n=>n.group==='framework').length} frameworks · ${graphData.nodes.filter(n=>n.group==='topic').length} topics · ${graphData.links.filter(l=>l.type==='related').length} cross-links · Updated: ${graphData.updated||'?'}`;
-    } catch(e) { console.error('Brain graph parse error:', e); }
+    // Ensure SVG parent is visible and has dimensions
+    const container = document.getElementById('brainGraphView');
+    if (container) {
+        container.style.display = 'block';
+        // Force layout recalculation
+        void container.offsetHeight;
+    }
+    const svgEl = document.getElementById('brainGraph');
+    if (!svgEl) return;
+    
+    // Explicitly set SVG size from container or viewport
+    const W = Math.max(container?.clientWidth || window.innerWidth - 40, 400);
+    const H = Math.max(container?.clientHeight || window.innerHeight - 200, 400);
+    svgEl.setAttribute('width', W);
+    svgEl.setAttribute('height', H);
+    svgEl.style.width = W + 'px';
+    svgEl.style.height = H + 'px';
+    
+    fetch(API + '/second-brain/graph')
+        .then(r => r.json())
+        .then(graphData => {
+            if (!graphData.nodes || !graphData.nodes.length) return;
+            renderBrainGraph(graphData, W, H);
+            document.getElementById('brainStats').textContent = 
+                `${graphData.nodes.filter(n=>n.group==='doc').length} docs · ${graphData.nodes.filter(n=>n.group==='framework').length} frameworks · ${graphData.nodes.filter(n=>n.group==='topic').length} topics · ${(graphData.links||[]).filter(l=>l.type==='related').length} cross-links`;
+        })
+        .catch(e => console.error('Brain graph fetch error:', e));
 }
 
-function renderBrainGraph(data) {
+function renderBrainGraph(data, W, H) {
     const svg = d3.select('#brainGraph');
     svg.selectAll('*').remove();
-    let W = svg.node().clientWidth || 900;
-    let H = svg.node().clientHeight || 600;
-    // Force minimum dimensions for the SVG
-    if (W < 100) W = 900;
-    if (H < 100) H = 600;
     svg.attr('viewBox', `0 0 ${W} ${H}`).attr('preserveAspectRatio', 'xMidYMid meet');
     const g = svg.append('g');
     svg.call(d3.zoom().scaleExtent([0.1, 4]).on('zoom', (e) => g.attr('transform', e.transform)));
@@ -2967,14 +1799,42 @@ function renderBrainGraph(data) {
     node.append('text').text(d => (d.title||'').length > 22 ? d.title.slice(0,22)+'…' : d.title||'')
         .attr('dx',10).attr('dy',4).attr('fill','#94a3b8').attr('font-size','10px');
 
-    node.on('click', (e, d) => showBrainDetail(d, data));
-    node.on('mouseenter', (e, d) => {
+    // Track selected node for persistent highlight
+    let selectedNode = null;
+    
+    node.on('click', (e, d) => {
+        e.stopPropagation();
+        showBrainDetail(d, data);
+
+        // Toggle: clicking selected node again deselects
+        if (selectedNode === d.id) {
+            selectedNode = null;
+            node.style('opacity',1);
+            link.style('opacity', l => l.type==='related'?0.3:0.5);
+            return;
+        }
+
+        // Highlight this node and its connections
+        selectedNode = d.id;
         const connected = new Set();
         data.links.forEach(l => { if(l.source.id===d.id||l.target.id===d.id) connected.add(l.source.id===d.id?l.target.id:l.source.id); });
         node.style('opacity', n => connected.has(n.id)||n.id===d.id ? 1 : 0.15);
         link.style('opacity', l => l.source.id===d.id||l.target.id===d.id ? 0.7 : 0.03);
     });
-    node.on('mouseleave', () => { node.style('opacity',1); link.style('opacity', d => d.type==='related'?0.3:0.5); });
+
+    // Click graph background to dismiss info panel + reset highlights
+    svg.on('click', function(e) {
+      if (e.target === this || e.target.tagName === 'svg' || e.target.tagName === 'g') {
+        selectedNode = null;
+        node.style('opacity',1);
+        link.style('opacity', l => l.type==='related'?0.3:0.5);
+        brainPanelCollapsed = true;
+        const panel = document.getElementById("brainInfo");
+        const btn = document.getElementById("brainCollapseBtn");
+        if (panel) panel.classList.add("collapsed");
+        if (btn) { btn.textContent = "▶"; btn.title = "Show details"; }
+      }
+    });
 
     sim.on('tick', () => {
         link.attr('x1',d=>d.source.x).attr('y1',d=>d.source.y).attr('x2',d=>d.target.x).attr('y2',d=>d.target.y);
@@ -3085,8 +1945,13 @@ function switchBrainSubView(name) {
     document.querySelectorAll('.brain-subview').forEach(v => v.classList.remove('active'));
     if (name === 'graph') {
         document.querySelector('.brain-subtab:nth-child(1)').classList.add('active');
-        document.getElementById('brainGraphView').classList.add('active');
-        if (!window._brainGraphInited) { window._brainGraphInited = true; setTimeout(() => initBrainGraph(), 100); }
+        const gv = document.getElementById('brainGraphView');
+        gv.classList.add('active');
+        gv.style.display = 'block';
+        if (!window._brainGraphInited) { 
+            window._brainGraphInited = true; 
+            setTimeout(() => initBrainGraph(), 250);
+        }
     } else {
         document.querySelector('.brain-subtab:nth-child(2)').classList.add('active');
         document.getElementById('brainDocsView').classList.add('active');
@@ -3636,65 +2501,50 @@ async function deleteBrainDoc(docName) {
     });
 }
 
-// ═══ CALENDAR ═══
-async function loadCalendar() {
-    const container = document.getElementById('calendarUpcoming');
-    try {
-        // Read from embedded data (refreshed on page load)
-        const scriptEl = document.getElementById('calendarData');
-        const data = scriptEl ? JSON.parse(scriptEl.textContent) : { events: [] };
-        const events = data.events || [];
-        
-        if (events.length === 0) {
-            container.innerHTML = '<p style="color:var(--dim);text-align:center;padding:40px;">No upcoming events</p>';
-            return;
-        }
+// ═══ Brain Panel Toggle ═══
+let brainPanelCollapsed = false;
+function closeBrainPanel() {
+  brainPanelCollapsed = true;
+  const panel = document.getElementById("brainInfo");
+  const btn = document.getElementById("brainCollapseBtn");
+  if (panel) panel.classList.add("collapsed");
+  if (btn) { btn.textContent = "▶"; btn.title = "Expand panel"; }
+}
+function toggleBrainPanel() {
+  brainPanelCollapsed = !brainPanelCollapsed;
+  const panel = document.getElementById("brainInfo");
+  const btn = document.getElementById("brainCollapseBtn");
+  if(brainPanelCollapsed) {
+    panel.classList.add("collapsed");
+    btn.textContent = "▶";
+    btn.title = "Expand panel";
+  } else {
+    panel.classList.remove("collapsed");
+    btn.textContent = "◀";
+    btn.title = "Collapse panel";
+  }
+}
 
-        const now = new Date();
-        const tagColors = { EXAM: '#ef4444', DEADLINE: '#f97316', CLASS: '#3b82f6', WORKSHOP: '#8b5cf6', OTHER: '#6b7280' };
-        
-        container.innerHTML = events.map(e => {
-            const start = new Date(e.start);
-            const daysUntil = Math.ceil((start - now) / 86400000);
-            const dateStr = e.is_all_day 
-                ? start.toLocaleDateString('en-GB', {weekday:'short',day:'numeric',month:'short'})
-                : start.toLocaleDateString('en-GB', {weekday:'short',day:'numeric',month:'short'}) + ' · ' + start.toLocaleTimeString('en-GB', {hour:'2-digit',minute:'2-digit'});
-            
-            let urgency = '';
-            if (daysUntil <= 1) urgency = '🔥 ';
-            else if (daysUntil <= 3) urgency = '⚠️ ';
-            else if (daysUntil <= 7) urgency = '📌 ';
-            
-            const tags = e.tags.map(t => {
-                const color = tagColors[t] || tagColors.OTHER;
-                return `<span style="display:inline-block;padding:1px 6px;border-radius:6px;font-size:9px;font-weight:600;background:${color}22;color:${color};margin-left:4px;">${t}</span>`;
-            }).join('');
-            
-            return `<div style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:12px 16px;display:flex;gap:12px;align-items:flex-start;">
-                <div style="min-width:44px;text-align:center;color:var(--dim);font-size:11px;line-height:1.3;">
-                    <div style="color:var(--gold);font-size:18px;font-weight:700;">${urgency}${daysUntil}d</div>
-                    <div>away</div>
-                </div>
-                <div style="flex:1;min-width:0;">
-                    <div style="font-weight:600;font-size:14px;color:var(--text);">${escapeHtml(e.summary)}${tags}</div>
-                    <div style="font-size:12px;color:var(--dim);margin-top:4px;">${dateStr}${e.location ? ' · 📍 '+escapeHtml(e.location) : ''}</div>
-                </div>
-            </div>`;
-        }).join('');
-        
-        // Highlight critical events
-        const critical = events.filter(e => e.tags.includes('EXAM') || e.tags.includes('DEADLINE'));
-        if (critical.length > 0 && container.firstChild) {
-            container.insertAdjacentHTML('afterbegin', 
-                `<div style="background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.3);border-radius:8px;padding:8px 12px;font-size:12px;color:#fca5a5;">
-                    ⚠️ ${critical.length} critical event${critical.length>1?'s':''} — exams & deadlines ahead
-                </div>`
-            );
-        }
-    } catch(e) {
-        container.innerHTML = `<p style="color:var(--dim);text-align:center;padding:40px;">Calendar unavailable</p>`;
+// ─── Mobile Menu Toggle ───────────────────────────
+function toggleMobileMenu() {
+    const nav = document.getElementById('tabsNav');
+    const btn = document.getElementById('hamburgerBtn');
+    if (nav) {
+        nav.classList.toggle('mobile-open');
+        btn.textContent = nav.classList.contains('mobile-open') ? '✕' : '☰';
     }
 }
+// Close mobile menu when a tab is clicked
+document.addEventListener('click', function(e) {
+    if (e.target.classList.contains('tab')) {
+        const nav = document.getElementById('tabsNav');
+        const btn = document.getElementById('hamburgerBtn');
+        if (nav && nav.classList.contains('mobile-open')) {
+            nav.classList.remove('mobile-open');
+            if (btn) btn.textContent = '☰';
+        }
+    }
+});
 
 </script>
 <!-- ═══ LOAD MODAL ═══ -->
@@ -3715,6 +2565,28 @@ async function loadCalendar() {
   </div>
 </div>
 
-<script id="calendarData" type="application/json">{"synced_at": "2026-06-03T10:54:57.938463+00:00", "total": 24, "events": [{"id": "7tar233s6fug3spk5gsst3k8hh", "summary": "Sasin Next Gen Bootcamp \u2013 Designing Your SASIN Life", "start": "2026-06-05T18:00:00+07:00", "end": "2026-06-05T21:30:00+07:00", "is_all_day": false, "location": "", "description": "<p><strong>Sasin Next Gen Bootcamp at Sasin</strong></p><p><strong>Session:</strong> Designing Your SASIN Life<br><strong>Date:</strong> Friday, June 5, 2026<br><strong>Venue:</strong> Sasin Hall, 9th Floor</p><h3>Session Description</h3><p>Based on Stanford\u2019s popular <em>Designing Your Life</em> ap", "tags": ["CLASS", "WORKSHOP"], "days_until": 2, "synced_at": "2026-06-03T10:54:57.938463+00:00"}, {"id": "7et89su0o0vnoi1302s6t9hfrs", "summary": "Sasin Next Gen Bootcamp \u2013 Preparing for Quantitative Thinking in MBA/EMBA", "start": "2026-06-06T13:30:00+07:00", "end": "2026-06-06T16:30:00+07:00", "is_all_day": false, "location": "", "description": "<p><strong>Sasin Next Gen Bootcamp at Sasin</strong></p><p><strong>Session:</strong> Preparing for Quantitative Thinking in MBA/EMBA<br><strong>Date:</strong> Saturday, June 6, 2026<br><strong>Time:</strong> 1:30 PM \u2013 4:30 PM<br><strong>Venue:</strong> Sasin Hall, 9th Floor</p><h3>Session Descriptio", "tags": ["CLASS", "WORKSHOP"], "days_until": 2, "synced_at": "2026-06-03T10:54:57.938463+00:00"}, {"id": "3lkcd7p96n78nh2rnoej6cooip", "summary": "Module 1/2026-2027", "start": "2026-06-08", "end": "2026-07-12", "is_all_day": true, "location": "", "description": "", "tags": ["CLASS"], "days_until": 999, "synced_at": "2026-06-03T10:54:57.938463+00:00"}, {"id": "6je9vamn93qihcpqocvmbekdn2", "summary": "Due Date: 9 June 2026: submission to Student Experience", "start": "2026-06-09", "end": "2026-06-10", "is_all_day": true, "location": "", "description": "<a href=\"https://sasinware.sasin.edu/pluginfile.php/78266/mod_resource/content/1/2026%20MGMT-S-0031%20Business%20Strategy%20EMBA.pdf\">https://sasinware.sasin.edu/pluginfile.php/78266/mod_resource/content/1/2026%20MGMT-S-0031%20Business%20Strategy%20EMBA.pdf</a>", "tags": ["DEADLINE", "CLASS"], "days_until": 999, "synced_at": "2026-06-03T10:54:57.938463+00:00"}, {"id": "j0aodb9l91j46sm8k8f0lns49k", "summary": "MGMT-S-0031: Management and Business Strategy", "start": "2026-06-12T18:00:00+07:00", "end": "2026-06-12T21:30:00+07:00", "is_all_day": false, "location": "", "description": "<div><h2>MGMT-S-0031: Management and Business Strategy</h2></div>\n<div> Module 1, 2026</div>\n<div><i>This course is to develop the capacity of students to think strategically about business and deal with various strategic decisions in a range of organizational settings.</i></div>\n<div><b>Faculty:</b", "tags": ["CLASS"], "days_until": 9, "synced_at": "2026-06-03T10:54:57.938463+00:00"}, {"id": "4806s9k81rtlg7r897mr7gjq9s", "summary": "DECS-S-0034: Statistical Models and Managerial Analysis", "start": "2026-06-13T09:00:00+07:00", "end": "2026-06-13T12:30:00+07:00", "is_all_day": false, "location": "", "description": "<div><h2>DECS-S-0034: Statistical Models and Managerial Analysis</h2></div>\n<div> Module 1, 2026</div>\n<div><i>The goal of this course is to enable participants to be more knowledgeable with respect to the underlying statistical foundations, especially those related to linear regressions.</i></div>\n", "tags": ["CLASS"], "days_until": 9, "synced_at": "2026-06-03T10:54:57.938463+00:00"}, {"id": "50soi97qog5foosp2svbo0dkts", "summary": "MGMT-S-0031: Management and Business Strategy", "start": "2026-06-13T13:30:00+07:00", "end": "2026-06-13T17:00:00+07:00", "is_all_day": false, "location": "", "description": "<div><h2>MGMT-S-0031: Management and Business Strategy</h2></div>\n<div> Module 1, 2026</div>\n<div><i>This course is to develop the capacity of students to think strategically about business and deal with various strategic decisions in a range of organizational settings.</i></div>\n<div><b>Faculty:</b", "tags": ["CLASS"], "days_until": 9, "synced_at": "2026-06-03T10:54:57.938463+00:00"}, {"id": "h2uv8csmjtjkfg2m8ffbdmr87s", "summary": "DECS-S-0034: Statistical Models and Managerial Analysis", "start": "2026-06-19T18:00:00+07:00", "end": "2026-06-19T21:30:00+07:00", "is_all_day": false, "location": "", "description": "<div><h2>DECS-S-0034: Statistical Models and Managerial Analysis</h2></div>\n<div> Module 1, 2026</div>\n<div><i>The goal of this course is to enable participants to be more knowledgeable with respect to the underlying statistical foundations, especially those related to linear regressions.</i></div>\n", "tags": ["CLASS"], "days_until": 16, "synced_at": "2026-06-03T10:54:57.938463+00:00"}, {"id": "57nrus13599ojdcfi74d5es1c4", "summary": "MGMT-S-0031: Management and Business Strategy", "start": "2026-06-20T09:00:00+07:00", "end": "2026-06-20T12:30:00+07:00", "is_all_day": false, "location": "", "description": "<div><h2>MGMT-S-0031: Management and Business Strategy</h2></div>\n<div> Module 1, 2026</div>\n<div><i>This course is to develop the capacity of students to think strategically about business and deal with various strategic decisions in a range of organizational settings.</i></div>\n<div><b>Faculty:</b", "tags": ["CLASS"], "days_until": 16, "synced_at": "2026-06-03T10:54:57.938463+00:00"}, {"id": "qf3pqp5mspq31fcu5363n4egl4", "summary": "DECS-S-0034: Statistical Models and Managerial Analysis", "start": "2026-06-20T13:30:00+07:00", "end": "2026-06-20T17:00:00+07:00", "is_all_day": false, "location": "", "description": "<div><h2>DECS-S-0034: Statistical Models and Managerial Analysis</h2></div>\n<div> Module 1, 2026</div>\n<div><i>The goal of this course is to enable participants to be more knowledgeable with respect to the underlying statistical foundations, especially those related to linear regressions.</i></div>\n", "tags": ["CLASS"], "days_until": 16, "synced_at": "2026-06-03T10:54:57.938463+00:00"}, {"id": "s4olc4d1s6op5odh5vpirpmo18", "summary": "MGMT-S-0031: Management and Business Strategy", "start": "2026-06-26T18:00:00+07:00", "end": "2026-06-26T21:30:00+07:00", "is_all_day": false, "location": "", "description": "<div><h2>MGMT-S-0031: Management and Business Strategy</h2></div>\n<div> Module 1, 2026</div>\n<div><i>This course is to develop the capacity of students to think strategically about business and deal with various strategic decisions in a range of organizational settings.</i></div>\n<div><b>Faculty:</b", "tags": ["CLASS"], "days_until": 23, "synced_at": "2026-06-03T10:54:57.938463+00:00"}, {"id": "qp3sp7l3gpis6cuvonna1l0te0", "summary": "DECS-S-0034: Statistical Models and Managerial Analysis", "start": "2026-06-27T09:00:00+07:00", "end": "2026-06-27T12:30:00+07:00", "is_all_day": false, "location": "", "description": "<div><h2>DECS-S-0034: Statistical Models and Managerial Analysis</h2></div>\n<div> Module 1, 2026</div>\n<div><i>The goal of this course is to enable participants to be more knowledgeable with respect to the underlying statistical foundations, especially those related to linear regressions.</i></div>\n", "tags": ["CLASS"], "days_until": 23, "synced_at": "2026-06-03T10:54:57.938463+00:00"}, {"id": "6caa60j59i4jb53enn7pseee0g", "summary": "MGMT-S-0031: Management and Business Strategy", "start": "2026-06-27T13:30:00+07:00", "end": "2026-06-27T17:00:00+07:00", "is_all_day": false, "location": "", "description": "<div><h2>MGMT-S-0031: Management and Business Strategy</h2></div>\n<div> Module 1, 2026</div>\n<div><i>This course is to develop the capacity of students to think strategically about business and deal with various strategic decisions in a range of organizational settings.</i></div>\n<div><b>Faculty:</b", "tags": ["CLASS"], "days_until": 23, "synced_at": "2026-06-03T10:54:57.938463+00:00"}, {"id": "6ofvjjbq4h4l87aup2vd6q4m14", "summary": "DECS-S-0034: Statistical Models and Managerial Analysis", "start": "2026-07-03T18:00:00+07:00", "end": "2026-07-03T21:30:00+07:00", "is_all_day": false, "location": "", "description": "<div><h2>DECS-S-0034: Statistical Models and Managerial Analysis</h2></div>\n<div> Module 1, 2026</div>\n<div><i>The goal of this course is to enable participants to be more knowledgeable with respect to the underlying statistical foundations, especially those related to linear regressions.</i></div>\n", "tags": ["CLASS"], "days_until": 30, "synced_at": "2026-06-03T10:54:57.938463+00:00"}, {"id": "qs4k21nfotd65itmgj6aebtipk", "summary": "MGMT-S-0031: Management and Business Strategy", "start": "2026-07-04T09:00:00+07:00", "end": "2026-07-04T12:30:00+07:00", "is_all_day": false, "location": "", "description": "<div><h2>MGMT-S-0031: Management and Business Strategy</h2></div>\n<div> Module 1, 2026</div>\n<div><i>This course is to develop the capacity of students to think strategically about business and deal with various strategic decisions in a range of organizational settings.</i></div>\n<div><b>Faculty:</b", "tags": ["CLASS"], "days_until": 30, "synced_at": "2026-06-03T10:54:57.938463+00:00"}, {"id": "927ujhnltkmltmjlcklu6ka0uo", "summary": "DECS-S-0034: Statistical Models and Managerial Analysis", "start": "2026-07-04T13:30:00+07:00", "end": "2026-07-04T17:00:00+07:00", "is_all_day": false, "location": "", "description": "<div><h2>DECS-S-0034: Statistical Models and Managerial Analysis</h2></div>\n<div> Module 1, 2026</div>\n<div><i>The goal of this course is to enable participants to be more knowledgeable with respect to the underlying statistical foundations, especially those related to linear regressions.</i></div>\n", "tags": ["CLASS"], "days_until": 30, "synced_at": "2026-06-03T10:54:57.938463+00:00"}, {"id": "lp7j80jvl5a9ib67ou6iieve24", "summary": "MGMT-S-0031: Management and Business Strategy", "start": "2026-07-10T18:00:00+07:00", "end": "2026-07-10T21:00:00+07:00", "is_all_day": false, "location": "", "description": "<div><h2>MGMT-S-0031: Management and Business Strategy</h2></div>\n<div> Module 1, 2026</div>\n<div><i>This course is to develop the capacity of students to think strategically about business and deal with various strategic decisions in a range of organizational settings.</i></div>\n<div><b>Faculty:</b", "tags": ["CLASS"], "days_until": 37, "synced_at": "2026-06-03T10:54:57.938463+00:00"}, {"id": "p2pr9h6f6fke3ka39cp8mb3cl0", "summary": "DECS-S-0034: Statistical Models and Managerial Analysis", "start": "2026-07-11T09:00:00+07:00", "end": "2026-07-11T12:00:00+07:00", "is_all_day": false, "location": "", "description": "<div><h2>DECS-S-0034: Statistical Models and Managerial Analysis</h2></div>\n<div> Module 1, 2026</div>\n<div><i>The goal of this course is to enable participants to be more knowledgeable with respect to the underlying statistical foundations, especially those related to linear regressions.</i></div>\n", "tags": ["EXAM", "CLASS"], "days_until": 37, "synced_at": "2026-06-03T10:54:57.938463+00:00"}, {"id": "5cgh9jfhj2g5fg5kv1855oe37o", "summary": "Module 2/2026-2027", "start": "2026-07-13", "end": "2026-08-16", "is_all_day": true, "location": "", "description": "", "tags": ["CLASS"], "days_until": 999, "synced_at": "2026-06-03T10:54:57.938463+00:00"}, {"id": "675puvi2sdb39vsbqsfnb2dd8r", "summary": "Break", "start": "2026-08-16", "end": "2026-08-24", "is_all_day": true, "location": "", "description": "", "tags": ["OTHER"], "days_until": 999, "synced_at": "2026-06-03T10:54:57.938463+00:00"}, {"id": "4toqadkfuei49f9ugcl2d5s3vs", "summary": "Module 3/2026-2027", "start": "2026-08-24", "end": "2026-09-27", "is_all_day": true, "location": "", "description": "", "tags": ["CLASS"], "days_until": 999, "synced_at": "2026-06-03T10:54:57.938463+00:00"}, {"id": "2bmls0dk8lg9p59qo5ft24a1cs", "summary": "Module 4/2026-2027", "start": "2026-09-28", "end": "2026-11-01", "is_all_day": true, "location": "", "description": "", "tags": ["CLASS"], "days_until": 999, "synced_at": "2026-06-03T10:54:57.938463+00:00"}, {"id": "4jr3khgkq1de9s7g2vk4km5j2e", "summary": "Break", "start": "2026-11-01", "end": "2026-11-09", "is_all_day": true, "location": "", "description": "", "tags": ["OTHER"], "days_until": 999, "synced_at": "2026-06-03T10:54:57.938463+00:00"}, {"id": "4rc7btsdmc7k6msi3f99ofcdqp", "summary": "Module 5/2026-2027", "start": "2026-11-09", "end": "2026-12-13", "is_all_day": true, "location": "", "description": "", "tags": ["CLASS"], "days_until": 999, "synced_at": "2026-06-03T10:54:57.938463+00:00"}]}</script>
+<script id="calendarData" type="application/json">{"synced_at": "2026-06-03T10:54:57.938463+00:00", "total": 24, "events": [{"id": "7tar233s6fug3spk5gsst3k8hh", "summary": "Sasin Next Gen Bootcamp \u2013 Designing Your SASIN Life", "start": "2026-06-05T18:00:00+07:00", "end": "2026-06-05T21:30:00+07:00", "is_all_day": false, "location": "", "description": "<p><strong>Sasin Next Gen Bootcamp at Sasin</strong></p><p><strong>Session:</strong> Designing Your SASIN Life<br><strong>Date:</strong> Friday, June 5, 2026<br><strong>Venue:</strong> Sasin Hall, 9th Floor</p><h3>Session Description</h3><p>Based on Stanford\u2019s popular <em>Designing Your Life</em> ap", "tags": ["CLASS", "WORKSHOP"], "days_until": 2, "synced_at": "2026-06-03T10:54:57.938463+00:00"}, {"id": "7et89su0o0vnoi1302s6t9hfrs", "summary": "Sasin Next Gen Bootcamp \u2013 Preparing for Quantitative Thinking in MBA/EMBA", "start": "2026-06-06T13:30:00+07:00", "end": "2026-06-06T16:30:00+07:00", "is_all_day": false, "location": "", "description": "<p><strong>Sasin Next Gen Bootcamp at Sasin</strong></p><p><strong>Session:</strong> Preparing for Quantitative Thinking in MBA/EMBA<br><strong>Date:</strong> Saturday, June 6, 2026<br><strong>Time:</strong> 1:30 PM \u2013 4:30 PM<br><strong>Venue:</strong> Sasin Hall, 9th Floor</p><h3>Session Descriptio", "tags": ["CLASS", "WORKSHOP"], "days_until": 2, "synced_at": "2026-06-03T10:54:57.938463+00:00"}, {"id": "3lkcd7p96n78nh2rnoej6cooip", "summary": "Module 1/2026-2027", "start": "2026-06-08", "end": "2026-07-12", "is_all_day": true, "location": "", "description": "", "tags": ["CLASS"], "days_until": 999, "synced_at": "2026-06-03T10:54:57.938463+00:00"}, {"id": "6je9vamn93qihcpqocvmbekdn2", "summary": "Due Date: 9 June 2026: submission to Student Experience", "start": "2026-06-09", "end": "2026-06-10", "is_all_day": true, "location": "", "description": "<a href=\"https://sasinware.sasin.edu/pluginfile.php/78266/mod_resource/content/1/2026%20MGMT-S-0031%20Business%20Strategy%20EMBA.pdf\">https://sasinware.sasin.edu/pluginfile.php/78266/mod_resource/content/1/2026%20MGMT-S-0031%20Business%20Strategy%20EMBA.pdf</a>", "tags": ["DEADLINE", "CLASS"], "days_until": 999, "synced_at": "2026-06-03T10:54:57.938463+00:00"}, {"id": "j0aodb9l91j46sm8k8f0lns49k", "summary": "MGMT-S-0031: Management and Business Strategy", "start": "2026-06-12T18:00:00+07:00", "end": "2026-06-12T21:30:00+07:00", "is_all_day": false, "location": "", "description": "<div><h2>MGMT-S-0031: Management and Business Strategy</h2></div>\n<div> Module 1, 2026</div>\n<div><i>This course is to develop the capacity of students to think strategically about business and deal with various strategic decisions in a range of organizational settings.</i></div>\n<div><b>Faculty:</b", "tags": ["CLASS"], "days_until": 9, "synced_at": "2026-06-03T10:54:57.938463+00:00"}, {"id": "4806s9k81rtlg7r897mr7gjq9s", "summary": "DECS-S-0034: Statistical Models and Managerial Analysis", "start": "2026-06-13T09:00:00+07:00", "end": "2026-06-13T12:30:00+07:00", "is_all_day": false, "location": "", "description": "<div><h2>DECS-S-0034: Statistical Models and Managerial Analysis</h2></div>\n<div> Module 1, 2026</div>\n<div><i>The goal of this course is to enable participants to be more knowledgeable with respect to the underlying statistical foundations, especially those related to linear regressions.</i></div>\n", "tags": ["CLASS"], "days_until": 9, "synced_at": "2026-06-03T10:54:57.938463+00:00"}, {"id": "50soi97qog5foosp2svbo0dkts", "summary": "MGMT-S-0031: Management and Business Strategy", "start": "2026-06-13T13:30:00+07:00", "end": "2026-06-13T17:00:00+07:00", "is_all_day": false, "location": "", "description": "<div><h2>MGMT-S-0031: Management and Business Strategy</h2></div>\n<div> Module 1, 2026</div>\n<div><i>This course is to develop the capacity of students to think strategically about business and deal with various strategic decisions in a range of organizational settings.</i></div>\n<div><b>Faculty:</b", "tags": ["CLASS"], "days_until": 9, "synced_at": "2026-06-03T10:54:57.938463+00:00"}, {"id": "h2uv8csmjtjkfg2m8ffbdmr87s", "summary": "DECS-S-0034: Statistical Models and Managerial Analysis", "start": "2026-06-19T18:00:00+07:00", "end": "2026-06-19T21:30:00+07:00", "is_all_day": false, "location": "", "description": "<div><h2>DECS-S-0034: Statistical Models and Managerial Analysis</h2></div>\n<div> Module 1, 2026</div>\n<div><i>The goal of this course is to enable participants to be more knowledgeable with respect to the underlying statistical foundations, especially those related to linear regressions.</i></div>\n", "tags": ["CLASS"], "days_until": 16, "synced_at": "2026-06-03T10:54:57.938463+00:00"}, {"id": "57nrus13599ojdcfi74d5es1c4", "summary": "MGMT-S-0031: Management and Business Strategy", "start": "2026-06-20T09:00:00+07:00", "end": "2026-06-20T12:30:00+07:00", "is_all_day": false, "location": "", "description": "<div><h2>MGMT-S-0031: Management and Business Strategy</h2></div>\n<div> Module 1, 2026</div>\n<div><i>This course is to develop the capacity of students to think strategically about business and deal with various strategic decisions in a range of organizational settings.</i></div>\n<div><b>Faculty:</b", "tags": ["CLASS"], "days_until": 16, "synced_at": "2026-06-03T10:54:57.938463+00:00"}, {"id": "qf3pqp5mspq31fcu5363n4egl4", "summary": "DECS-S-0034: Statistical Models and Managerial Analysis", "start": "2026-06-20T13:30:00+07:00", "end": "2026-06-20T17:00:00+07:00", "is_all_day": false, "location": "", "description": "<div><h2>DECS-S-0034: Statistical Models and Managerial Analysis</h2></div>\n<div> Module 1, 2026</div>\n<div><i>The goal of this course is to enable participants to be more knowledgeable with respect to the underlying statistical foundations, especially those related to linear regressions.</i></div>\n", "tags": ["CLASS"], "days_until": 16, "synced_at": "2026-06-03T10:54:57.938463+00:00"}, {"id": "s4olc4d1s6op5odh5vpirpmo18", "summary": "MGMT-S-0031: Management and Business Strategy", "start": "2026-06-26T18:00:00+07:00", "end": "2026-06-26T21:30:00+07:00", "is_all_day": false, "location": "", "description": "<div><h2>MGMT-S-0031: Management and Business Strategy</h2></div>\n<div> Module 1, 2026</div>\n<div><i>This course is to develop the capacity of students to think strategically about business and deal with various strategic decisions in a range of organizational settings.</i></div>\n<div><b>Faculty:</b", "tags": ["CLASS"], "days_until": 23, "synced_at": "2026-06-03T10:54:57.938463+00:00"}, {"id": "qp3sp7l3gpis6cuvonna1l0te0", "summary": "DECS-S-0034: Statistical Models and Managerial Analysis", "start": "2026-06-27T09:00:00+07:00", "end": "2026-06-27T12:30:00+07:00", "is_all_day": false, "location": "", "description": "<div><h2>DECS-S-0034: Statistical Models and Managerial Analysis</h2></div>\n<div> Module 1, 2026</div>\n<div><i>The goal of this course is to enable participants to be more knowledgeable with respect to the underlying statistical foundations, especially those related to linear regressions.</i></div>\n", "tags": ["CLASS"], "days_until": 23, "synced_at": "2026-06-03T10:54:57.938463+00:00"}, {"id": "6caa60j59i4jb53enn7pseee0g", "summary": "MGMT-S-0031: Management and Business Strategy", "start": "2026-06-27T13:30:00+07:00", "end": "2026-06-27T17:00:00+07:00", "is_all_day": false, "location": "", "description": "<div><h2>MGMT-S-0031: Management and Business Strategy</h2></div>\n<div> Module 1, 2026</div>\n<div><i>This course is to develop the capacity of students to think strategically about business and deal with various strategic decisions in a range of organizational settings.</i></div>\n<div><b>Faculty:</b", "tags": ["CLASS"], "days_until": 23, "synced_at": "2026-06-03T10:54:57.938463+00:00"}, {"id": "6ofvjjbq4h4l87aup2vd6q4m14", "summary": "DECS-S-0034: Statistical Models and Managerial Analysis", "start": "2026-07-03T18:00:00+07:00", "end": "2026-07-03T21:30:00+07:00", "is_all_day": false, "location": "", "description": "<div><h2>DECS-S-0034: Statistical Models and Managerial Analysis</h2></div>\n<div> Module 1, 2026</div>\n<div><i>The goal of this course is to enable participants to be more knowledgeable with respect to the underlying statistical foundations, especially those related to linear regressions.</i></div>\n", "tags": ["CLASS"], "days_until": 30, "synced_at": "2026-06-03T10:54:57.938463+00:00"}, {"id": "qs4k21nfotd65itmgj6aebtipk", "summary": "MGMT-S-0031: Management and Business Strategy", "start": "2026-07-04T09:00:00+07:00", "end": "2026-07-04T12:30:00+07:00", "is_all_day": false, "location": "", "description": "<div><h2>MGMT-S-0031: Management and Business Strategy</h2></div>\n<div> Module 1, 2026</div>\n<div><i>This course is to develop the capacity of students to think strategically about business and deal with various strategic decisions in a range of organizational settings.</i></div>\n<div><b>Faculty:</b", "tags": ["CLASS"], "days_until": 30, "synced_at": "2026-06-03T10:54:57.938463+00:00"}, {"id": "927ujhnltkmltmjlcklu6ka0uo", "summary": "DECS-S-0034: Statistical Models and Managerial Analysis", "start": "2026-07-04T13:30:00+07:00", "end": "2026-07-04T17:00:00+07:00", "is_all_day": false, "location": "", "description": "<div><h2>DECS-S-0034: Statistical Models and Managerial Analysis</h2></div>\n<div> Module 1, 2026</div>\n<div><i>The goal of this course is to enable participants to be more knowledgeable with respect to the underlying statistical foundations, especially those related to linear regressions.</i></div>\n", "tags": ["CLASS"], "days_until": 30, "synced_at": "2026-06-03T10:54:57.938463+00:00"}, {"id": "lp7j80jvl5a9ib67ou6iieve24", "summary": "MGMT-S-0031: Management and Business Strategy", "start": "2026-07-10T18:00:00+07:00", "end": "2026-07-10T21:00:00+07:00", "is_all_day": false, "location": "", "description": "<div><h2>MGMT-S-0031: Management and Business Strategy</h2></div>\n<div> Module 1, 2026</div>\n<div><i>This course is to develop the capacity of students to think strategically about business and deal with various strategic decisions in a range of organizational settings.</i></div>\n<div><b>Faculty:</b", "tags": ["CLASS"], "days_until": 37, "synced_at": "2026-06-03T10:54:57.938463+00:00"}, {"id": "p2pr9h6f6fke3ka39cp8mb3cl0", "summary": "DECS-S-0034: Statistical Models and Managerial Analysis", "start": "2026-07-11T09:00:00+07:00", "end": "2026-07-11T12:00:00+07:00", "is_all_day": false, "location": "", "description": "<div><h2>DECS-S-0034: Statistical Models and Managerial Analysis</h2></div>\n<div> Module 1, 2026</div>\n<div><i>The goal of this course is to enable participants to be more knowledgeable with respect to the underlying statistical foundations, especially those related to linear regressions.</i></div>\n", "tags": ["EXAM", "CLASS"], "days_until": 37, "synced_at": "2026-06-03T10:54:57.938463+00:00"}, {"id": "5cgh9jfhj2g5fg5kv1855oe37o", "summary": "Module 2/2026-2027", "start": "2026-07-13", "end": "2026-08-16", "is_all_day": true, "location": "", "description": "", "tags": ["CLASS"], "days_until": 999, "synced_at": "2026-06-03T10:54:57.938463+00:00"}, {"id": "675puvi2sdb39vsbqsfnb2dd8r", "summary": "Break", "start": "2026-08-16", "end": "2026-08-24", "is_all_day": true, "location": "", "description": "", "tags": ["OTHER"], "days_until": 999, "synced_at": "2026-06-03T10:54:57.938463+00:00"}, {"id": "4toqadkfuei49f9ugcl2d5s3vs", "summary": "Module 3/2026-2027", "start": "2026-08-24", "end": "2026-09-27", "is_all_day": true, "location": "", "description": "", "tags": ["CLASS"], "days_until": 999, "synced_at": "2026-06-03T10:54:57.938463+00:00"}, {"id": "2bmls0dk8lg9p59qo5ft24a1cs", "summary": "Module 4/2026-2027", "start": "2026-09-28", "end": "2026-11-01", "is_all_day": true, "location": "", "description": "", "tags": ["CLASS"], "days_until": 999, "synced_at": "2026-06-03T10:54:57.938463+00:00"}, {"id": "4jr3khgkq1de9s7g2vk4km5j2e", "summary": "Break", "start": "2026-11-01", "end": "2026-11-09", "is_all_day": true, "location": "", "description": "", "tags": ["OTHER"], "days_until": 999, "synced_at": "2026-06-03T10:54:57.938463+00:00"}, {"id": "4rc7btsdmc7k6msi3f99ofcdqp", "summary": "Module 5/2026-2027", "start": "2026-11-09", "end": "2026-12-13", "is_all_day": true, "location": "", "description": "", "tags": ["CLASS"], "days_until": 999, "synced_at": "2026-06-03T10:54:57.938463+00:00"}]}
+// ─── Mobile Menu Toggle ───────────────────────────
+function toggleMobileMenu() {
+    const nav = document.getElementById('tabsNav');
+    const btn = document.getElementById('hamburgerBtn');
+    if (nav) {
+        nav.classList.toggle('mobile-open');
+        btn.textContent = nav.classList.contains('mobile-open') ? '✕' : '☰';
+    }
+}
+// Close mobile menu when a tab is clicked
+document.addEventListener('click', function(e) {
+    if (e.target.classList.contains('tab')) {
+        const nav = document.getElementById('tabsNav');
+        const btn = document.getElementById('hamburgerBtn');
+        if (nav && nav.classList.contains('mobile-open')) {
+            nav.classList.remove('mobile-open');
+            if (btn) btn.textContent = '☰';
+        }
+    }
+});
+
+</script>
 </body>
 </html>

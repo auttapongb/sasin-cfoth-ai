@@ -1,16 +1,23 @@
 """
-Sasin Lecture Capture — FastAPI Server v4
+Sasin Lecture Capture — FastAPI Server v5
 Two-Box Architecture:
   Box 1: Raw transcript (STT) + unanalyzed slides
   Box 2: AI Co-Learner insights (slide analysis, thinking out loud, answers)
 
 Features:
-  - Groq STT with Deepgram fallback
+  - faster-whisper local STT (primary, offline, fast)
+  - Groq STT with Deepgram fallback (cloud backup, switchable)
+  - Audio enhancement via noisereduce (denoising)
   - Gemini Vision for slide analysis → routed to Box 1 or 2
   - AI Co-Learner agent (DeepSeek) that studies alongside
   - SQLite persistence for all entries
   - Timestamp-based linking between boxes
   - Session management (save/load)
+
+Engine control:
+  TRANSCRIBE_ENGINE=faster_whisper (default) — local, offline, fast
+  TRANSCRIBE_ENGINE=groq — Groq cloud API (needs internet, higher accuracy)
+  TRANSCRIBE_ENGINE=auto — try faster_whisper first, fall back to Groq
 """
 
 import os
@@ -23,9 +30,14 @@ import tempfile
 import subprocess
 import hashlib
 import shutil
+import wave
+import numpy as np
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Optional
+
+from dotenv import load_dotenv
+load_dotenv(Path(__file__).parent / ".env")
 
 from fastapi import FastAPI, UploadFile, File, Form, HTTPException, Query, Request
 from fastapi.middleware.cors import CORSMiddleware
@@ -71,10 +83,18 @@ COLEARNER_URL = os.environ.get("COLEARNER_URL", "https://api.deepseek.com/v1/cha
 
 TRANSCRIBE_TIMEOUT = 25
 COLEARNER_TIMEOUT = 15
+AUDIO_ENHANCE_ENABLED = os.environ.get("AUDIO_ENHANCE", "true").lower() == "true"
+TRANSCRIBE_ENGINE = os.environ.get("TRANSCRIBE_ENGINE", "faster_whisper")  # faster_whisper | groq | auto
+FASTER_WHISPER_MODEL = os.environ.get("FASTER_WHISPER_MODEL", "tiny.en")  # default: fastest
+_current_fw_model = FASTER_WHISPER_MODEL  # runtime-switchable
 _last_engine_used = "groq"
 _last_colearner_time = 0.0
 _webm_headers: dict[str, bytes] = {}  # session_id -> cached WebM header bytes
 COLEARNER_COOLDOWN_SEC = 20  # server-side cooldown
+
+# ── Lazy-loaded models ──
+_faster_whisper_model = None  # loaded on first use
+_noisereduce = None
 
 logging.basicConfig(level=logging.WARNING)
 logger = logging.getLogger("capture")
@@ -414,12 +434,55 @@ class ResearchRequest(BaseModel):
 async def health():
     return {
         "status": "ok",
-        "engine": "groq",
-        "model": GROQ_MODEL,
-        "fallback": "deepgram/nova-2",
-        "colearner_model": COLEARNER_MODEL,
-        "db_size_mb": round(DB_PATH.stat().st_size / 1024**2, 2) if DB_PATH.exists() else 0,
+        "engine": TRANSCRIBE_ENGINE,
+        "faster_whisper_model": _current_fw_model,
+        "groq_model": GROQ_MODEL,
     }
+
+
+@app.get("/engine/status")
+async def engine_status():
+    """Return current STT engine config for UI display."""
+    return {
+        "engine": TRANSCRIBE_ENGINE,
+        "last_used": _last_engine_used,
+        "audio_enhance": AUDIO_ENHANCE_ENABLED,
+        "faster_whisper_model": _current_fw_model,
+        "groq_model": GROQ_MODEL,
+    }
+
+
+@app.post("/engine/set")
+async def engine_set(engine: str = Query(...)):
+    """Update TRANSCRIBE_ENGINE env var (runtime only, not persisted)."""
+    global TRANSCRIBE_ENGINE
+    engine = engine.lower()
+    if engine not in ("faster_whisper", "groq", "auto"):
+        raise HTTPException(400, f"Invalid engine: {engine}. Use faster_whisper, groq, or auto")
+    TRANSCRIBE_ENGINE = engine
+    return {"engine": TRANSCRIBE_ENGINE, "message": f"Switched to {engine} (runtime only — restart to persist)"}
+
+
+@app.get("/model/status")
+async def model_status():
+    """Return current faster-whisper model."""
+    return {
+        "model": _current_fw_model,
+        "default": FASTER_WHISPER_MODEL,
+        "available": ["tiny.en", "base.en", "small.en"],
+    }
+
+
+@app.post("/model/set")
+async def model_set(model: str = Query(...)):
+    """Switch faster-whisper model at runtime (tiny.en ↔ base.en)."""
+    global _current_fw_model, _faster_whisper_model
+    model = model.lower()
+    if model not in ("tiny.en", "base.en", "small.en"):
+        raise HTTPException(400, f"Invalid model: {model}. Use tiny.en, base.en, or small.en")
+    _current_fw_model = model
+    _faster_whisper_model = None  # force reload on next use
+    return {"model": _current_fw_model, "message": f"Switched to {model} (reloads on next transcription)"}
 
 
 # ── STT Transcription (Box 1) ──
@@ -450,10 +513,16 @@ async def transcribe(audio: UploadFile = File(...), chunk_index: int = Form(0),
                     fh.write(raw_audio)
             wav_path = tmp_path + ".wav"
             loop = asyncio.get_event_loop()
-            await asyncio.wait_for(
+            logger.debug(f"Converting chunk {chunk_index}: {len(raw_audio)} bytes (suffix={suffix})")
+            success = await asyncio.wait_for(
                 loop.run_in_executor(None, _convert_audio, tmp_path, wav_path),
                 timeout=TRANSCRIBE_TIMEOUT,
             )
+            if not success:
+                return {"text": "", "chunk_index": chunk_index, "error": "audio_conversion_failed", "elapsed_sec": elapsed_sec}
+
+        # ── Audio Enhancement ──
+        wav_path = _enhance_audio(wav_path)
 
         text = await asyncio.wait_for(
             _transcribe_with_fallback(wav_path),
@@ -505,12 +574,117 @@ async def transcribe(audio: UploadFile = File(...), chunk_index: int = Form(0),
                     pass
 
 
-def _convert_audio(src: str, dst: str):
-    subprocess.run(
+
+# ── Audio Enhancement ──
+
+def _enhance_audio(wav_path: str) -> str:
+    """Apply noise reduction to WAV file. Returns path to enhanced file."""
+    global _noisereduce
+    if not AUDIO_ENHANCE_ENABLED:
+        return wav_path
+
+    try:
+        if _noisereduce is None:
+            import noisereduce as nr
+            _noisereduce = nr
+
+        # Read WAV
+        with wave.open(wav_path, 'rb') as wf:
+            n_channels = wf.getnchannels()
+            sample_width = wf.getsampwidth()
+            framerate = wf.getframerate()
+            n_frames = wf.getnframes()
+            audio_data = wf.readframes(n_frames)
+
+        # Convert to numpy
+        audio = np.frombuffer(audio_data, dtype=np.int16).astype(np.float32) / 32768.0
+        if n_channels > 1:
+            audio = audio.reshape(-1, n_channels).mean(axis=1)  # mono
+
+        # Stationary noise reduction (fast, deterministic)
+        enhanced = _noisereduce.reduce_noise(
+            y=audio, sr=framerate,
+            stationary=True, prop_decrease=0.85,
+            n_fft=512, win_length=512, hop_length=128
+        )
+
+        # Convert back to int16
+        enhanced_int16 = (enhanced * 32768.0).clip(-32768, 32767).astype(np.int16)
+
+        # Write enhanced file
+        enhanced_path = wav_path + ".enhanced.wav"
+        with wave.open(enhanced_path, 'wb') as wf:
+            wf.setnchannels(1)
+            wf.setsampwidth(2)
+            wf.setframerate(framerate)
+            wf.writeframes(enhanced_int16.tobytes())
+
+        logger.info(f"Audio enhanced: {wav_path} → {enhanced_path}")
+        return enhanced_path
+
+    except Exception as e:
+        logger.warning(f"Audio enhancement skipped: {e}")
+        return wav_path
+
+
+# ── faster-whisper Transcription ──
+
+def _load_faster_whisper():
+    """Lazy-load faster-whisper model. Reloads if model was switched."""
+    global _faster_whisper_model, _current_fw_model
+    if _faster_whisper_model is None or getattr(_faster_whisper_model, '_model_name', '') != _current_fw_model:
+        from faster_whisper import WhisperModel
+        # Clear old model
+        _faster_whisper_model = None
+        _faster_whisper_model = WhisperModel(
+            _current_fw_model,
+            device="cpu",
+            compute_type="int8",
+            cpu_threads=4,
+            num_workers=2,
+        )
+        _faster_whisper_model._model_name = _current_fw_model  # track which model is loaded
+        logger.info(f"faster-whisper loaded: {_current_fw_model}")
+    return _faster_whisper_model
+
+
+async def _faster_whisper_transcribe(wav_path: str) -> str:
+    """Transcribe using local faster-whisper."""
+    loop = asyncio.get_event_loop()
+
+    def _run():
+        model = _load_faster_whisper()
+        segments, _ = model.transcribe(wav_path, beam_size=5, language="en")
+        return " ".join(seg.text.strip() for seg in segments)
+
+    try:
+        text = await asyncio.wait_for(
+            loop.run_in_executor(None, _run),
+            timeout=TRANSCRIBE_TIMEOUT,
+        )
+        return text.strip()
+    except asyncio.TimeoutError:
+        logger.warning("faster-whisper timed out")
+        return ""
+    except Exception as e:
+        logger.warning(f"faster-whisper failed: {e}")
+        return ""
+
+
+def _convert_audio(src: str, dst: str) -> bool:
+    result = subprocess.run(
         ["ffmpeg", "-y", "-i", src, "-ar", "16000", "-ac", "1", "-f", "wav", dst],
         capture_output=True,
         timeout=TRANSCRIBE_TIMEOUT,
     )
+    if result.returncode != 0:
+        stderr_tail = result.stderr.decode(errors="replace")[-500:] if result.stderr else "(no stderr)"
+        logger.warning(f"ffmpeg failed (rc={result.returncode}) on {os.path.basename(src)}: {stderr_tail}")
+        return False
+    if not os.path.exists(dst) or os.path.getsize(dst) == 0:
+        logger.warning(f"ffmpeg produced no output: {dst} missing or empty (src was {os.path.getsize(src)} bytes)")
+        return False
+    return True
 
 
 async def _groq_transcribe(wav_path: str) -> str:
@@ -557,20 +731,36 @@ async def _deepgram_transcribe(wav_path: str) -> str:
 
 async def _transcribe_with_fallback(wav_path: str) -> str:
     global _last_engine_used
-    try:
-        text = await _groq_transcribe(wav_path)
-        if text:
-            _last_engine_used = "groq"
-            return text
-    except Exception as e:
-        logger.warning(f"Groq failed, trying Deepgram: {e}")
-    try:
-        text = await _deepgram_transcribe(wav_path)
-        if text:
-            _last_engine_used = "deepgram"
-            return text
-    except Exception as e:
-        logger.error(f"Deepgram also failed: {e}")
+
+    engine = TRANSCRIBE_ENGINE.lower()
+
+    # ── faster_whisper (local, primary) ──
+    if engine in ("faster_whisper", "auto"):
+        try:
+            text = await _faster_whisper_transcribe(wav_path)
+            if text:
+                _last_engine_used = "faster_whisper"
+                return text
+        except Exception as e:
+            logger.warning(f"faster-whisper failed: {e}")
+
+    # ── Groq (cloud, fallback or primary) ──
+    if engine == "auto" or engine == "groq":
+        try:
+            text = await _groq_transcribe(wav_path)
+            if text:
+                _last_engine_used = "groq"
+                return text
+        except Exception as e:
+            logger.warning(f"Groq failed, trying Deepgram: {e}")
+        try:
+            text = await _deepgram_transcribe(wav_path)
+            if text:
+                _last_engine_used = "deepgram"
+                return text
+        except Exception as e:
+            logger.error(f"Deepgram also failed: {e}")
+
     _last_engine_used = "none"
     return ""
 
@@ -1114,6 +1304,7 @@ TONE:
 - Match the student's language (English or Thai)
 
 CAPABILITIES:
+- You have access to the LIVE lecture transcript if provided — reference specific quotes
 - Explain business frameworks (Porter, SWOT, PESTLE, BCG, Blue Ocean, etc.)
 - Connect lecture concepts across sessions
 - Help prepare for case discussions and exams
@@ -1128,6 +1319,7 @@ FORMAT:
 class ChatRequest(BaseModel):
     session_id: str = ""
     question: str
+    transcript: str = ""
 
 @app.post("/chat")
 async def chat(req: ChatRequest):
@@ -1142,8 +1334,11 @@ async def chat(req: ChatRequest):
         transcript_entries = [e for e in entries if e["box"] == "transcript" and e.get("content_type") != "slide_image"]
         insight_entries = [e for e in entries if e["box"] == "colearner"]
         
-        if transcript_entries:
-            # Last 2000 chars of transcript
+        if req.transcript:
+            # Live transcript from DOM (during recording)
+            context_parts.append(f"LIVE TRANSCRIPT (currently recording):\n{req.transcript[-3000:]}")
+        elif transcript_entries:
+            # Saved transcript from DB
             transcript_text = " ".join(e["content"] for e in transcript_entries[-10:])
             context_parts.append(f"RECENT TRANSCRIPT:\n{transcript_text[-2000:]}")
         
@@ -2286,7 +2481,7 @@ async def shutdown():
 
 
 if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 8898))
+    port = int(os.environ.get("PORT", 8896))
     workers = int(os.environ.get("WORKERS", "1"))
     # Workers > 1 needs import string; PM2 handles multi-process better
     uvicorn.run("__main__:app" if workers > 1 else app,
