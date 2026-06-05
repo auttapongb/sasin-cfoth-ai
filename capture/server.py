@@ -671,6 +671,20 @@ async def _faster_whisper_transcribe(wav_path: str) -> str:
         return ""
 
 
+def _sync_whisper_transcribe(wav_path: str) -> str:
+    """Synchronous whisper transcription for background threads.
+    Uses faster-whisper directly (no async wrapper needed since we're
+    already in a background thread, avoiding event-loop conflicts)."""
+    try:
+        model = _load_faster_whisper()
+        segments, _ = model.transcribe(wav_path, beam_size=5, language="en")
+        text = " ".join(seg.text.strip() for seg in segments)
+        return text.strip()
+    except Exception as e:
+        logger.warning(f"_sync_whisper_transcribe failed: {e}")
+        return ""
+
+
 def _convert_audio(src: str, dst: str) -> bool:
     result = subprocess.run(
         ["ffmpeg", "-y", "-i", src, "-ar", "16000", "-ac", "1", "-f", "wav", dst],
@@ -2527,17 +2541,8 @@ def _split_and_transcribe(job_id, src_path, suffix):
                     except Exception:
                         pass
 
-                loop = asyncio.new_event_loop()
-                try:
-                    text = loop.run_until_complete(
-                        asyncio.wait_for(_transcribe_with_fallback(wav_path), timeout=600)
-                    )
-                except asyncio.TimeoutError:
-                    text = "[Chunk %d timed out]" % (i + 1)
-                except Exception as e:
-                    text = "[Chunk %d error: %s]" % (i + 1, str(e))
-                finally:
-                    loop.close()
+                # Transcribe synchronously (we're already in a background thread)
+                text = _sync_whisper_transcribe(wav_path)
 
                 if text and text.strip():
                     all_texts.append(text.strip())
