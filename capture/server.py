@@ -85,7 +85,7 @@ TRANSCRIBE_TIMEOUT = 25
 COLEARNER_TIMEOUT = 30
 AUDIO_ENHANCE_ENABLED = os.environ.get("AUDIO_ENHANCE", "true").lower() == "true"
 TRANSCRIBE_ENGINE = os.environ.get("TRANSCRIBE_ENGINE", "faster_whisper")  # faster_whisper | groq | auto
-FASTER_WHISPER_MODEL = os.environ.get("FASTER_WHISPER_MODEL", "base.en")  # base.en: 2x slower than tiny but much better accuracy
+FASTER_WHISPER_MODEL = os.environ.get("FASTER_WHISPER_MODEL", "small.en")  # best English accuracy
 _current_fw_model = FASTER_WHISPER_MODEL  # runtime-switchable
 _last_engine_used = "groq"
 _last_colearner_time = 0.0
@@ -469,7 +469,7 @@ async def model_status():
     return {
         "model": _current_fw_model,
         "default": FASTER_WHISPER_MODEL,
-        "available": ["tiny.en", "base.en", "small.en"],
+        "available": ["small.en", "base.en", "tiny.en"],
     }
 
 

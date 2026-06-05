@@ -535,11 +535,14 @@ html, body { display: flex; flex-direction: column;
 <!-- Engine Selector Popup -->
 <div class="engine-popup" id="enginePopup">
     <div style="font-size:0.6rem;color:var(--dim);padding:4px 12px;">MODEL (click ⚡ badge to toggle)</div>
-    <div class="engine-option" onclick="selectModel('tiny.en')" id="optTiny">
-        <span>⚡</span><span class="opt-name">tiny.en</span><span class="opt-desc">fastest · English only</span>
+    <div class="engine-option" onclick="selectModel('small.en')" id="optSmall">
+        <span>🎯</span><span class="opt-name">small.en</span><span class="opt-desc">best accuracy · English</span>
     </div>
     <div class="engine-option" onclick="selectModel('base.en')" id="optBase">
-        <span>🎯</span><span class="opt-name">base.en 🇹🇭</span><span class="opt-desc">better with Thai accent</span>
+        <span>⚖️</span><span class="opt-name">base.en</span><span class="opt-desc">balanced speed/quality</span>
+    </div>
+    <div class="engine-option" onclick="selectModel('tiny.en')" id="optTiny">
+        <span>⚡</span><span class="opt-name">tiny.en</span><span class="opt-desc">fastest · English only</span>
     </div>
     <div style="font-size:0.6rem;color:var(--dim);padding:8px 12px 4px;border-top:1px solid var(--border);margin-top:4px;">ENGINE</div>
     <div class="engine-option" onclick="selectEngineFull('faster_whisper')" id="optFW">
@@ -1687,45 +1690,35 @@ async function sendChat() {
 // ─── Init ────────────────────────────────────────
 // ─── Engine Selector ──────────────────────────
 let currentEngine = 'faster_whisper';
-let currentModel = 'tiny.en';  // default: fastest
+let currentModel = 'small.en';  // default: best accuracy
 
-async function checkEngineStatus() {
+async function fetchEngineStatus() {
     try {
-        const [engResp, modelResp] = await Promise.all([
-            fetch(`${API}/engine/status`),
-            fetch(`${API}/model/status`)
-        ]);
-        const eng = await engResp.json();
-        const mod = await modelResp.json();
-        currentEngine = eng.engine;
+        const r = await fetch(`${API}/model/status`);
+        const mod = await r.json();
         currentModel = mod.model;
+        currentEngine = TRANSCRIBE_ENGINE || 'faster_whisper';
         updateEngineBadge();
-    } catch(e) { /* server may not have endpoints yet */ }
+    } catch(e) { /* ignore */ }
 }
+fetchEngineStatus();
 
 function updateEngineBadge() {
     const badge = document.getElementById('engineBadge');
-    const label = document.getElementById('engLabel');
-    const icon = badge?.querySelector('.eng-icon');
-    if (!badge || !label || !icon) return;
-    
+    const label = document.getElementById('engineLabel');
+    const icon = document.getElementById('engineIcon');
+    if (!badge || !label) return;
     badge.className = 'engine-badge';
-    
-    // Model indicator
+    label.textContent = currentModel;
+    icon.textContent = '🎯';
     if (currentModel === 'tiny.en') {
-        label.textContent = 'tiny.en';
         icon.textContent = '⚡';
         badge.classList.add('tiny');
     } else if (currentModel === 'base.en') {
-        label.textContent = 'base.en 🇹🇭';
+        icon.textContent = '⚖️';
+    } else if (currentModel === 'small.en') {
         icon.textContent = '🎯';
-        badge.classList.add('thai');
-    } else {
-        label.textContent = currentModel;
-        icon.textContent = '🔊';
     }
-    
-    // Engine indicator
     if (currentEngine === 'groq') {
         badge.classList.add('groq');
         label.textContent = 'Groq ☁️';
@@ -1734,10 +1727,9 @@ function updateEngineBadge() {
 }
 
 function toggleEngine() {
-    // Single click: toggle model (tiny.en ↔ base.en)
-    // This is the primary toggle — fast click for Thai mode
-    const newModel = currentModel === 'tiny.en' ? 'base.en' : 'tiny.en';
-    selectModel(newModel);
+    // Cycle: small.en → base.en → tiny.en → small.en
+    const cycle = {'small.en': 'base.en', 'base.en': 'tiny.en', 'tiny.en': 'small.en'};
+    selectModel(cycle[currentModel] || 'small.en');
 }
 
 async function selectModel(model) {
