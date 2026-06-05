@@ -2480,6 +2480,134 @@ async def shutdown():
         _http_client = None
 
 
+# ═══ ASYNC FILE UPLOAD + TRANSCRIPTION ═══
+import threading
+import time as _time
+import hashlib as _hashlib
+
+_upload_jobs = {}
+_upload_lock = threading.Lock()
+CHUNK_DURATION = 1800  # 30 minutes per chunk
+
+def _split_and_transcribe(job_id, src_path, suffix):
+    """Background: split audio into 30-min chunks, transcribe each."""
+    try:
+        result = subprocess.run(
+            ["ffprobe", "-v", "error", "-show_entries", "format=duration",
+             "-of", "default=noprint_wrappers=1:nokey=1", src_path],
+            capture_output=True, timeout=15
+        )
+        duration = float(result.stdout.decode().strip()) if result.returncode == 0 else 0
+        if duration <= 0:
+            with _upload_lock:
+                _upload_jobs[job_id] = {"status": "error", "error": "Could not determine audio duration", "text": "", "progress": 0, "chunks_total": 0, "chunks_done": 0}
+            return
+
+        total_chunks = max(1, int(duration / CHUNK_DURATION) + (1 if duration % CHUNK_DURATION > 1 else 0))
+        with _upload_lock:
+            _upload_jobs[job_id] = {"status": "processing", "progress": 0, "text": "", "error": None, "chunks_total": total_chunks, "chunks_done": 0}
+
+        all_texts = []
+        for i in range(total_chunks):
+            start = i * CHUNK_DURATION
+            chunk_wav = tempfile.NamedTemporaryFile(suffix=".wav", delete=False).name
+            subprocess.run(
+                ["ffmpeg", "-y", "-ss", str(start), "-t", str(CHUNK_DURATION),
+                 "-i", src_path, "-ar", "16000", "-ac", "1", "-f", "wav", chunk_wav],
+                capture_output=True, timeout=120
+            )
+
+            if os.path.exists(chunk_wav) and os.path.getsize(chunk_wav) > 100:
+                wav_path = chunk_wav
+                if AUDIO_ENHANCE_ENABLED:
+                    try:
+                        enhanced = _enhance_audio(wav_path)
+                        if enhanced != wav_path:
+                            wav_path = enhanced
+                    except Exception:
+                        pass
+
+                loop = asyncio.new_event_loop()
+                try:
+                    text = loop.run_until_complete(
+                        asyncio.wait_for(_transcribe_with_fallback(wav_path), timeout=600)
+                    )
+                except asyncio.TimeoutError:
+                    text = "[Chunk %d timed out]" % (i + 1)
+                except Exception as e:
+                    text = "[Chunk %d error: %s]" % (i + 1, str(e))
+                finally:
+                    loop.close()
+
+                if text and text.strip():
+                    all_texts.append(text.strip())
+
+            for f in [chunk_wav]:
+                try:
+                    os.remove(f)
+                except Exception:
+                    pass
+
+            with _upload_lock:
+                _upload_jobs[job_id]["chunks_done"] = i + 1
+                _upload_jobs[job_id]["progress"] = int(((i + 1) / total_chunks) * 100)
+                _upload_jobs[job_id]["text"] = "\n\n".join(all_texts)
+
+        with _upload_lock:
+            _upload_jobs[job_id]["status"] = "done"
+            _upload_jobs[job_id]["text"] = "\n\n".join(all_texts)
+            _upload_jobs[job_id]["progress"] = 100
+
+    except Exception as e:
+        logger.error("Upload job %s failed: %s", job_id, str(e))
+        with _upload_lock:
+            _upload_jobs[job_id] = {"status": "error", "error": str(e), "text": "", "progress": 0, "chunks_total": 0, "chunks_done": 0}
+    finally:
+        try:
+            os.remove(src_path)
+        except Exception:
+            pass
+
+
+@app.post("/upload")
+async def upload_audio(audio: UploadFile = File(...)):
+    """Upload a pre-recorded audio file for background transcription."""
+    suffix = Path(audio.filename).suffix if audio.filename else ".webm"
+    if suffix not in (".webm", ".wav", ".mp3", ".m4a", ".mp4", ".ogg", ".opus", ".flac", ".aac"):
+        suffix = ".webm"
+
+    with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as tmp:
+        content = await audio.read()
+        tmp.write(content)
+        src_path = tmp.name
+
+    job_id = _hashlib.md5((src_path + str(_time.time())).encode()).hexdigest()[:12]
+    with _upload_lock:
+        _upload_jobs[job_id] = {"status": "queued", "progress": 0, "text": "", "error": None, "chunks_total": 0, "chunks_done": 0}
+
+    thread = threading.Thread(target=_split_and_transcribe, args=(job_id, src_path, suffix), daemon=True)
+    thread.start()
+
+    return {"job_id": job_id, "status": "queued", "message": "Processing. Poll /job/%s for status." % job_id}
+
+
+@app.get("/job/{job_id}")
+async def get_job_status(job_id: str):
+    """Poll for upload/transcription job status."""
+    with _upload_lock:
+        job = _upload_jobs.get(job_id)
+    if not job:
+        raise HTTPException(404, "Job not found")
+    return job
+
+
+@app.get("/jobs")
+async def list_jobs():
+    """List all known upload jobs."""
+    with _upload_lock:
+        return {"jobs": [{"job_id": k, "status": v["status"], "progress": v["progress"]} for k, v in _upload_jobs.items()]}
+
+
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 8896))
     workers = int(os.environ.get("WORKERS", "1"))
