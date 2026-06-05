@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DECS-S-0034: Statistical Models and Management Analysis | Sasin EMBA 2026</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Inter', -apple-system, sans-serif; background: #0f172a; color: #e2e8f0; line-height: 1.6; }
+.container { max-width: 1100px; margin: 0 auto; padding: 40px 24px; }
+.header { margin-bottom: 32px; border-bottom: 1px solid rgba(148,163,184,0.15); padding-bottom: 24px; }
+.code { font-size: 13px; color: #60a5fa; font-weight: 700; margin-bottom: 4px; }
+h1 { font-size: 32px; color: #fbbf24; display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
+.faculty { font-size: 14px; color: #64748b; }
+.desc { color: #94a3b8; margin-bottom: 24px; font-size: 15px; line-height: 1.7; }
+h2 { font-size: 20px; color: #f1f5f9; margin: 28px 0 12px; }
+h3 { font-size: 16px; color: #94a3b8; margin: 20px 0 8px; }
+.fw-pill { display: inline-block; margin: 3px; padding: 4px 12px; border-radius: 16px; font-size: 12px; background: rgba(59,130,246,0.12); color: #60a5fa; border: 1px solid rgba(59,130,246,0.25); }
+.topic-pill { display: inline-block; margin: 3px; padding: 4px 12px; border-radius: 16px; font-size: 12px; background: rgba(34,197,94,0.08); color: #4ade80; border: 1px solid rgba(34,197,94,0.2); }
+.yt-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; margin-top: 12px; }
+.yt-card { background: rgba(30,41,59,0.8); border: 1px solid rgba(148,163,184,0.12); border-radius: 12px; overflow: hidden; transition: all 0.2s; }
+.yt-card:hover { border-color: rgba(59,130,246,0.3); transform: translateY(-2px); }
+.yt-thumb { width: 100%; aspect-ratio: 16/9; object-fit: cover; background: #1e293b; }
+.yt-info { padding: 12px; }
+.yt-title { font-size: 13px; font-weight: 600; color: #e2e8f0; margin-bottom: 4px; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.yt-channel { font-size: 11px; color: #64748b; }
+.yt-desc { font-size: 11px; color: #94a3b8; margin-top: 4px; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.fw-card { background: rgba(30,41,59,0.5); border: 1px solid rgba(148,163,184,0.1); border-radius: 10px; padding: 14px; margin-bottom: 10px; }
+.fw-card h3 { margin: 0 0 6px; font-size: 15px; color: #93c5fd; }
+.fw-card p { font-size: 13px; color: #94a3b8; line-height: 1.5; }
+.nav-back { display: inline-block; margin-bottom: 20px; color: #60a5fa; text-decoration: none; font-size: 13px; }
+.nav-back:hover { text-decoration: underline; }
+.meta-row { display: flex; gap: 24px; flex-wrap: wrap; margin-top: 8px; }
+.meta-item { font-size: 13px; color: #64748b; }
+.meta-item strong { color: #94a3b8; }
+.disclaimer { margin-top: 40px; padding: 16px; background: rgba(239,68,68,0.05); border: 1px solid rgba(239,68,68,0.15); border-radius: 8px; font-size: 12px; color: #64748b; }
+</style>
+</head>
+<body>
+<div class="container">
+<a href="/" class="nav-back">← Back to Dashboard</a>
+<div class="header">
+  <div class="code">DECS-S-0034</div>
+  <h1>📘 Statistical Models and Management Analysis</h1>
+  <p class="desc">Statistical foundations for managerial decision-making — regression analysis, hypothesis testing, predictive modeling, and data-driven management.</p>
+</div>
+
+<h2>🔷 Key Frameworks</h2>
+<span class="fw-pill">Linear Regression</span> <span class="fw-pill">Multiple Regression</span> <span class="fw-pill">Hypothesis Testing</span> <span class="fw-pill">Confidence Intervals</span> <span class="fw-pill">Probability Theory</span> <span class="fw-pill">Central Limit Theorem</span> <span class="fw-pill">t-Distributions</span> <span class="fw-pill">ANOVA (Analysis of Variance)</span>
+
+<div style="margin-top:16px;">
+<div class="fw-card">
+  <h3>Linear Regression</h3>
+  <p>Models the relationship between a dependent variable and one independent variable. Estimates how changes in the predictor affect the outcome. Foundation for business forecasting, trend analysis, and understanding cause-effect relationships.</p>
+</div>
+<div class="fw-card">
+  <h3>Multiple Regression</h3>
+  <p>Extends linear regression to include two or more independent variables. Enables managers to isolate the impact of individual factors while controlling for others. Essential for multivariate business analysis and predictive modeling.</p>
+</div>
+<div class="fw-card">
+  <h3>Hypothesis Testing</h3>
+  <p>A formal statistical procedure to evaluate claims about population parameters using sample data. Involves null and alternative hypotheses, significance levels, p-values, and Type I/II errors. Core framework for evidence-based management decisions.</p>
+</div>
+<div class="fw-card">
+  <h3>Confidence Intervals</h3>
+  <p>A range of values that likely contains the true population parameter with a specified level of confidence (e.g., 95%). Provides managers with an estimate of uncertainty around sample statistics, crucial for risk-aware decision-making.</p>
+</div>
+<div class="fw-card">
+  <h3>Probability Theory</h3>
+  <p>The mathematical foundation for quantifying uncertainty. Covers probability rules, conditional probability, Bayes theorem, and probability distributions (binomial, normal, Poisson). Underpins risk assessment and decision analysis in management.</p>
+</div>
+<div class="fw-card">
+  <h3>Central Limit Theorem</h3>
+  <p>States that the sampling distribution of the sample mean approaches a normal distribution as sample size increases, regardless of the population distribution. Justifies the use of normal-based inference in business analytics.</p>
+</div>
+<div class="fw-card">
+  <h3>t-Distributions</h3>
+  <p>A family of distributions used when population standard deviation is unknown and sample sizes are small. Heavier tails than the normal distribution. Critical for small-sample hypothesis testing and confidence interval construction in business research.</p>
+</div>
+<div class="fw-card">
+  <h3>ANOVA (Analysis of Variance)</h3>
+  <p>A statistical technique for comparing means across three or more groups. Tests whether observed differences are statistically significant. Used in market segmentation, A/B testing, and comparing business unit performance.</p>
+</div>
+
+</div>
+
+<h2>📚 Course Topics</h2>
+<div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px">
+<span class="topic-pill">Descriptive Statistics and Data Visualization for Managers</span> <span class="topic-pill">Probability Theory and Probability Distributions (Binomial, Normal, Poisson)</span> <span class="topic-pill">Sampling Methods and Sampling Distributions</span> <span class="topic-pill">Central Limit Theorem and Its Business Applications</span> <span class="topic-pill">Point Estimation and Confidence Interval Estimation</span> <span class="topic-pill">One-Sample and Two-Sample Hypothesis Testing (z-test, t-test)</span> <span class="topic-pill">Chi-Square Tests for Categorical Data</span> <span class="topic-pill">Simple Linear Regression: Estimation, Inference, and Prediction</span> <span class="topic-pill">Multiple Regression: Model Building, Interpretation, and Diagnostics</span> <span class="topic-pill">ANOVA: One-Way and Two-Way Analysis of Variance</span> <span class="topic-pill">Model Assumptions, Residual Analysis, and Diagnostics</span> <span class="topic-pill">Multicollinearity, Heteroskedasticity, and Autocorrelation</span> <span class="topic-pill">Dummy Variables and Interaction Effects in Regression</span> <span class="topic-pill">Model Selection: Stepwise, Forward, Backward, and Best Subsets</span> <span class="topic-pill">Statistical Software Applications (Excel, SPSS, R, Python)</span> <span class="topic-pill">Managerial Interpretation of Statistical Output</span> <span class="topic-pill">Predictive Modeling and Forecasting for Business Decisions</span> <span class="topic-pill">Statistical Process Control and Quality Management</span> <span class="topic-pill">Decision Trees and Expected Value Analysis</span> <span class="topic-pill">Ethics in Data Analysis and Statistical Reporting</span>
+</div>
+
+<h2>🎬 Pre-Study Resources</h2>
+<p style="color:#94a3b8;font-size:13px;margin-bottom:12px">Curated YouTube lectures and explainers to prepare before class. Click any card to watch.</p>
+<div class="yt-grid">
+<a href="https://www.youtube.com/watch?v=gPfgB4ew3RY" target="_blank" rel="noopener" style="text-decoration:none;color:inherit">
+  <div class="yt-card">
+    <img class="yt-thumb" src="https://img.youtube.com/vi/gPfgB4ew3RY/mqdefault.jpg" alt="Simple Linear Regression: An Easy and Clear Beginner Guide" loading="lazy" onerror="this.style.background='#1e293b';this.style.display='flex';this.style.alignItems='center';this.style.justifyContent='center';this.outerHTML='<div style=padding:32px;text-align:center;color:#64748b>🎬 Click to watch</div>'">
+    <div class="yt-info">
+      <div class="yt-title">Simple Linear Regression: An Easy and Clear Beginner Guide</div>
+      <div class="yt-channel">numiqo</div>
+      <div class="yt-desc">Covers the basics of Simple Linear Regression: what it is, how it works, and why it is useful for business analytics and</div>
+    </div>
+  </div>
+</a>
+<a href="https://www.youtube.com/watch?v=-6IdN_74IwY" target="_blank" rel="noopener" style="text-decoration:none;color:inherit">
+  <div class="yt-card">
+    <img class="yt-thumb" src="https://img.youtube.com/vi/-6IdN_74IwY/mqdefault.jpg" alt="Simple Linear Regression for Managers: Predicting Business Outcomes with Excel" loading="lazy" onerror="this.style.background='#1e293b';this.style.display='flex';this.style.alignItems='center';this.style.justifyContent='center';this.outerHTML='<div style=padding:32px;text-align:center;color:#64748b>🎬 Click to watch</div>'">
+    <div class="yt-info">
+      <div class="yt-title">Simple Linear Regression for Managers: Predicting Business Outcomes with Excel</div>
+      <div class="yt-channel">DJB Speaks</div>
+      <div class="yt-desc">Practical guide for EMBA students and professionals on building predictive models with simple linear regression using Ex</div>
+    </div>
+  </div>
+</a>
+<a href="https://www.youtube.com/watch?v=VG3M25G5yf0" target="_blank" rel="noopener" style="text-decoration:none;color:inherit">
+  <div class="yt-card">
+    <img class="yt-thumb" src="https://img.youtube.com/vi/VG3M25G5yf0/mqdefault.jpg" alt="Business Interpretation of Linear Regression - Business Intelligence with Data Mining" loading="lazy" onerror="this.style.background='#1e293b';this.style.display='flex';this.style.alignItems='center';this.style.justifyContent='center';this.outerHTML='<div style=padding:32px;text-align:center;color:#64748b>🎬 Click to watch</div>'">
+    <div class="yt-info">
+      <div class="yt-title">Business Interpretation of Linear Regression - Business Intelligence with Data Mining</div>
+      <div class="yt-channel">Chitu Okoli</div>
+      <div class="yt-desc">Non-mathematical explanation of how linear regression equations translate into actionable business insights.</div>
+    </div>
+  </div>
+</a>
+<a href="https://www.youtube.com/watch?v=Ew_uyYjow1w" target="_blank" rel="noopener" style="text-decoration:none;color:inherit">
+  <div class="yt-card">
+    <img class="yt-thumb" src="https://img.youtube.com/vi/Ew_uyYjow1w/mqdefault.jpg" alt="Multiple Regression for beginners" loading="lazy" onerror="this.style.background='#1e293b';this.style.display='flex';this.style.alignItems='center';this.style.justifyContent='center';this.outerHTML='<div style=padding:32px;text-align:center;color:#64748b>🎬 Click to watch</div>'">
+    <div class="yt-info">
+      <div class="yt-title">Multiple Regression for beginners</div>
+      <div class="yt-channel">Global Health with Greg Martin</div>
+      <div class="yt-desc">Walks through simple and multiple regression analysis, explaining how multiple regression differs by incorporating more </div>
+    </div>
+  </div>
+</a>
+<a href="https://www.youtube.com/watch?v=VYD0R-7vTRs" target="_blank" rel="noopener" style="text-decoration:none;color:inherit">
+  <div class="yt-card">
+    <img class="yt-thumb" src="https://img.youtube.com/vi/VYD0R-7vTRs/mqdefault.jpg" alt="Business Statistics Lesson 14: Multiple Regression Analysis" loading="lazy" onerror="this.style.background='#1e293b';this.style.display='flex';this.style.alignItems='center';this.style.justifyContent='center';this.outerHTML='<div style=padding:32px;text-align:center;color:#64748b>🎬 Click to watch</div>'">
+    <div class="yt-info">
+      <div class="yt-title">Business Statistics Lesson 14: Multiple Regression Analysis</div>
+      <div class="yt-channel">Luther Maddy - Helping Humans Learn</div>
+      <div class="yt-desc">Covers correlation coefficients, dependent/independent variables, and performing linear regression manually and with Exc</div>
+    </div>
+  </div>
+</a>
+<a href="https://www.youtube.com/watch?v=vU-p8KJ2XtU" target="_blank" rel="noopener" style="text-decoration:none;color:inherit">
+  <div class="yt-card">
+    <img class="yt-thumb" src="https://img.youtube.com/vi/vU-p8KJ2XtU/mqdefault.jpg" alt="Multiple Linear Regression Analysis (Business Statistics) For MBA" loading="lazy" onerror="this.style.background='#1e293b';this.style.display='flex';this.style.alignItems='center';this.style.justifyContent='center';this.outerHTML='<div style=padding:32px;text-align:center;color:#64748b>🎬 Click to watch</div>'">
+    <div class="yt-info">
+      <div class="yt-title">Multiple Linear Regression Analysis (Business Statistics) For MBA</div>
+      <div class="yt-channel">EduMCQ Mastery</div>
+      <div class="yt-desc">Detailed explanation of Multiple Linear Regression Analysis tailored specifically for MBA students in business statistic</div>
+    </div>
+  </div>
+</a>
+<a href="https://www.youtube.com/watch?v=0oc49DyA3hU" target="_blank" rel="noopener" style="text-decoration:none;color:inherit">
+  <div class="yt-card">
+    <img class="yt-thumb" src="https://img.youtube.com/vi/0oc49DyA3hU/mqdefault.jpg" alt="Hypothesis Testing and The Null Hypothesis, Clearly Explained" loading="lazy" onerror="this.style.background='#1e293b';this.style.display='flex';this.style.alignItems='center';this.style.justifyContent='center';this.outerHTML='<div style=padding:32px;text-align:center;color:#64748b>🎬 Click to watch</div>'">
+    <div class="yt-info">
+      <div class="yt-title">Hypothesis Testing and The Null Hypothesis, Clearly Explained</div>
+      <div class="yt-channel">StatQuest with Josh Starmer</div>
+      <div class="yt-desc">Clear, visual explanation of hypothesis testing and the null hypothesis — one of the most fundamental concepts in statis</div>
+    </div>
+  </div>
+</a>
+<a href="https://www.youtube.com/watch?v=wraov1Nv7UA" target="_blank" rel="noopener" style="text-decoration:none;color:inherit">
+  <div class="yt-card">
+    <img class="yt-thumb" src="https://img.youtube.com/vi/wraov1Nv7UA/mqdefault.jpg" alt="ANOVA - A Full Lecture to learn Analysis of Variance" loading="lazy" onerror="this.style.background='#1e293b';this.style.display='flex';this.style.alignItems='center';this.style.justifyContent='center';this.outerHTML='<div style=padding:32px;text-align:center;color:#64748b>🎬 Click to watch</div>'">
+    <div class="yt-info">
+      <div class="yt-title">ANOVA - A Full Lecture to learn Analysis of Variance</div>
+      <div class="yt-channel">numiqo</div>
+      <div class="yt-desc">Full free course on analysis of variance exploring what ANOVA is, why you need it, and how to apply it in business, rese</div>
+    </div>
+  </div>
+</a>
+<a href="https://www.youtube.com/watch?v=XD94WB-yAn4" target="_blank" rel="noopener" style="text-decoration:none;color:inherit">
+  <div class="yt-card">
+    <img class="yt-thumb" src="https://img.youtube.com/vi/XD94WB-yAn4/mqdefault.jpg" alt="Business Statistics Lesson 12: Analysis of Variance ANOVA" loading="lazy" onerror="this.style.background='#1e293b';this.style.display='flex';this.style.alignItems='center';this.style.justifyContent='center';this.outerHTML='<div style=padding:32px;text-align:center;color:#64748b>🎬 Click to watch</div>'">
+    <div class="yt-info">
+      <div class="yt-title">Business Statistics Lesson 12: Analysis of Variance ANOVA</div>
+      <div class="yt-channel">Luther Maddy - Helping Humans Learn</div>
+      <div class="yt-desc">Explains ANOVA computation with two or more variances, comparing three or more means with additional examples and downlo</div>
+    </div>
+  </div>
+</a>
+<a href="https://www.youtube.com/watch?v=x_gHAly3mJo" target="_blank" rel="noopener" style="text-decoration:none;color:inherit">
+  <div class="yt-card">
+    <img class="yt-thumb" src="https://img.youtube.com/vi/x_gHAly3mJo/mqdefault.jpg" alt="What is ANOVA (Analysis of Variance) in Statistics? Explained with Examples (ANOVA F-test)" loading="lazy" onerror="this.style.background='#1e293b';this.style.display='flex';this.style.alignItems='center';this.style.justifyContent='center';this.outerHTML='<div style=padding:32px;text-align:center;color:#64748b>🎬 Click to watch</div>'">
+    <div class="yt-info">
+      <div class="yt-title">What is ANOVA (Analysis of Variance) in Statistics? Explained with Examples (ANOVA F-test)</div>
+      <div class="yt-channel">Digital E-Learning</div>
+      <div class="yt-desc">Comprehensive exploration of ANOVA analysis of variance with practical examples including the F-test.</div>
+    </div>
+  </div>
+</a>
+<a href="https://www.youtube.com/watch?v=ENnlSlvQHO0" target="_blank" rel="noopener" style="text-decoration:none;color:inherit">
+  <div class="yt-card">
+    <img class="yt-thumb" src="https://img.youtube.com/vi/ENnlSlvQHO0/mqdefault.jpg" alt="Confidence Interval [Simply explained]" loading="lazy" onerror="this.style.background='#1e293b';this.style.display='flex';this.style.alignItems='center';this.style.justifyContent='center';this.outerHTML='<div style=padding:32px;text-align:center;color:#64748b>🎬 Click to watch</div>'">
+    <div class="yt-info">
+      <div class="yt-title">Confidence Interval [Simply explained]</div>
+      <div class="yt-channel">numiqo</div>
+      <div class="yt-desc">Explains how population parameters are estimated based on samples, covering confidence intervals for means and variances</div>
+    </div>
+  </div>
+</a>
+<a href="https://www.youtube.com/watch?v=TqOeMYtOc1w" target="_blank" rel="noopener" style="text-decoration:none;color:inherit">
+  <div class="yt-card">
+    <img class="yt-thumb" src="https://img.youtube.com/vi/TqOeMYtOc1w/mqdefault.jpg" alt="Confidence Intervals, Clearly Explained" loading="lazy" onerror="this.style.background='#1e293b';this.style.display='flex';this.style.alignItems='center';this.style.justifyContent='center';this.outerHTML='<div style=padding:32px;text-align:center;color:#64748b>🎬 Click to watch</div>'">
+    <div class="yt-info">
+      <div class="yt-title">Confidence Intervals, Clearly Explained</div>
+      <div class="yt-channel">StatQuest with Josh Starmer</div>
+      <div class="yt-desc">Demystifies confidence intervals using bootstrapping — makes a potentially confusing concept intuitive and accessible.</div>
+    </div>
+  </div>
+</a>
+<a href="https://www.youtube.com/watch?v=zeJD6dqJ5lo" target="_blank" rel="noopener" style="text-decoration:none;color:inherit">
+  <div class="yt-card">
+    <img class="yt-thumb" src="https://img.youtube.com/vi/zeJD6dqJ5lo/mqdefault.jpg" alt="But what is the Central Limit Theorem?" loading="lazy" onerror="this.style.background='#1e293b';this.style.display='flex';this.style.alignItems='center';this.style.justifyContent='center';this.outerHTML='<div style=padding:32px;text-align:center;color:#64748b>🎬 Click to watch</div>'">
+    <div class="yt-info">
+      <div class="yt-title">But what is the Central Limit Theorem?</div>
+      <div class="yt-channel">3Blue1Brown</div>
+      <div class="yt-desc">Award-winning visual introduction to probability most important theorem. Shows why the normal distribution appears every</div>
+    </div>
+  </div>
+</a>
+<a href="https://www.youtube.com/watch?v=NTq0BO6pbbg" target="_blank" rel="noopener" style="text-decoration:none;color:inherit">
+  <div class="yt-card">
+    <img class="yt-thumb" src="https://img.youtube.com/vi/NTq0BO6pbbg/mqdefault.jpg" alt="The central limit theorem | Explained with a simple example" loading="lazy" onerror="this.style.background='#1e293b';this.style.display='flex';this.style.alignItems='center';this.style.justifyContent='center';this.outerHTML='<div style=padding:32px;text-align:center;color:#64748b>🎬 Click to watch</div>'">
+    <div class="yt-info">
+      <div class="yt-title">The central limit theorem | Explained with a simple example</div>
+      <div class="yt-channel">TileStats</div>
+      <div class="yt-desc">Explains the CLT with a simple, intuitive example — one of the most fundamental concepts in statistics for business appl</div>
+    </div>
+  </div>
+</a>
+<a href="https://www.youtube.com/watch?v=s7VE8ldgaCQ" target="_blank" rel="noopener" style="text-decoration:none;color:inherit">
+  <div class="yt-card">
+    <img class="yt-thumb" src="https://img.youtube.com/vi/s7VE8ldgaCQ/mqdefault.jpg" alt="Statistics: Degrees of Freedom and Using a T-table" loading="lazy" onerror="this.style.background='#1e293b';this.style.display='flex';this.style.alignItems='center';this.style.justifyContent='center';this.outerHTML='<div style=padding:32px;text-align:center;color:#64748b>🎬 Click to watch</div>'">
+    <div class="yt-info">
+      <div class="yt-title">Statistics: Degrees of Freedom and Using a T-table</div>
+      <div class="yt-channel">Emporium Mathematics</div>
+      <div class="yt-desc">Defines degrees of freedom and demonstrates how to use a t-table to find critical values for hypothesis testing with sma</div>
+    </div>
+  </div>
+</a>
+<a href="https://www.youtube.com/watch?v=MWB88C_VlYs" target="_blank" rel="noopener" style="text-decoration:none;color:inherit">
+  <div class="yt-card">
+    <img class="yt-thumb" src="https://img.youtube.com/vi/MWB88C_VlYs/mqdefault.jpg" alt="T-Distribution Explained: When Sigma Is Unknown (Statistics 101)" loading="lazy" onerror="this.style.background='#1e293b';this.style.display='flex';this.style.alignItems='center';this.style.justifyContent='center';this.outerHTML='<div style=padding:32px;text-align:center;color:#64748b>🎬 Click to watch</div>'">
+    <div class="yt-info">
+      <div class="yt-title">T-Distribution Explained: When Sigma Is Unknown (Statistics 101)</div>
+      <div class="yt-channel">CodeLucky</div>
+      <div class="yt-desc">Visualizes how the t-distribution differs from the standard normal distribution, explaining degrees of freedom and heavi</div>
+    </div>
+  </div>
+</a>
+<a href="https://www.youtube.com/watch?v=Z9ifjCfPqjM" target="_blank" rel="noopener" style="text-decoration:none;color:inherit">
+  <div class="yt-card">
+    <img class="yt-thumb" src="https://img.youtube.com/vi/Z9ifjCfPqjM/mqdefault.jpg" alt="Probability for Business and Management: Uncertainty, Risk and Decision Making" loading="lazy" onerror="this.style.background='#1e293b';this.style.display='flex';this.style.alignItems='center';this.style.justifyContent='center';this.outerHTML='<div style=padding:32px;text-align:center;color:#64748b>🎬 Click to watch</div>'">
+    <div class="yt-info">
+      <div class="yt-title">Probability for Business and Management: Uncertainty, Risk and Decision Making</div>
+      <div class="yt-channel">Riyath Ismail</div>
+      <div class="yt-desc">In-depth session exploring the fundamental concept of probability — quantifying uncertainty to aid managerial decision-m</div>
+    </div>
+  </div>
+</a>
+<a href="https://www.youtube.com/watch?v=Z_XACcg46sk" target="_blank" rel="noopener" style="text-decoration:none;color:inherit">
+  <div class="yt-card">
+    <img class="yt-thumb" src="https://img.youtube.com/vi/Z_XACcg46sk/mqdefault.jpg" alt="Conditional Probability for Managers: Solving Real-World Business Problems" loading="lazy" onerror="this.style.background='#1e293b';this.style.display='flex';this.style.alignItems='center';this.style.justifyContent='center';this.outerHTML='<div style=padding:32px;text-align:center;color:#64748b>🎬 Click to watch</div>'">
+    <div class="yt-info">
+      <div class="yt-title">Conditional Probability for Managers: Solving Real-World Business Problems</div>
+      <div class="yt-channel">DJB Speaks</div>
+      <div class="yt-desc">Practical application of conditional probability to real-world business problems, bridging theory and managerial practic</div>
+    </div>
+  </div>
+</a>
+
+</div>
+
+<div class="disclaimer">
+  <strong>⚠️ Pre-Study Note:</strong> These are supplementary resources curated to help you prepare for this course. They are not official Sasin materials. Always prioritize your course syllabus and instructor guidance. AI-generated research — verify key facts independently.
+</div>
+</div>
+</body>
+</html>

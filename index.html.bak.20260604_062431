@@ -208,7 +208,7 @@ body {
 </style>
 </head>
 <body>
-<script id="calendarData" type="application/json">{"synced_at": "2026-06-04T23:00:46.218374+00:00", "total": 25, "events": [{"id": "7tar233s6fug3spk5gsst3k8hh", "summary": "Sasin Next Gen Bootcamp \u2013 Designing Your SASIN Life", "start": "2026-06-05T18:00:00+07:00", "end": "2026-06-05T21:30:00+07:00", "is_all_day": false, "location": "", "description": "<p><strong>Sasin Next Gen Bootcamp at Sasin</strong></p><p><strong>Session:</strong> Designing Your SASIN Life<br><strong>Date:</strong> Friday, June 5, 2026<br><strong>Venue:</strong> Sasin Hall, 9th Floor</p><h3>Session Description</h3><p>Based on Stanford\u2019s popular <em>Designing Your Life</em> ap", "tags": ["CLASS", "WORKSHOP"], "days_until": 0, "synced_at": "2026-06-04T23:00:46.218374+00:00"}, {"id": "13emcaa03obua1mbtqsva9q569", "summary": "Sasin Next Gen Bootcamp \u2013 Intro AI for Tomorrow's World", "start": "2026-06-06T09:00:00+07:00", "end": "2026-06-06T12:15:00+07:00", "is_all_day": false, "location": "", "description": "<p><strong>Sasin Next Gen Bootcamp at Sasin</strong></p><p><b>Session Name:\u00a0\u00a0Intro AI for Tomorrow's World</b></p><p><strong>Date:</strong> Saturday, June 6, 2026</p><p><strong>Time:</strong> 9:00 AM \u2013 12:15 PM</p><p><b>Venue: Room 821, 8th Floor</b></p><h3>Session Description</h3><p>This session ch", "tags": ["CLASS", "WORKSHOP"], "days_until": 1, "synced_at": "2026-06-04T23:00:46.218374+00:00"}, {"id": "7et89su0o0vnoi1302s6t9hfrs", "summary": "Sasin Next Gen Bootcamp \u2013 Preparing for Quantitative Thinking in MBA/EMBA", "start": "2026-06-06T13:30:00+07:00", "end": "2026-06-06T16:30:00+07:00", "is_all_day": false, "location": "", "description": "<p><strong>Sasin Next Gen Bootcamp at Sasin</strong></p><p><strong>Session:</strong> Preparing for Quantitative Thinking in MBA/EMBA<br><strong>Date:</strong> Saturday, June 6, 2026<br><strong>Time:</strong> 1:30 PM \u2013 4:30 PM<br><strong>Venue:</strong> Sasin Hall, 9th Floor</p><h3>Session Descriptio", "tags": ["CLASS", "WORKSHOP"], "days_until": 1, "synced_at": "2026-06-04T23:00:46.218374+00:00"}, {"id": "3lkcd7p96n78nh2rnoej6cooip", "summary": "Module 1/2026-2027", "start": "2026-06-08", "end": "2026-07-12", "is_all_day": true, "location": "", "description": "", "tags": ["CLASS"], "days_until": 3, "synced_at": "2026-06-04T23:00:46.218374+00:00"}, {"id": "6je9vamn93qihcpqocvmbekdn2", "summary": "Due Date: 9 June 2026: submission to Student Experience", "start": "2026-06-09", "end": "2026-06-10", "is_all_day": true, "location": "", "description": "<a href=\"https://sasinware.sasin.edu/pluginfile.php/78266/mod_resource/content/1/2026%20MGMT-S-0031%20Business%20Strategy%20EMBA.pdf\">https://sasinware.sasin.edu/pluginfile.php/78266/mod_resource/content/1/2026%20MGMT-S-0031%20Business%20Strategy%20EMBA.pdf</a>", "tags": ["DEADLINE", "CLASS"], "days_until": 4, "synced_at": "2026-06-04T23:00:46.218374+00:00"}, {"id": "j0aodb9l91j46sm8k8f0lns49k", "summary": "MGMT-S-0031: Management and Business Strategy", "start": "2026-06-12T18:00:00+07:00", "end": "2026-06-12T21:30:00+07:00", "is_all_day": false, "location": "", "description": "<div><h2>MGMT-S-0031: Management and Business Strategy</h2></div>\n<div> Module 1, 2026</div>\n<div><i>This course is to develop the capacity of students to think strategically about business and deal with various strategic decisions in a range of organizational settings.</i></div>\n<div><b>Faculty:</b", "tags": ["CLASS"], "days_until": 7, "synced_at": "2026-06-04T23:00:46.218374+00:00"}, {"id": "4806s9k81rtlg7r897mr7gjq9s", "summary": "DECS-S-0034: Statistical Models and Managerial Analysis", "start": "2026-06-13T09:00:00+07:00", "end": "2026-06-13T12:30:00+07:00", "is_all_day": false, "location": "", "description": "<div><h2>DECS-S-0034: Statistical Models and Managerial Analysis</h2></div>\n<div> Module 1, 2026</div>\n<div><i>The goal of this course is to enable participants to be more knowledgeable with respect to the underlying statistical foundations, especially those related to linear regressions.</i></div>\n", "tags": ["CLASS"], "days_until": 8, "synced_at": "2026-06-04T23:00:46.218374+00:00"}, {"id": "50soi97qog5foosp2svbo0dkts", "summary": "MGMT-S-0031: Management and Business Strategy", "start": "2026-06-13T13:30:00+07:00", "end": "2026-06-13T17:00:00+07:00", "is_all_day": false, "location": "", "description": "<div><h2>MGMT-S-0031: Management and Business Strategy</h2></div>\n<div> Module 1, 2026</div>\n<div><i>This course is to develop the capacity of students to think strategically about business and deal with various strategic decisions in a range of organizational settings.</i></div>\n<div><b>Faculty:</b", "tags": ["CLASS"], "days_until": 8, "synced_at": "2026-06-04T23:00:46.218374+00:00"}, {"id": "h2uv8csmjtjkfg2m8ffbdmr87s", "summary": "DECS-S-0034: Statistical Models and Managerial Analysis", "start": "2026-06-19T18:00:00+07:00", "end": "2026-06-19T21:30:00+07:00", "is_all_day": false, "location": "", "description": "<div><h2>DECS-S-0034: Statistical Models and Managerial Analysis</h2></div>\n<div> Module 1, 2026</div>\n<div><i>The goal of this course is to enable participants to be more knowledgeable with respect to the underlying statistical foundations, especially those related to linear regressions.</i></div>\n", "tags": ["CLASS"], "days_until": 14, "synced_at": "2026-06-04T23:00:46.218374+00:00"}, {"id": "57nrus13599ojdcfi74d5es1c4", "summary": "MGMT-S-0031: Management and Business Strategy", "start": "2026-06-20T09:00:00+07:00", "end": "2026-06-20T12:30:00+07:00", "is_all_day": false, "location": "", "description": "<div><h2>MGMT-S-0031: Management and Business Strategy</h2></div>\n<div> Module 1, 2026</div>\n<div><i>This course is to develop the capacity of students to think strategically about business and deal with various strategic decisions in a range of organizational settings.</i></div>\n<div><b>Faculty:</b", "tags": ["CLASS"], "days_until": 15, "synced_at": "2026-06-04T23:00:46.218374+00:00"}, {"id": "qf3pqp5mspq31fcu5363n4egl4", "summary": "DECS-S-0034: Statistical Models and Managerial Analysis", "start": "2026-06-20T13:30:00+07:00", "end": "2026-06-20T17:00:00+07:00", "is_all_day": false, "location": "", "description": "<div><h2>DECS-S-0034: Statistical Models and Managerial Analysis</h2></div>\n<div> Module 1, 2026</div>\n<div><i>The goal of this course is to enable participants to be more knowledgeable with respect to the underlying statistical foundations, especially those related to linear regressions.</i></div>\n", "tags": ["CLASS"], "days_until": 15, "synced_at": "2026-06-04T23:00:46.218374+00:00"}, {"id": "s4olc4d1s6op5odh5vpirpmo18", "summary": "MGMT-S-0031: Management and Business Strategy", "start": "2026-06-26T18:00:00+07:00", "end": "2026-06-26T21:30:00+07:00", "is_all_day": false, "location": "", "description": "<div><h2>MGMT-S-0031: Management and Business Strategy</h2></div>\n<div> Module 1, 2026</div>\n<div><i>This course is to develop the capacity of students to think strategically about business and deal with various strategic decisions in a range of organizational settings.</i></div>\n<div><b>Faculty:</b", "tags": ["CLASS"], "days_until": 21, "synced_at": "2026-06-04T23:00:46.218374+00:00"}, {"id": "qp3sp7l3gpis6cuvonna1l0te0", "summary": "DECS-S-0034: Statistical Models and Managerial Analysis", "start": "2026-06-27T09:00:00+07:00", "end": "2026-06-27T12:30:00+07:00", "is_all_day": false, "location": "", "description": "<div><h2>DECS-S-0034: Statistical Models and Managerial Analysis</h2></div>\n<div> Module 1, 2026</div>\n<div><i>The goal of this course is to enable participants to be more knowledgeable with respect to the underlying statistical foundations, especially those related to linear regressions.</i></div>\n", "tags": ["CLASS"], "days_until": 22, "synced_at": "2026-06-04T23:00:46.218374+00:00"}, {"id": "6caa60j59i4jb53enn7pseee0g", "summary": "MGMT-S-0031: Management and Business Strategy", "start": "2026-06-27T13:30:00+07:00", "end": "2026-06-27T17:00:00+07:00", "is_all_day": false, "location": "", "description": "<div><h2>MGMT-S-0031: Management and Business Strategy</h2></div>\n<div> Module 1, 2026</div>\n<div><i>This course is to develop the capacity of students to think strategically about business and deal with various strategic decisions in a range of organizational settings.</i></div>\n<div><b>Faculty:</b", "tags": ["CLASS"], "days_until": 22, "synced_at": "2026-06-04T23:00:46.218374+00:00"}, {"id": "6ofvjjbq4h4l87aup2vd6q4m14", "summary": "DECS-S-0034: Statistical Models and Managerial Analysis", "start": "2026-07-03T18:00:00+07:00", "end": "2026-07-03T21:30:00+07:00", "is_all_day": false, "location": "", "description": "<div><h2>DECS-S-0034: Statistical Models and Managerial Analysis</h2></div>\n<div> Module 1, 2026</div>\n<div><i>The goal of this course is to enable participants to be more knowledgeable with respect to the underlying statistical foundations, especially those related to linear regressions.</i></div>\n", "tags": ["CLASS"], "days_until": 28, "synced_at": "2026-06-04T23:00:46.218374+00:00"}, {"id": "qs4k21nfotd65itmgj6aebtipk", "summary": "MGMT-S-0031: Management and Business Strategy", "start": "2026-07-04T09:00:00+07:00", "end": "2026-07-04T12:30:00+07:00", "is_all_day": false, "location": "", "description": "<div><h2>MGMT-S-0031: Management and Business Strategy</h2></div>\n<div> Module 1, 2026</div>\n<div><i>This course is to develop the capacity of students to think strategically about business and deal with various strategic decisions in a range of organizational settings.</i></div>\n<div><b>Faculty:</b", "tags": ["CLASS"], "days_until": 29, "synced_at": "2026-06-04T23:00:46.218374+00:00"}, {"id": "927ujhnltkmltmjlcklu6ka0uo", "summary": "DECS-S-0034: Statistical Models and Managerial Analysis", "start": "2026-07-04T13:30:00+07:00", "end": "2026-07-04T17:00:00+07:00", "is_all_day": false, "location": "", "description": "<div><h2>DECS-S-0034: Statistical Models and Managerial Analysis</h2></div>\n<div> Module 1, 2026</div>\n<div><i>The goal of this course is to enable participants to be more knowledgeable with respect to the underlying statistical foundations, especially those related to linear regressions.</i></div>\n", "tags": ["CLASS"], "days_until": 29, "synced_at": "2026-06-04T23:00:46.218374+00:00"}, {"id": "lp7j80jvl5a9ib67ou6iieve24", "summary": "MGMT-S-0031: Management and Business Strategy", "start": "2026-07-10T18:00:00+07:00", "end": "2026-07-10T21:00:00+07:00", "is_all_day": false, "location": "", "description": "<div><h2>MGMT-S-0031: Management and Business Strategy</h2></div>\n<div> Module 1, 2026</div>\n<div><i>This course is to develop the capacity of students to think strategically about business and deal with various strategic decisions in a range of organizational settings.</i></div>\n<div><b>Faculty:</b", "tags": ["CLASS"], "days_until": 35, "synced_at": "2026-06-04T23:00:46.218374+00:00"}, {"id": "p2pr9h6f6fke3ka39cp8mb3cl0", "summary": "DECS-S-0034: Statistical Models and Managerial Analysis", "start": "2026-07-11T09:00:00+07:00", "end": "2026-07-11T12:00:00+07:00", "is_all_day": false, "location": "", "description": "<div><h2>DECS-S-0034: Statistical Models and Managerial Analysis</h2></div>\n<div> Module 1, 2026</div>\n<div><i>The goal of this course is to enable participants to be more knowledgeable with respect to the underlying statistical foundations, especially those related to linear regressions.</i></div>\n", "tags": ["EXAM", "CLASS"], "days_until": 36, "synced_at": "2026-06-04T23:00:46.218374+00:00"}, {"id": "5cgh9jfhj2g5fg5kv1855oe37o", "summary": "Module 2/2026-2027", "start": "2026-07-13", "end": "2026-08-16", "is_all_day": true, "location": "", "description": "", "tags": ["CLASS"], "days_until": 38, "synced_at": "2026-06-04T23:00:46.218374+00:00"}, {"id": "675puvi2sdb39vsbqsfnb2dd8r", "summary": "Break", "start": "2026-08-16", "end": "2026-08-24", "is_all_day": true, "location": "", "description": "", "tags": ["OTHER"], "days_until": 72, "synced_at": "2026-06-04T23:00:46.218374+00:00"}, {"id": "4toqadkfuei49f9ugcl2d5s3vs", "summary": "Module 3/2026-2027", "start": "2026-08-24", "end": "2026-09-27", "is_all_day": true, "location": "", "description": "", "tags": ["CLASS"], "days_until": 80, "synced_at": "2026-06-04T23:00:46.218374+00:00"}, {"id": "2bmls0dk8lg9p59qo5ft24a1cs", "summary": "Module 4/2026-2027", "start": "2026-09-28", "end": "2026-11-01", "is_all_day": true, "location": "", "description": "", "tags": ["CLASS"], "days_until": 115, "synced_at": "2026-06-04T23:00:46.218374+00:00"}, {"id": "4jr3khgkq1de9s7g2vk4km5j2e", "summary": "Break", "start": "2026-11-01", "end": "2026-11-09", "is_all_day": true, "location": "", "description": "", "tags": ["OTHER"], "days_until": 149, "synced_at": "2026-06-04T23:00:46.218374+00:00"}, {"id": "4rc7btsdmc7k6msi3f99ofcdqp", "summary": "Module 5/2026-2027", "start": "2026-11-09", "end": "2026-12-13", "is_all_day": true, "location": "", "description": "", "tags": ["CLASS"], "days_until": 157, "synced_at": "2026-06-04T23:00:46.218374+00:00"}]}</script>
+<script id="calendarData" type="application/json">{"synced_at": "2026-06-04T01:41:14.454667+00:00", "total": 24, "events": [{"id": "7tar233s6fug3spk5gsst3k8hh", "summary": "Sasin Next Gen Bootcamp \u2013 Designing Your SASIN Life", "start": "2026-06-05T18:00:00+07:00", "end": "2026-06-05T21:30:00+07:00", "is_all_day": false, "location": "", "description": "<p><strong>Sasin Next Gen Bootcamp at Sasin</strong></p><p><strong>Session:</strong> Designing Your SASIN Life<br><strong>Date:</strong> Friday, June 5, 2026<br><strong>Venue:</strong> Sasin Hall, 9th Floor</p><h3>Session Description</h3><p>Based on Stanford\u2019s popular <em>Designing Your Life</em> ap", "tags": ["CLASS", "WORKSHOP"], "days_until": 1, "synced_at": "2026-06-04T01:41:14.454667+00:00"}, {"id": "7et89su0o0vnoi1302s6t9hfrs", "summary": "Sasin Next Gen Bootcamp \u2013 Preparing for Quantitative Thinking in MBA/EMBA", "start": "2026-06-06T13:30:00+07:00", "end": "2026-06-06T16:30:00+07:00", "is_all_day": false, "location": "", "description": "<p><strong>Sasin Next Gen Bootcamp at Sasin</strong></p><p><strong>Session:</strong> Preparing for Quantitative Thinking in MBA/EMBA<br><strong>Date:</strong> Saturday, June 6, 2026<br><strong>Time:</strong> 1:30 PM \u2013 4:30 PM<br><strong>Venue:</strong> Sasin Hall, 9th Floor</p><h3>Session Descriptio", "tags": ["CLASS", "WORKSHOP"], "days_until": 2, "synced_at": "2026-06-04T01:41:14.454667+00:00"}, {"id": "3lkcd7p96n78nh2rnoej6cooip", "summary": "Module 1/2026-2027", "start": "2026-06-08", "end": "2026-07-12", "is_all_day": true, "location": "", "description": "", "tags": ["CLASS"], "days_until": 3, "synced_at": "2026-06-04T01:41:14.454667+00:00"}, {"id": "6je9vamn93qihcpqocvmbekdn2", "summary": "Due Date: 9 June 2026: submission to Student Experience", "start": "2026-06-09", "end": "2026-06-10", "is_all_day": true, "location": "", "description": "<a href=\"https://sasinware.sasin.edu/pluginfile.php/78266/mod_resource/content/1/2026%20MGMT-S-0031%20Business%20Strategy%20EMBA.pdf\">https://sasinware.sasin.edu/pluginfile.php/78266/mod_resource/content/1/2026%20MGMT-S-0031%20Business%20Strategy%20EMBA.pdf</a>", "tags": ["DEADLINE", "CLASS"], "days_until": 4, "synced_at": "2026-06-04T01:41:14.454667+00:00"}, {"id": "j0aodb9l91j46sm8k8f0lns49k", "summary": "MGMT-S-0031: Management and Business Strategy", "start": "2026-06-12T18:00:00+07:00", "end": "2026-06-12T21:30:00+07:00", "is_all_day": false, "location": "", "description": "<div><h2>MGMT-S-0031: Management and Business Strategy</h2></div>\n<div> Module 1, 2026</div>\n<div><i>This course is to develop the capacity of students to think strategically about business and deal with various strategic decisions in a range of organizational settings.</i></div>\n<div><b>Faculty:</b", "tags": ["CLASS"], "days_until": 8, "synced_at": "2026-06-04T01:41:14.454667+00:00"}, {"id": "4806s9k81rtlg7r897mr7gjq9s", "summary": "DECS-S-0034: Statistical Models and Managerial Analysis", "start": "2026-06-13T09:00:00+07:00", "end": "2026-06-13T12:30:00+07:00", "is_all_day": false, "location": "", "description": "<div><h2>DECS-S-0034: Statistical Models and Managerial Analysis</h2></div>\n<div> Module 1, 2026</div>\n<div><i>The goal of this course is to enable participants to be more knowledgeable with respect to the underlying statistical foundations, especially those related to linear regressions.</i></div>\n", "tags": ["CLASS"], "days_until": 9, "synced_at": "2026-06-04T01:41:14.454667+00:00"}, {"id": "50soi97qog5foosp2svbo0dkts", "summary": "MGMT-S-0031: Management and Business Strategy", "start": "2026-06-13T13:30:00+07:00", "end": "2026-06-13T17:00:00+07:00", "is_all_day": false, "location": "", "description": "<div><h2>MGMT-S-0031: Management and Business Strategy</h2></div>\n<div> Module 1, 2026</div>\n<div><i>This course is to develop the capacity of students to think strategically about business and deal with various strategic decisions in a range of organizational settings.</i></div>\n<div><b>Faculty:</b", "tags": ["CLASS"], "days_until": 9, "synced_at": "2026-06-04T01:41:14.454667+00:00"}, {"id": "h2uv8csmjtjkfg2m8ffbdmr87s", "summary": "DECS-S-0034: Statistical Models and Managerial Analysis", "start": "2026-06-19T18:00:00+07:00", "end": "2026-06-19T21:30:00+07:00", "is_all_day": false, "location": "", "description": "<div><h2>DECS-S-0034: Statistical Models and Managerial Analysis</h2></div>\n<div> Module 1, 2026</div>\n<div><i>The goal of this course is to enable participants to be more knowledgeable with respect to the underlying statistical foundations, especially those related to linear regressions.</i></div>\n", "tags": ["CLASS"], "days_until": 15, "synced_at": "2026-06-04T01:41:14.454667+00:00"}, {"id": "57nrus13599ojdcfi74d5es1c4", "summary": "MGMT-S-0031: Management and Business Strategy", "start": "2026-06-20T09:00:00+07:00", "end": "2026-06-20T12:30:00+07:00", "is_all_day": false, "location": "", "description": "<div><h2>MGMT-S-0031: Management and Business Strategy</h2></div>\n<div> Module 1, 2026</div>\n<div><i>This course is to develop the capacity of students to think strategically about business and deal with various strategic decisions in a range of organizational settings.</i></div>\n<div><b>Faculty:</b", "tags": ["CLASS"], "days_until": 16, "synced_at": "2026-06-04T01:41:14.454667+00:00"}, {"id": "qf3pqp5mspq31fcu5363n4egl4", "summary": "DECS-S-0034: Statistical Models and Managerial Analysis", "start": "2026-06-20T13:30:00+07:00", "end": "2026-06-20T17:00:00+07:00", "is_all_day": false, "location": "", "description": "<div><h2>DECS-S-0034: Statistical Models and Managerial Analysis</h2></div>\n<div> Module 1, 2026</div>\n<div><i>The goal of this course is to enable participants to be more knowledgeable with respect to the underlying statistical foundations, especially those related to linear regressions.</i></div>\n", "tags": ["CLASS"], "days_until": 16, "synced_at": "2026-06-04T01:41:14.454667+00:00"}, {"id": "s4olc4d1s6op5odh5vpirpmo18", "summary": "MGMT-S-0031: Management and Business Strategy", "start": "2026-06-26T18:00:00+07:00", "end": "2026-06-26T21:30:00+07:00", "is_all_day": false, "location": "", "description": "<div><h2>MGMT-S-0031: Management and Business Strategy</h2></div>\n<div> Module 1, 2026</div>\n<div><i>This course is to develop the capacity of students to think strategically about business and deal with various strategic decisions in a range of organizational settings.</i></div>\n<div><b>Faculty:</b", "tags": ["CLASS"], "days_until": 22, "synced_at": "2026-06-04T01:41:14.454667+00:00"}, {"id": "qp3sp7l3gpis6cuvonna1l0te0", "summary": "DECS-S-0034: Statistical Models and Managerial Analysis", "start": "2026-06-27T09:00:00+07:00", "end": "2026-06-27T12:30:00+07:00", "is_all_day": false, "location": "", "description": "<div><h2>DECS-S-0034: Statistical Models and Managerial Analysis</h2></div>\n<div> Module 1, 2026</div>\n<div><i>The goal of this course is to enable participants to be more knowledgeable with respect to the underlying statistical foundations, especially those related to linear regressions.</i></div>\n", "tags": ["CLASS"], "days_until": 23, "synced_at": "2026-06-04T01:41:14.454667+00:00"}, {"id": "6caa60j59i4jb53enn7pseee0g", "summary": "MGMT-S-0031: Management and Business Strategy", "start": "2026-06-27T13:30:00+07:00", "end": "2026-06-27T17:00:00+07:00", "is_all_day": false, "location": "", "description": "<div><h2>MGMT-S-0031: Management and Business Strategy</h2></div>\n<div> Module 1, 2026</div>\n<div><i>This course is to develop the capacity of students to think strategically about business and deal with various strategic decisions in a range of organizational settings.</i></div>\n<div><b>Faculty:</b", "tags": ["CLASS"], "days_until": 23, "synced_at": "2026-06-04T01:41:14.454667+00:00"}, {"id": "6ofvjjbq4h4l87aup2vd6q4m14", "summary": "DECS-S-0034: Statistical Models and Managerial Analysis", "start": "2026-07-03T18:00:00+07:00", "end": "2026-07-03T21:30:00+07:00", "is_all_day": false, "location": "", "description": "<div><h2>DECS-S-0034: Statistical Models and Managerial Analysis</h2></div>\n<div> Module 1, 2026</div>\n<div><i>The goal of this course is to enable participants to be more knowledgeable with respect to the underlying statistical foundations, especially those related to linear regressions.</i></div>\n", "tags": ["CLASS"], "days_until": 29, "synced_at": "2026-06-04T01:41:14.454667+00:00"}, {"id": "qs4k21nfotd65itmgj6aebtipk", "summary": "MGMT-S-0031: Management and Business Strategy", "start": "2026-07-04T09:00:00+07:00", "end": "2026-07-04T12:30:00+07:00", "is_all_day": false, "location": "", "description": "<div><h2>MGMT-S-0031: Management and Business Strategy</h2></div>\n<div> Module 1, 2026</div>\n<div><i>This course is to develop the capacity of students to think strategically about business and deal with various strategic decisions in a range of organizational settings.</i></div>\n<div><b>Faculty:</b", "tags": ["CLASS"], "days_until": 30, "synced_at": "2026-06-04T01:41:14.454667+00:00"}, {"id": "927ujhnltkmltmjlcklu6ka0uo", "summary": "DECS-S-0034: Statistical Models and Managerial Analysis", "start": "2026-07-04T13:30:00+07:00", "end": "2026-07-04T17:00:00+07:00", "is_all_day": false, "location": "", "description": "<div><h2>DECS-S-0034: Statistical Models and Managerial Analysis</h2></div>\n<div> Module 1, 2026</div>\n<div><i>The goal of this course is to enable participants to be more knowledgeable with respect to the underlying statistical foundations, especially those related to linear regressions.</i></div>\n", "tags": ["CLASS"], "days_until": 30, "synced_at": "2026-06-04T01:41:14.454667+00:00"}, {"id": "lp7j80jvl5a9ib67ou6iieve24", "summary": "MGMT-S-0031: Management and Business Strategy", "start": "2026-07-10T18:00:00+07:00", "end": "2026-07-10T21:00:00+07:00", "is_all_day": false, "location": "", "description": "<div><h2>MGMT-S-0031: Management and Business Strategy</h2></div>\n<div> Module 1, 2026</div>\n<div><i>This course is to develop the capacity of students to think strategically about business and deal with various strategic decisions in a range of organizational settings.</i></div>\n<div><b>Faculty:</b", "tags": ["CLASS"], "days_until": 36, "synced_at": "2026-06-04T01:41:14.454667+00:00"}, {"id": "p2pr9h6f6fke3ka39cp8mb3cl0", "summary": "DECS-S-0034: Statistical Models and Managerial Analysis", "start": "2026-07-11T09:00:00+07:00", "end": "2026-07-11T12:00:00+07:00", "is_all_day": false, "location": "", "description": "<div><h2>DECS-S-0034: Statistical Models and Managerial Analysis</h2></div>\n<div> Module 1, 2026</div>\n<div><i>The goal of this course is to enable participants to be more knowledgeable with respect to the underlying statistical foundations, especially those related to linear regressions.</i></div>\n", "tags": ["EXAM", "CLASS"], "days_until": 37, "synced_at": "2026-06-04T01:41:14.454667+00:00"}, {"id": "5cgh9jfhj2g5fg5kv1855oe37o", "summary": "Module 2/2026-2027", "start": "2026-07-13", "end": "2026-08-16", "is_all_day": true, "location": "", "description": "", "tags": ["CLASS"], "days_until": 38, "synced_at": "2026-06-04T01:41:14.454667+00:00"}, {"id": "675puvi2sdb39vsbqsfnb2dd8r", "summary": "Break", "start": "2026-08-16", "end": "2026-08-24", "is_all_day": true, "location": "", "description": "", "tags": ["OTHER"], "days_until": 72, "synced_at": "2026-06-04T01:41:14.454667+00:00"}, {"id": "4toqadkfuei49f9ugcl2d5s3vs", "summary": "Module 3/2026-2027", "start": "2026-08-24", "end": "2026-09-27", "is_all_day": true, "location": "", "description": "", "tags": ["CLASS"], "days_until": 80, "synced_at": "2026-06-04T01:41:14.454667+00:00"}, {"id": "2bmls0dk8lg9p59qo5ft24a1cs", "summary": "Module 4/2026-2027", "start": "2026-09-28", "end": "2026-11-01", "is_all_day": true, "location": "", "description": "", "tags": ["CLASS"], "days_until": 115, "synced_at": "2026-06-04T01:41:14.454667+00:00"}, {"id": "4jr3khgkq1de9s7g2vk4km5j2e", "summary": "Break", "start": "2026-11-01", "end": "2026-11-09", "is_all_day": true, "location": "", "description": "", "tags": ["OTHER"], "days_until": 149, "synced_at": "2026-06-04T01:41:14.454667+00:00"}, {"id": "4rc7btsdmc7k6msi3f99ofcdqp", "summary": "Module 5/2026-2027", "start": "2026-11-09", "end": "2026-12-13", "is_all_day": true, "location": "", "description": "", "tags": ["CLASS"], "days_until": 157, "synced_at": "2026-06-04T01:41:14.454667+00:00"}]}</script>
 
 <!-- ═══ SIDEBAR ═══ -->
 <nav id="sidebar">
@@ -388,7 +388,6 @@ const COURSES = {
     desc: 'Technology and innovation in agriculture — precision farming, supply chain, sustainability.',
     driveFolder: '',
     driveLink: '',
-    materialsUrl: '/agritech.html',
   },
   'mgmt-s-0031': {
     title: 'Management & Business Strategy',
@@ -405,7 +404,6 @@ const COURSES = {
     desc: 'Statistical foundations for managerial decision-making — regression, hypothesis testing, predictive modeling.',
     driveFolder: 'EMBA2026/Courses/DECS-S-0034 Statistical Models and Management Analysis',
     driveLink: 'https://drive.google.com/drive/folders/14dneQVsbxnf6mGUgNVbSiE9blsxaDwJr',
-    exam: '2026-07-10',
   },
   'mktg-s-0030': {
     title: 'Marketing for a Digital Age',
@@ -496,7 +494,7 @@ async function showHome() {
   // Load calendar from embedded data (refreshed by cron)
   let eventsHtml = '<p style="color:var(--dim)">Loading...</p>';
   const calData = CALENDAR_DATA || {};
-  const allEvents = calData.events || []; window._allEvents = allEvents
+  const allEvents = calData.events || [];
   const upcoming = allEvents.filter(e => e.days_until <= 7);
   if (upcoming.length) {
       eventsHtml = upcoming.map(e => {
@@ -518,65 +516,22 @@ async function showHome() {
       eventsHtml = '<p style="color:var(--dim)">No events this week</p>';
     }
 
-  // Compute deadline alerts from calendar data + courses.json
-  const calendarDeadlines = (allEvents || []).filter(e => {
+  // Compute deadline alerts from calendar data
+  const deadlines = allEvents.filter(e => {
     const tags = e.tags || [];
     return tags.includes('DEADLINE') || tags.includes('EXAM');
-  }).map(e => ({
-    label: e.summary,
-    date: e.start,
-    days_until: e.days_until,
-    type: (e.tags||[]).includes('EXAM') ? 'exam' : 'deadline',
-    source: 'calendar'
-  }));
-
-  // Merge courses.json deadlines
-  const courseDeadlines = [];
-  try {
-    const coursesEl = document.getElementById('coursesData');
-    if (coursesEl) {
-      const coursesData = JSON.parse(coursesEl.textContent);
-      window._courseDeadlines = coursesData;
-      const now = new Date();
-      for (const [code, dls] of Object.entries(coursesData)) {
-        for (const dl of dls) {
-          const dlDate = new Date(dl.date);
-          const daysUntil = Math.ceil((dlDate - now) / 86400000);
-          if (daysUntil >= 0 && daysUntil <= 60) {
-            courseDeadlines.push({
-              label: code + ': ' + dl.label,
-              date: dl.date,
-              days_until: daysUntil,
-              type: dl.type || 'deadline',
-              source: 'courses'
-            });
-          }
-        }
-      }
-    }
-  } catch(e) {}
-
-  // Combine, deduplicate by date+label, sort by days
-  const allDl = [...calendarDeadlines, ...courseDeadlines];
-  const seen = new Set();
-  const deadlines = allDl.filter(d => {
-    const key = d.date + '|' + d.label.slice(0, 40);
-    if (seen.has(key)) return false;
-    seen.add(key);
-    return true;
-  }).sort((a,b) => a.days_until - b.days_until).slice(0, 8);
+  }).sort((a,b) => a.days_until - b.days_until).slice(0, 5);
 
   let deadlineHtml = '';
   if (deadlines.length) {
     deadlineHtml = deadlines.map(e => {
-      const d = new Date(e.date);
+      const d = new Date(e.start);
       const dateStr = d.toLocaleDateString('en-GB', {day:'numeric',month:'short'});
       const urgency = e.days_until <= 1 ? '🔴' : e.days_until <= 3 ? '🟠' : '🟢';
-      const examBadge = e.type === 'exam' ? ' <span style="font-size:10px;color:#f87171;font-weight:700">EXAM</span>' : '';
       return '<div style="display:flex;align-items:center;gap:8px;padding:4px 0;font-size:13px">' +
         '<span>' + urgency + '</span>' +
-        '<span style="flex:1">' + e.label + examBadge + '</span>' +
-        '<span style="color:var(--dim);font-size:11px;white-space:nowrap">' + dateStr + ' · ' + e.days_until + 'd</span>' +
+        '<span style="flex:1">' + e.summary + '</span>' +
+        '<span style="color:var(--dim);font-size:11px">' + dateStr + ' · ' + e.days_until + 'd</span>' +
         '</div>';
     }).join('');
   } else {
@@ -615,33 +570,15 @@ function renderCourseModal(courseId) {
   const c = COURSES[courseId];
   if (!c) return '<p>Course not found</p>';
   
-  // Dynamic exam date lookup from calendar events + courses.json
-  let examDate = c.exam || null;
-  if (!examDate && c.code && window._allEvents) {
-    const examEvent = window._allEvents.find(e =>
-      e.tags && e.tags.includes('EXAM') &&
-      e.summary.toLowerCase().includes(c.code.toLowerCase())
-    );
-    if (examEvent) examDate = examEvent.start;
-  }
-  // Also check courses.json deadlines (fetched async, cached)
-  if (!examDate && window._courseDeadlines && window._courseDeadlines[c.code]) {
-    const examDL = window._courseDeadlines[c.code].find(d => d.type === 'exam');
-    if (examDL) examDate = examDL.date;
-  }
-  
   let examAlert = '';
-  if (examDate) {
-    const ed = new Date(examDate);
+  if (c.examDate) {
+    const ed = new Date(c.examDate);
     const days = Math.ceil((ed - new Date()) / 86400000);
     const urgency = days <= 7 ? '🔥 ' : days <= 14 ? '⚠️ ' : '';
     examAlert = `<div style="background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.3);border-radius:8px;padding:12px;margin-bottom:16px;font-size:13px">
-      ⚠️ <strong>Exam:</strong> ${ed.toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'})} — <span style="color:#fca5a5">${urgency}${days} days away</span>
+      ⚠️ <strong>Exam:</strong> ${c.examDate} — <span style="color:#fca5a5">${urgency}${days} days away</span>
     </div>`;
   }
-
-  // Course page URL — use custom materialsUrl if set, otherwise default
-  const coursePageUrl = c.materialsUrl || (c.code ? '/courses/' + c.code + '/' : '#');
 
   return `
     ${examAlert}
@@ -653,36 +590,29 @@ function renderCourseModal(courseId) {
     ${c.driveFolder ? `<div id="courseDocsSection">
       <h4 style="margin-bottom:12px;color:var(--dim)">📁 Course Materials</h4>
       <p style="color:var(--dim);font-size:12px">Loading documents from Google Drive...</p>
-    </div>` : '<p style="color:var(--dim);margin-bottom:16px">Course materials coming soon.</p>'}
+    </div>` : '<p style="color:var(--dim)">Course materials coming soon.</p>'}
     <div style="margin-top:20px;display:flex;gap:10px;flex-wrap:wrap">
-      <button class="btn btn-gold" onclick="window.open('https://capture.sasin.cfoth.ai','_blank')">🎙️ Start Capture</button>
-      <button class="btn btn-outline" onclick="window.open('https://capture.sasin.cfoth.ai','_blank')">🃏 Study Cards</button>
+      <button class="btn btn-gold" onclick="openModal('capture')">🎙️ Start Capture</button>
+      <button class="btn btn-outline" onclick="openModal('flashcards')">🃏 Study Cards</button>
       <button class="btn btn-outline" onclick="openModal('brain')">🧠 2nd Brain</button>
-      <button class="btn btn-outline" onclick="window.open('${coursePageUrl}','_blank')">📚 Materials</button>
     </div>
   `;
 }
 
-// ═══ RENDER COURSE DOCUMENTS (Google Drive folder tree) ═══
+// ═══ RENDER COURSE DOCUMENTS ═══
 async function loadCourseDocs(folderPath) {
   try {
     const r = await fetch(API + '/second-brain/documents');
     const data = await r.json();
-    const matches = data.drive_files.filter(f => f.folder && f.folder.toLowerCase().includes(folderPath.toLowerCase()));
-    if (!matches.length) return '<p style="color:var(--dim);padding:16px">No documents found in this folder.</p>';
-    
-    // Build tree scoped to this course
-    const tree = buildFolderTree(matches);
-    // Find the matching root node directly
-    let courseNode = tree;
-    const searchParts = folderPath.split('/').filter(p => p);
-    for (const part of searchParts) {
-      const found = Object.keys(courseNode).find(k => k.toLowerCase().includes(part.toLowerCase()));
-      if (found) courseNode = courseNode[found];
-      else break;
-    }
-    const treeHtml = renderTree(courseNode && courseNode._files !== undefined ? courseNode : tree, 0);
-    return `<div style="background:var(--bg);border:1px solid var(--border);border-radius:12px;padding:8px;max-height:400px;overflow-y:auto;">${treeHtml}</div>`;
+    const matches = data.drive_files.filter(f => f.folder && f.folder.includes(folderPath));
+    if (!matches.length) return '<p style="color:var(--dim)">No documents found in this folder.</p>';
+    return `<table class="doc-table">
+      <thead><tr><th>File</th><th>Folder</th><th>Modified</th></tr></thead>
+      <tbody>${matches.map(f => `<tr>
+        <td>📄 ${f.name}</td>
+        <td><span class="doc-folder">${f.folder}</span></td>
+        <td style="color:var(--dim);font-size:11px">${f.modified ? new Date(f.modified).toLocaleDateString('en-GB') : ''}</td>
+      </tr>`).join('')}</tbody></table>`;
   } catch(e) { return '<p style="color:var(--dim)">Failed to load documents.</p>'; }
 }
 
@@ -832,96 +762,34 @@ async function renderCaptureModal() {
 }
 
 // ═══ 2ND BRAIN MODAL ═══
-function buildFolderTree(files) {
-  // Build nested tree: {folderName: {_files: [...], subfolder: {...}}}
-  const tree = {};
-  for (const f of files) {
-    const folder = f.folder || 'Other';
-    const parts = folder.split('/').filter(p => p);
-    let node = tree;
-    for (const part of parts) {
-      if (!node[part]) node[part] = {_files: []};
-      node = node[part];
-    }
-    node._files.push(f);
-  }
-  return tree;
-}
-
-function renderTree(tree, depth, basePath) {
-  depth = depth || 0;
-  basePath = basePath || '';
-  const keys = Object.keys(tree).sort();
-  let html = '';
-  
-  for (const key of keys) {
-    if (key === '_files') continue;
-    const node = tree[key];
-    const fileCount = node._files.length + Object.keys(node).filter(k => k !== '_files').reduce((s, k) => s + (node[k]._files?.length || 0), 0);
-    const folderPath = basePath ? basePath + '/' + key : key;
-    const displayName = key.replace(/^EMBA2026[\/]?/, '').replace(/^Courses[\/]?/, '').replace('Fundamental Managerial Analysis', 'Fund. Managerial Analysis');
-    const indent = depth * 20;
-    const icon = depth === 0 ? '📁' : '📂';
-    
-    html += `<details open style="margin-left:${indent}px;cursor:pointer;">
-      <summary style="padding:6px 8px;border-radius:6px;font-size:0.85rem;font-weight:600;color:var(--gold);list-style:none;display:flex;align-items:center;gap:6px;" onclick="event.stopPropagation()">
-        <span style="font-size:1rem;">${icon}</span> ${displayName}
-        <span style="font-size:0.7rem;color:var(--dim);font-weight:400;margin-left:4px;">(${fileCount})</span>
-      </summary>
-      <div style="margin-left:8px;">`;
-    
-    // Render files in this folder
-    if (node._files.length > 0) {
-      for (const f of node._files) {
-        const dlUrl = `https://capture.sasin.cfoth.ai/second-brain/download/emba-2026/${encodeURIComponent(f.name)}`;
-        const date = f.modified ? new Date(f.modified).toLocaleDateString('en-GB') : '';
-        html += `<div style="padding:4px 8px;margin:2px 0;border-radius:4px;font-size:0.8rem;display:flex;align-items:center;gap:6px;cursor:pointer;transition:background 0.15s;" 
-          onclick="window.open('${dlUrl}','_blank')" 
-          onmouseover="this.style.background='var(--card)'" 
-          onmouseout="this.style.background='transparent'"
-          title="Download ${f.name}">
-          <span style="font-size:0.9rem;">📄</span>
-          <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${f.name}</span>
-          <span style="color:var(--dim);font-size:0.7rem;white-space:nowrap;">${date}</span>
-        </div>`;
-      }
-    }
-    
-    // Render subfolders
-    html += renderTree(node, depth + 1, folderPath);
-    html += `</div></details>`;
-  }
-  return html;
-}
-
 async function renderBrainModal() {
   try {
     const r = await fetch(API + '/second-brain/documents');
     const data = await r.json();
     
-    const tree = buildFolderTree(data.drive_files || []);
-    const treeHtml = renderTree(tree);
+    const driveHtml = data.drive_files.map(f => `<tr>
+      <td>📄 ${f.name}</td>
+      <td><span class="doc-folder">${f.folder}</span></td>
+      <td style="color:var(--dim);font-size:11px">${f.modified ? new Date(f.modified).toLocaleDateString('en-GB') : ''}</td>
+    </tr>`).join('');
 
-    const brainHtml = (data.brain_files||[]).slice(0,15).map(f => `<div style="padding:6px 8px;margin:2px 0;border-radius:4px;font-size:0.8rem;display:flex;align-items:center;gap:6px;">
-      <span>📄</span>
-      <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${f.title || f.name}</span>
-      <span style="color:var(--dim);font-size:0.7rem;">${f.size ? (f.size/1024).toFixed(0)+'k' : ''}</span>
-    </div>`).join('');
+    const brainHtml = (data.brain_files||[]).slice(0,20).map(f => `<tr>
+      <td>${f.title || f.name}</td>
+      <td>${(f.frameworks||[]).slice(0,2).map(fw => `<span style="display:inline-block;margin:1px;padding:1px 6px;border-radius:6px;font-size:9px;background:rgba(59,130,246,0.1);color:#60a5fa">${fw}</span>`).join('')}</td>
+      <td style="color:var(--dim);font-size:11px">${f.size ? (f.size/1024).toFixed(1)+'k' : ''}</td>
+    </tr>`).join('');
 
     return `
       <div style="display:flex;gap:10px;margin-bottom:16px">
         <button class="btn btn-gold" onclick="window.open('https://capture.sasin.cfoth.ai','_blank')">🧠 Open Full 2nd Brain</button>
-        <span style="font-size:0.75rem;color:var(--dim);align-self:center;">${data.drive_count} files synced from Google Drive</span>
       </div>
-      <h4 style="margin-bottom:8px">📁 Google Drive</h4>
-      <div style="background:var(--bg);border:1px solid var(--border);border-radius:12px;padding:8px;max-height:400px;overflow-y:auto;">
-        ${treeHtml || '<p style="color:var(--dim);padding:16px;text-align:center">No Drive files synced</p>'}
-      </div>
+      <h4 style="margin-bottom:8px">📁 Google Drive (${data.drive_count} files)</h4>
+      <table class="doc-table"><thead><tr><th>File</th><th>Folder</th><th>Modified</th></tr></thead>
+      <tbody>${driveHtml || '<tr><td colspan="3" style="color:var(--dim)">No Drive files synced</td></tr>'}</tbody></table>
       
-      <h4 style="margin:20px 0 8px">🧠 2nd Brain Analysis (${data.brain_count} indexed)</h4>
-      <div style="background:var(--bg);border:1px solid var(--border);border-radius:12px;padding:8px;max-height:260px;overflow-y:auto;">
-        ${brainHtml || '<p style="color:var(--dim);padding:16px;text-align:center">No documents processed</p>'}
-      </div>
+      <h4 style="margin:20px 0 8px">🧠 2nd Brain (${data.brain_count} documents)</h4>
+      <table class="doc-table"><thead><tr><th>Document</th><th>Frameworks</th><th>Size</th></tr></thead>
+      <tbody>${brainHtml || '<tr><td colspan="3" style="color:var(--dim)">No documents processed</td></tr>'}</tbody></table>
     `;
   } catch(e) {
     return '<p style="color:var(--dim)">Brain data unavailable.</p>';

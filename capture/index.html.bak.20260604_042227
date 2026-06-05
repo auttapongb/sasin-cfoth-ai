@@ -6,498 +6,409 @@
 <title>Sasin Lecture Capture — Two-Box Study</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:wght@600;700;800&display=swap" rel="stylesheet">
-<script src="https://d3js.org/d3.v7.min.js">
-// ─── Mobile Menu Toggle ───────────────────────────
-function toggleMobileMenu() {
-    const nav = document.getElementById('tabsNav');
-    const btn = document.getElementById('hamburgerBtn');
-    if (nav) {
-        nav.classList.toggle('mobile-open');
-        btn.textContent = nav.classList.contains('mobile-open') ? '✕' : '☰';
-    }
-}
-// Close mobile menu when a tab is clicked
-document.addEventListener('click', function(e) {
-    if (e.target.classList.contains('tab')) {
-        const nav = document.getElementById('tabsNav');
-        const btn = document.getElementById('hamburgerBtn');
-        if (nav && nav.classList.contains('mobile-open')) {
-            nav.classList.remove('mobile-open');
-            if (btn) btn.textContent = '☰';
-        }
-    }
-});
-
-</script>
+<script src="https://d3js.org/d3.v7.min.js"></script>
 <style>
 :root {
-    --bg: #080C14;
-    --surface: #111827;
-    --surface2: #1A2235;
-    --border: #1E2D45;
-    --border-light: #263550;
-    --gold: #D4A843;
-    --gold-dim: #B8922F;
-    --gold-bg: rgba(212,168,67,0.08);
-    --teal: #14B8A6;
-    --teal-bg: rgba(20,184,166,0.08);
-    --coral: #F04E3B;
-    --coral-bg: rgba(240,78,59,0.08);
-    --blue: #60A5FA;
-    --blue-bg: rgba(96,165,250,0.08);
-    --purple: #A78BFA;
-    --purple-bg: rgba(167,139,250,0.08);
-    --text: #E2E8F0;
-    --text-dim: #8899B4;
-    --text-muted: #5A6D85;
-    --green: #34D399;
-    --green-bg: rgba(52,211,153,0.08);
-    --radius: 12px;
-    --radius-sm: 8px;
-    --radius-lg: 16px;
-    --shadow: 0 2px 12px rgba(0,0,0,0.3);
-    --font: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-    --transition: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    --gold: #C9A84C; --gold-light: #E8D48B;
+    --bg: #0A0A14; --card: #141428; --border: #252540;
+    --text: #D8D8E8; --dim: #7A7A9A;
+    --recording: #E85D3A; --success: #4CAF50; --blue: #3B82F6;
+    --box1-accent: #3B82F6; --box2-accent: #C9A84C;
+    --box1-bg: #0D1117; --box2-bg: #111118;
 }
-
 * { margin:0; padding:0; box-sizing:border-box; }
-html, body { display: flex; flex-direction: column;
-    font-family: var(--font);
+body {
+    font-family: 'Inter', sans-serif;
     background: var(--bg); color: var(--text);
-    height: 100vh; height: 100dvh;
-    overflow: hidden;
-    -webkit-font-smoothing: antialiased;
-    -webkit-tap-highlight-color: transparent;
+    height: 100vh; overflow: hidden;
+    display: flex; flex-direction: column;
 }
-::-webkit-scrollbar { width: 4px; height: 4px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: var(--border-light); border-radius: 4px; }
 
-/* ═══ TOP BAR ═══ */
+/* ── Top Bar ── */
 .topbar {
-    display: flex; align-items: center; gap: 10px;
-    padding: 8px 14px; background: var(--surface);
-    border-bottom: 1px solid var(--border); flex-shrink: 0;
-    min-height: 52px; z-index: 50; position: relative;
+    display: flex; align-items: center; gap: 12px;
+    padding: 8px 16px; background: var(--card);
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0; z-index: 10;
 }
-.hamburger {
-    display: none; width: 40px; height: 40px; border-radius: var(--radius-sm);
-    background: transparent; border: 1px solid var(--border);
-    color: var(--text-dim); font-size: 1.3rem; cursor: pointer;
-    align-items: center; justify-content: center; flex-shrink: 0;
-}
-.hamburger:hover { border-color: var(--gold); color: var(--gold); }
-
-.status-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--green); flex-shrink: 0; transition: background var(--transition); }
-.status-dot.recording { background: var(--coral); animation: dotPulse 1s infinite; }
-.status-dot.error { background: #ff4444; }
-.status-dot.connected { background: var(--green); }
-@keyframes dotPulse { 0%,100%{opacity:1;box-shadow:0 0 0 0 rgba(240,78,59,0.4)} 50%{opacity:0.5;box-shadow:0 0 0 6px rgba(240,78,59,0)} }
-
-.status-text { font-size: 0.72rem; color: var(--text-dim); font-weight: 500; white-space: nowrap; }
-
-.logo { font-family: 'Playfair Display', Georgia, serif; font-size: 1.05rem; color: var(--gold); font-weight: 700; white-space: nowrap; }
-.logo span { font-size: 0.6rem; color: var(--text-muted); font-family: var(--font); font-weight: 400; margin-left: 3px; }
-
-.timer { margin-left: auto; font-family: 'SF Mono', 'Fira Code', monospace; font-size: 0.85rem; color: var(--gold); font-weight: 600; white-space: nowrap; }
-
+.topbar .logo { font-family: 'Playfair Display', serif; font-size: 1.1rem; color: var(--gold); }
+.topbar .logo span { font-size: 0.65rem; color: var(--dim); font-family: 'Inter', sans-serif; margin-left: 4px; }
+.status-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--success); flex-shrink: 0; }
+.status-dot.recording { background: var(--recording); animation: dotPulse 1s infinite; }
+@keyframes dotPulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+.status-text { font-size: 0.75rem; color: var(--dim); }
+.timer { margin-left: auto; font-family: monospace; font-size: 0.9rem; color: var(--gold); }
 .btn-sm {
-    padding: 6px 12px; border-radius: 20px; border: 1px solid var(--border-light);
-    background: transparent; color: var(--text-dim); font-size: 0.68rem;
-    font-weight: 600; cursor: pointer; font-family: var(--font);
-    transition: all var(--transition); white-space: nowrap;
-    min-height: 32px; display: inline-flex; align-items: center; gap: 4px;
+    padding: 6px 14px; border-radius: 16px; border: 1px solid var(--border);
+    background: transparent; color: var(--text); font-size: 0.7rem;
+    font-weight: 600; cursor: pointer; font-family: 'Inter', sans-serif;
+    transition: all 0.15s; white-space: nowrap;
 }
-.btn-sm:hover { border-color: var(--gold); color: var(--gold); background: var(--gold-bg); }
-.btn-sm.primary { background: var(--coral); border-color: var(--coral); color: #fff; }
-.btn-sm.primary:hover { background: #d43d2a; opacity: 1; }
+.btn-sm:hover { border-color: var(--gold); color: var(--gold); }
+.btn-sm.primary { background: var(--recording); border-color: var(--recording); color: white; }
+.btn-sm.primary:hover { opacity: 0.9; }
 .btn-sm.save { border-color: var(--gold); color: var(--gold); }
-.btn-sm.second-brain { border-color: var(--purple); color: var(--purple); }
-.btn-sm.second-brain:hover { border-color: var(--purple); background: var(--purple-bg); }
+.btn-sm.second-brain { border-color: #7C3AED; color: #A78BFA; }
+.btn-sm.second-brain:hover { border-color: #A78BFA; background: rgba(124,58,237,0.1); }
 .btn-sm.second-brain.uploading { opacity: 0.6; pointer-events: none; animation: dotPulse 1s infinite; }
 
-/* Engine Badge */
-.engine-badge {
-    display: inline-flex; align-items: center; gap: 5px;
-    padding: 5px 12px; border-radius: 20px; border: 1px solid var(--border-light);
-    background: transparent; color: var(--text-dim); font-size: 0.65rem;
-    font-weight: 600; cursor: pointer; font-family: var(--font);
-    transition: all var(--transition); white-space: nowrap;
-}
-.engine-badge:hover { border-color: var(--gold); color: var(--gold); }
-.engine-badge.faster { border-color: var(--green); color: var(--green); background: var(--green-bg); }
-.engine-badge.groq { border-color: var(--blue); color: var(--blue); background: var(--blue-bg); }
-.engine-badge.auto { border-color: var(--gold); color: var(--gold); background: var(--gold-bg); }
-.engine-badge.tiny { border-color: var(--green); color: var(--green); background: var(--green-bg); }
-.engine-badge.thai { border-color: var(--coral); color: #FF8A65; background: var(--coral-bg); }
-.engine-badge .eng-icon { font-size: 0.7rem; }
-
-.engine-popup {
-    display: none; position: absolute; top: 48px; left: 100px;
-    background: var(--surface2); border: 1px solid var(--border);
-    border-radius: var(--radius); padding: 6px; z-index: 200;
-    box-shadow: 0 8px 40px rgba(0,0,0,0.5); min-width: 200px;
-}
-.engine-popup.show { display: block; }
-.engine-option {
-    display: flex; align-items: center; gap: 8px;
-    padding: 8px 12px; border-radius: 6px; cursor: pointer;
-    font-size: 0.7rem; color: var(--text-dim); transition: all 0.15s;
-}
-.engine-option:hover { background: var(--gold-bg); color: var(--text); }
-.engine-option.active { color: var(--gold); font-weight: 700; background: var(--gold-bg); }
-.engine-option .opt-name { font-weight: 600; }
-.engine-option .opt-desc { color: var(--text-muted); font-size: 0.6rem; }
-
-/* ═══ TABS ═══ */
-.tabs-nav {
-    display: flex; align-items: center; gap: 2px; overflow-x: auto;
-    flex-shrink: 0; scrollbar-width: none; padding: 0 2px;
-}
-.tabs-nav::-webkit-scrollbar { display: none; }
+/* ── Tabs ── */
+.tabs { display: flex; gap: 2px; margin: 0 8px; overflow-x: auto; flex-shrink: 0; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
 .tab {
-    padding: 7px 14px; border: 1px solid transparent; border-radius: var(--radius-sm) var(--radius-sm) 0 0;
-    background: transparent; color: var(--text-muted); font-size: 0.7rem;
-    font-weight: 600; cursor: pointer; font-family: var(--font);
-    transition: all var(--transition); white-space: nowrap; min-height: 36px;
-    display: inline-flex; align-items: center; gap: 4px;
+    padding: 5px 14px; border: 1px solid var(--border); border-radius: 8px 8px 0 0;
+    background: transparent; color: var(--dim); font-size: 0.72rem;
+    font-weight: 600; cursor: pointer; font-family: 'Inter', sans-serif;
+    transition: all 0.15s; border-bottom: none;
 }
-.tab:hover { color: var(--text-dim); border-color: var(--border-light); }
-.tab.active { color: var(--gold); border-color: var(--gold); background: var(--gold-bg); }
+.tab:hover { color: var(--text); border-color: var(--gold); }
+.tab.active { color: var(--gold); border-color: var(--gold); background: rgba(201,168,76,0.06); }
 
-/* Session title */
-.session-title {
-    font-size: 0.7rem; color: var(--gold); font-weight: 500;
-    padding: 4px 10px; border-radius: 20px;
-    background: var(--gold-bg); border: 1px solid rgba(212,168,67,0.2);
-    cursor: pointer; max-width: 160px; overflow: hidden;
-    text-overflow: ellipsis; white-space: nowrap; transition: all var(--transition);
-}
-.session-title:hover { background: rgba(212,168,67,0.15); }
-.session-title:empty { display: none; }
+/* ── Tab View Containers ── */
+#captureView { display: flex; flex-direction: column; flex: 1; min-height: 0; overflow: hidden; }
+#chatView.chat-view.active { display: flex; flex-direction: column; flex: 1; min-height: 0; }
 
-/* ═══ TAB CONTENT ═══ */
-.tab-view {
-    display: none; flex-direction: column; flex: 1; min-height: 0;
-    overflow: hidden; background: var(--bg);
+/* ── Chat View ── */
+.chat-view {
+    display: none; flex-direction: column; height: 100%;
+    background: var(--bg);
 }
-.tab-view.active { display: flex; }
-
-/* ═══ MAIN TWO-PANEL ═══ */
-.main-panels {
-    display: flex; flex: 1; overflow: hidden; gap: 1px;
-    background: var(--border);
-}
-.panel {
-    flex: 1; display: flex; flex-direction: column;
-    background: var(--surface); overflow: hidden; min-width: 0;
-}
-.panel-header {
-    padding: 10px 16px; font-weight: 700; font-size: 0.75rem;
-    display: flex; align-items: center; gap: 8px;
-    flex-shrink: 0; letter-spacing: 0.3px; text-transform: uppercase;
-}
-.panel-header .icon { font-size: 0.9rem; }
-.box1 .panel-header { background: var(--blue-bg); color: var(--blue); border-bottom: 1px solid rgba(96,165,250,0.15); }
-.box2 .panel-header { background: var(--gold-bg); color: var(--gold); border-bottom: 1px solid rgba(212,168,67,0.15); }
-.panel-body { display: flex; flex-direction: column;
-    flex: 1; overflow-y: auto; padding: 10px 14px; scroll-behavior: smooth;
-}
-
-/* Entries */
-.entry {
-    padding: 10px 12px; margin-bottom: 8px;
-    border-radius: var(--radius-sm); animation: fadeIn 0.3s ease;
-    font-size: 0.82rem; line-height: 1.55; position: relative;
-}
-@keyframes fadeIn { from { opacity:0; transform:translateY(4px) } to { opacity:1; transform:translateY(0) } }
-.entry-time { font-size: 0.6rem; color: var(--text-muted); font-family: monospace; margin-bottom: 3px; display: flex; align-items: center; gap: 6px; }
-.entry-time .elapsed { color: var(--gold); font-weight: 600; }
-.entry-latest { border-left: 2px solid var(--gold); padding-left: 12px; }
-.box1 .entry { background: var(--blue-bg); border: 1px solid rgba(96,165,250,0.08); }
-.box1 .entry-text { color: var(--text); white-space: pre-wrap; word-break: break-word; }
-.box1 .entry-slide { border: 1px dashed var(--border-light); padding: 6px; text-align: center; border-radius: 6px; }
-.box1 .entry-slide img { max-width: 100%; max-height: 200px; border-radius: 6px; cursor: pointer; }
-.box1 .entry-slide .slide-label { font-size: 0.6rem; color: var(--text-dim); margin-top: 4px; }
-
-.box2 .entry { background: var(--gold-bg); border: 1px solid rgba(212,168,67,0.08); }
-.box2 .entry-text { color: var(--text); }
-.box2 .entry-insight { border-left: 2px solid var(--gold); padding-left: 10px; }
-.box2 .entry-slide-analysis .explanation { color: var(--text); font-size: 0.8rem; line-height: 1.6; }
-.box2 .entry-slide-analysis .summary { font-style: italic; color: var(--text-dim); font-size: 0.75rem; margin-bottom: 6px; }
-.box2 .entry-slide-analysis .qa { margin-bottom: 6px; }
-.box2 .entry-slide-analysis .q { color: var(--gold); font-weight: 600; font-size: 0.78rem; }
-.box2 .entry-slide-analysis .a { color: var(--text); font-size: 0.78rem; padding-left: 10px; border-left: 1px solid var(--border-light); }
-
-.empty-state { text-align: center; color: var(--text-muted); padding: 40px 20px; font-size: 0.82rem; line-height: 1.6; }
-.empty-state .big-icon { font-size: 2.2rem; margin-bottom: 12px; opacity: 0.4; }
-
-/* Slide Strip */
-.slide-strip {
-    display: flex; gap: 8px; overflow-x: auto; padding: 8px 0;
-    min-height: 50px; align-items: center; flex-shrink: 0;
-    border-top: 1px solid var(--border); margin: 0 14px;
-}
-.slide-strip:empty { min-height:0; padding:0; border:none; }
-.slide-thumb {
-    flex-shrink: 0; width: 52px; height: 52px; border-radius: var(--radius-sm);
-    background-size: cover; background-position: center;
-    border: 2px solid var(--border-light); cursor: pointer;
-    transition: all var(--transition); position: relative;
-}
-.slide-thumb:hover { border-color: var(--blue); transform: scale(1.06); }
-.slide-thumb .badge {
-    position: absolute; top: -6px; right: -6px;
-    font-size: 0.5rem; padding: 1px 6px; border-radius: 10px;
-    font-weight: 700; color: #fff;
-}
-.badge-useful { background: var(--gold); }
-.badge-raw { background: var(--blue); }
-
-/* ═══ BOTTOM BAR ═══ */
-.bottombar {
-    display: flex; gap: 8px; padding: 10px 14px;
-    background: var(--surface); border-top: 1px solid var(--border);
-    align-items: center; flex-shrink: 0; min-height: 60px;
-}
-.btn-record {
-    height: 48px; padding: 0 24px; border-radius: 24px; border: none;
-    font-size: 0.9rem; font-weight: 700; cursor: pointer;
-    font-family: var(--font); display: flex; align-items: center; gap: 8px;
-    transition: all var(--transition); letter-spacing: 0.3px;
-}
-.btn-record.start { background: var(--coral); color: #fff; flex: 1; box-shadow: 0 4px 20px rgba(240,78,59,0.35); }
-.btn-record.start:hover { transform: translateY(-1px); box-shadow: 0 6px 24px rgba(240,78,59,0.45); }
-.btn-record.start:active { transform: scale(0.98); }
-.btn-record.recording { background: transparent; border: 2px solid var(--coral); color: var(--coral); flex: 1; animation: borderPulse 1.5s infinite; }
-@keyframes borderPulse { 0%,100%{border-color:var(--coral);box-shadow:0 0 20px rgba(240,78,59,0.2)} 50%{border-color:rgba(240,78,59,0.3);box-shadow:0 0 8px rgba(240,78,59,0.05)} }
-
-.btn-icon {
-    width: 48px; height: 48px; border-radius: 50%; border: 1px solid var(--border-light);
-    background: transparent; color: var(--text-dim); font-size: 1.2rem;
-    cursor: pointer; display: flex; align-items: center; justify-content: center;
-    transition: all var(--transition); flex-shrink: 0;
-}
-.btn-icon:hover { border-color: var(--gold); color: var(--gold); background: var(--gold-bg); }
-.btn-icon.blue { border-color: var(--blue); color: var(--blue); }
-.btn-icon.blue:hover { background: var(--blue-bg); }
-.btn-icon.purple { border-color: var(--purple); color: var(--purple); }
-.btn-icon.purple:hover { background: var(--purple-bg); }
-.btn-icon.teal { border-color: var(--teal); color: var(--teal); }
-.btn-icon.teal:hover { background: var(--teal-bg); }
-
-/* Chat */
-.chat-view { display: none; flex-direction: column; height: 100%; background: var(--bg); }
 .chat-view.active { display: flex; }
-.chat-messages { flex: 1; overflow-y: auto; padding: 14px 16px; display: flex; flex-direction: column; gap: 10px; }
-.chat-msg { max-width: 85%; padding: 10px 14px; border-radius: 14px; font-size: 0.84rem; line-height: 1.5; animation: fadeIn 0.2s ease; }
-.chat-msg.user { align-self: flex-end; background: var(--blue-bg); border: 1px solid rgba(96,165,250,0.2); border-bottom-right-radius: 4px; }
-.chat-msg.ai { align-self: flex-start; background: var(--surface2); border: 1px solid var(--border-light); border-bottom-left-radius: 4px; }
-.chat-input-row { display: flex; gap: 8px; padding: 10px 14px; background: var(--surface); border-top: 1px solid var(--border); }
+.chat-messages {
+    flex: 1; overflow-y: auto; padding: 12px 16px;
+    display: flex; flex-direction: column; gap: 10px;
+}
+.chat-msg {
+    max-width: 85%; padding: 10px 14px; border-radius: 14px;
+    font-size: 0.85rem; line-height: 1.5; animation: fadeIn 0.2s ease;
+}
+.chat-msg.user {
+    align-self: flex-end; background: rgba(59,130,246,0.15);
+    border: 1px solid rgba(59,130,246,0.25); color: var(--text);
+    border-bottom-right-radius: 4px;
+}
+.chat-msg.ai {
+    align-self: flex-start; background: var(--card);
+    border: 1px solid var(--border); color: var(--text);
+    border-bottom-left-radius: 4px;
+}
+.chat-msg.ai.thinking { opacity: 0.5; }
+.chat-input-row {
+    display: flex; gap: 8px; padding: 10px 16px;
+    background: var(--card); border-top: 1px solid var(--border);
+}
 .chat-input-row input {
-    flex: 1; background: var(--bg); border: 1px solid var(--border-light);
-    border-radius: 24px; padding: 10px 18px; color: var(--text);
-    font-size: 0.85rem; font-family: var(--font); outline: none;
+    flex: 1; background: var(--bg); border: 1px solid var(--border);
+    border-radius: 20px; padding: 8px 16px; color: var(--text);
+    font-size: 0.85rem; font-family: 'Inter', sans-serif; outline: none;
 }
 .chat-input-row input:focus { border-color: var(--gold); }
 .chat-send {
-    width: 42px; height: 42px; border-radius: 50%; border: none;
-    background: var(--gold); color: var(--bg); font-size: 1.1rem;
-    cursor: pointer; flex-shrink: 0; transition: all var(--transition);
-    display: flex; align-items: center; justify-content: center;
+    width: 38px; height: 38px; border-radius: 50%; border: none;
+    background: var(--gold); color: var(--bg); font-size: 1rem;
+    cursor: pointer; flex-shrink: 0; transition: all 0.15s;
 }
-.chat-send:hover { background: #c49630; }
+.chat-send:hover { background: var(--gold-light); }
 .chat-send:disabled { opacity: 0.4; cursor: not-allowed; }
-.chat-empty { text-align: center; color: var(--text-dim); padding: 60px 20px; }
-.chat-empty .big-icon { font-size: 2.5rem; margin-bottom: 12px; opacity: 0.3; }
+.chat-empty {
+    text-align: center; color: var(--dim); padding: 60px 20px;
+}
+.chat-empty .big-icon { font-size: 2.5rem; margin-bottom: 12px; opacity: 0.4; }
+
+/* ── Main Two-Panel ── */
+.main-panels {
+    display: flex; flex: 1; overflow: hidden;
+    gap: 2px; background: var(--border);
+}
+.panel {
+    flex: 1; display: flex; flex-direction: column;
+    background: var(--card); overflow: hidden;
+    min-width: 0;
+}
+.panel-header {
+    padding: 10px 14px; font-weight: 700; font-size: 0.8rem;
+    display: flex; align-items: center; gap: 8px;
+    flex-shrink: 0; letter-spacing: 0.3px;
+}
+.panel-header .icon { font-size: 1rem; }
+.box1 .panel-header { background: rgba(59,130,246,0.1); color: var(--box1-accent); border-bottom: 1px solid rgba(59,130,246,0.2); }
+.box2 .panel-header { background: rgba(201,168,76,0.1); color: var(--box2-accent); border-bottom: 1px solid rgba(201,168,76,0.2); }
+.panel-body {
+    flex: 1; overflow-y: auto; padding: 8px 12px;
+    scroll-behavior: smooth;
+}
+.panel-body::-webkit-scrollbar { width: 4px; }
+.panel-body::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+/* ── Entry Styles ── */
+.entry {
+    padding: 8px 10px; margin-bottom: 6px;
+    border-radius: 8px; animation: fadeIn 0.25s ease;
+    font-size: 0.85rem; line-height: 1.5;
+    position: relative;
+}
+@keyframes fadeIn { from { opacity:0; transform:translateY(3px) } to { opacity:1; transform:translateY(0) } }
+.entry-time {
+    font-size: 0.6rem; color: var(--dim); font-family: monospace;
+    margin-bottom: 2px; display: flex; align-items: center; gap: 6px;
+}
+.entry-time .elapsed { color: var(--gold); font-weight: 600; }
+.entry-latest { border-left: 2px solid var(--gold); padding-left: 10px; }
+.entry-latest .entry-text { color: #fff; }
+
+/* Box 1 entries */
+.box1 .entry { background: rgba(59,130,246,0.04); border: 1px solid rgba(59,130,246,0.08); }
+.box1 .entry-text { color: var(--text); white-space: pre-wrap; word-break: break-word; }
+.box1 .entry-slide { border: 1px dashed var(--border); padding: 6px; text-align: center; }
+.box1 .entry-slide img { max-width: 100%; max-height: 200px; border-radius: 6px; cursor: pointer; }
+.box1 .entry-slide .slide-label { font-size: 0.65rem; color: var(--dim); margin-top: 4px; }
+
+/* Box 2 entries */
+.box2 .entry { background: rgba(201,168,76,0.04); border: 1px solid rgba(201,168,76,0.08); }
+.box2 .entry-text { color: var(--text); }
+.box2 .entry-insight { border-left: 2px solid var(--gold); padding-left: 10px; }
+.box2 .entry-slide-analysis { }
+.box2 .entry-slide-analysis .slide-text { font-size: 0.8rem; color: var(--dim); margin-bottom: 8px; }
+.box2 .entry-slide-analysis .qa { margin-bottom: 6px; }
+.box2 .entry-slide-analysis .q { color: var(--gold-light); font-weight: 600; font-size: 0.8rem; }
+.box2 .entry-slide-analysis .a { color: var(--text); font-size: 0.8rem; padding-left: 10px; border-left: 1px solid var(--border); }
+.box2 .entry-slide-analysis .summary { font-style: italic; color: var(--dim); font-size: 0.78rem; margin-bottom: 6px; }
+.box2 .entry-slide-analysis .explanation { color: var(--text); font-size: 0.82rem; line-height: 1.6; }
+
+.empty-state {
+    text-align: center; color: var(--dim); padding: 40px 20px;
+    font-size: 0.85rem; line-height: 1.6;
+}
+.empty-state .big-icon { font-size: 2rem; margin-bottom: 10px; opacity: 0.5; }
+
+/* ── Slide Strip ── */
+.slide-strip {
+    display: flex; gap: 6px; overflow-x: auto;
+    padding: 8px 0; min-height: 50px; align-items: center;
+    flex-shrink: 0; border-top: 1px solid var(--border);
+    margin: 0 12px;
+}
+.slide-strip:empty { min-height:0; padding:0; border:none; }
+.slide-thumb {
+    flex-shrink: 0; width: 48px; height: 48px; border-radius: 6px;
+    background-size: cover; background-position: center;
+    border: 1px solid var(--border); cursor: pointer;
+    transition: all 0.15s; position: relative;
+}
+.slide-thumb:hover { border-color: var(--blue); transform: scale(1.05); }
+.slide-thumb .badge {
+    position: absolute; top: -5px; right: -5px;
+    font-size: 0.5rem; padding: 1px 5px; border-radius: 8px;
+    font-weight: 700; color: white;
+}
+.badge-useful { background: var(--box2-accent); }
+.badge-raw { background: var(--box1-accent); }
+
+/* ── Bottom Controls ── */
+.bottombar {
+    display: flex; gap: 8px; padding: 8px 16px;
+    background: var(--card); border-top: 1px solid var(--border);
+    align-items: center; flex-shrink: 0;
+}
+.btn-record {
+    height: 44px; padding: 0 20px; border-radius: 22px; border: none;
+    font-size: 0.9rem; font-weight: 600; cursor: pointer;
+    font-family: 'Inter', sans-serif; display: flex; align-items: center; gap: 6px;
+    transition: all 0.2s;
+}
+.btn-record.start { background: var(--recording); color: white; flex: 1; box-shadow: 0 2px 12px rgba(232,93,58,0.3); }
+.btn-record.start:hover { transform: translateY(-1px); }
+.btn-record.recording { background: transparent; border: 2px solid var(--recording); color: var(--recording); flex: 1; animation: borderPulse 1.5s infinite; }
+@keyframes borderPulse { 0%,100%{border-color:var(--recording)} 50%{border-color:rgba(232,93,58,0.3)} }
+.btn-slide {
+    width: 44px; height: 44px; border-radius: 22px; border: 1px solid var(--blue);
+    background: transparent; color: var(--blue); font-size: 1.2rem;
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+    transition: all 0.15s; flex-shrink: 0;
+}
+.btn-slide:hover { background: rgba(59,130,246,0.1); }
+.btn-slide:active { transform: scale(0.94); }
+.btn-slide.pdf-upload { border-color: #7C3AED; color: #A78BFA; }
+.btn-slide.pdf-upload:hover { background: rgba(124,58,237,0.15); }
+.btn-slide.pdf-upload.uploading { animation: dotPulse 1s infinite; pointer-events: none; opacity: 0.5; }
 
 /* Toast */
 .toast {
-    position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%);
-    padding: 10px 22px; border-radius: 24px; font-size: 0.78rem;
-    font-weight: 600; z-index: 999; animation: slideUp 0.3s ease;
-    max-width: 90vw; text-align: center; box-shadow: var(--shadow);
-    pointer-events: none;
+    position: fixed; bottom: 70px; left: 50%; transform: translateX(-50%);
+    padding: 10px 20px; border-radius: 10px; font-size: 0.8rem;
+    font-weight: 500; z-index: 100; animation: slideUp 0.3s ease;
+    max-width: 90vw; text-align: center;
 }
-.toast.error { background: var(--coral); color: #fff; }
-.toast.info { background: var(--surface2); color: var(--gold); border: 1px solid var(--border-light); }
-@keyframes slideUp { from { opacity:0; transform:translateX(-50%) translateY(16px) } to { opacity:1; transform:translateX(-50%) translateY(0) } }
+.toast.error { background: var(--recording); color: white; }
+.toast.info { background: var(--card); color: var(--gold); border: 1px solid var(--gold); }
+@keyframes slideUp { from { opacity:0; transform:translateX(-50%) translateY(15px) } to { opacity:1; transform:translateX(-50%) translateY(0) } }
 
-/* Modals */
-.modal-overlay {
-    display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.75);
-    z-index: 500; align-items: center; justify-content: center;
-    backdrop-filter: blur(4px);
+/* Mobile responsive */
+.month-badge {
+    font-size: 0.6rem; color: var(--gold); font-weight: 700;
+    padding: 4px 0; margin-top: 10px; border-top: 1px solid var(--border);
+    letter-spacing: 0.5px;
 }
-.modal-overlay.show { display: flex; }
+.month-badge:first-child { margin-top: 0; border-top: none; }
+#sessionSearch:focus { border-color: var(--gold) !important; }
+@media (max-width: 768px) {
+    .main-panels { flex-direction: column; }
+    .panel { flex: none; height: 50%; }
+    .topbar { padding: 6px 10px; }
+    .bottombar { padding: 6px 10px; }
+    .panel-body { padding: 6px 8px; }
+    .entry { font-size: 0.8rem; padding: 6px 8px; }
+}
+/* ── Session Title ── */
+.session-title {
+    font-size: 0.75rem; color: var(--gold-light); font-weight: 500;
+    margin: 0 8px; padding: 2px 10px; border-radius: 10px;
+    background: rgba(201,168,76,0.1); border: 1px solid rgba(201,168,76,0.2);
+    cursor: pointer; max-width: 180px; overflow: hidden;
+    text-overflow: ellipsis; white-space: nowrap; transition: all 0.15s;
+}
+.session-title:hover { background: rgba(201,168,76,0.2); }
+.session-title:empty { display: none; }
+
+/* ── Load Modal ── */
+.modal-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.7);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 1000; animation: fadeIn 0.2s ease;
+}
 .modal-card {
-    background: var(--surface2); border: 1px solid var(--border);
-    border-radius: var(--radius-lg); width: 92vw; max-width: 480px;
-    max-height: 75vh; display: flex; flex-direction: column;
-    box-shadow: 0 16px 48px rgba(0,0,0,0.6);
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 14px; width: 90vw; max-width: 480px;
+    max-height: 70vh; display: flex; flex-direction: column;
+    box-shadow: 0 8px 40px rgba(0,0,0,0.5);
 }
 .modal-header {
     display: flex; align-items: center; justify-content: space-between;
-    padding: 16px 20px; border-bottom: 1px solid var(--border);
-    font-weight: 700; font-size: 0.9rem; color: var(--gold);
+    padding: 14px 18px; border-bottom: 1px solid var(--border);
+    font-weight: 600; font-size: 0.9rem; color: var(--gold);
 }
-.modal-close { background: none; border: none; color: var(--text-dim); font-size: 1.1rem; cursor: pointer; padding: 4px 8px; border-radius: 6px; }
-.modal-close:hover { color: #fff; background: rgba(255,255,255,0.05); }
-.modal-body { display: flex; flex-direction: column; padding: 10px 14px; overflow-y: auto; flex: 1; }
-
+.modal-close {
+    background: none; border: none; color: var(--dim); font-size: 1.1rem;
+    cursor: pointer; padding: 4px 8px; border-radius: 6px;
+}
+.modal-close:hover { color: var(--text); background: rgba(255,255,255,0.05); }
+.modal-body { padding: 8px; overflow-y: auto; flex: 1; }
 .session-list-item {
     display: flex; align-items: center; justify-content: space-between;
-    padding: 14px 16px; border-radius: var(--radius-sm); cursor: pointer;
-    transition: all 0.12s; border: 1px solid transparent; margin-bottom: 2px;
+    padding: 12px 14px; border-radius: 10px; cursor: pointer;
+    transition: all 0.12s; border: 1px solid transparent;
+    margin-bottom: 2px;
 }
-.session-list-item:hover { background: var(--gold-bg); border-color: var(--border-light); }
+.session-list-item:hover { background: rgba(201,168,76,0.06); border-color: var(--border); }
 .session-list-item .sli-title { font-weight: 600; font-size: 0.85rem; color: var(--text); }
-.session-list-item .sli-meta { font-size: 0.65rem; color: var(--text-dim); margin-top: 2px; }
+.session-list-item .sli-meta { font-size: 0.65rem; color: var(--dim); margin-top: 2px; }
 .session-list-item .sli-count {
-    font-size: 0.7rem; color: var(--gold); background: var(--gold-bg);
-    padding: 3px 10px; border-radius: 12px; white-space: nowrap;
+    font-size: 0.7rem; color: var(--gold); background: rgba(201,168,76,0.1);
+    padding: 3px 8px; border-radius: 10px; white-space: nowrap;
 }
 
 .month-badge {
     font-size: 0.6rem; color: var(--gold); font-weight: 700;
     padding: 4px 0; margin-top: 10px; border-top: 1px solid var(--border);
-    letter-spacing: 0.5px; text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
 .month-badge:first-child { margin-top: 0; border-top: none; }
 #sessionSearch:focus { border-color: var(--gold) !important; }
-
-/* Brain */
-#brainView { background: var(--bg); }
+@media (max-width: 768px) {
+    .modal-card { width: 95vw; max-height: 80vh; }
+    .session-title { max-width: 120px; font-size: 0.7rem; }
+}
+/* ── v5: New Tab Views ── */
+.tab-view {
+    display: none; flex-direction: column; flex: 1; min-height: 0; overflow-y: auto;
+}
+.tab-view.active { display: flex; }
+#brainView, #briefsView, #flashcardsView, #quizzesView, #audioView, #casesView {
+    background: var(--bg);
+}
+#brainGraph { min-height: 500px; min-width: 100%; }
+/* Brain tab toolbar + sub-tabs */
 #brainToolbar {
-    display: flex; align-items: center; gap: 10px;
-    background: var(--surface); border-bottom: 1px solid var(--border);
-    padding: 8px 14px; flex-shrink: 0; flex-wrap: wrap;
+  position: absolute; top: 8px; left: 12px; right: 12px; z-index: 20;
+  display: flex; align-items: center; gap: 10px;
+  background: rgba(20,20,40,0.95); border: 1px solid var(--border);
+  border-radius: 10px; padding: 6px 12px;
 }
 #brainSyncBtn {
-    background: linear-gradient(135deg, #7C3AED, #A78BFA); color: #fff;
-    border: none; padding: 7px 16px; border-radius: 20px;
-    font-size: 0.72rem; cursor: pointer; font-weight: 600; font-family: var(--font);
+  background: linear-gradient(135deg, #7C3AED, #A78BFA); color: #fff;
+  border: none; padding: 5px 14px; border-radius: 6px;
+  font-size: 12px; cursor: pointer; font-weight: 600;
+  font-family: 'Inter', sans-serif; white-space: nowrap;
 }
 #brainSyncBtn:hover { opacity: 0.9; }
 #brainSyncBtn:disabled { opacity: 0.5; cursor: not-allowed; }
-#brainSyncStatus { font-size: 0.68rem; color: var(--text-dim); }
-.brain-subtabs { display: flex; gap: 2px; }
+#brainSyncStatus { font-size: 11px; color: var(--dim); }
+.brain-subtabs { display: flex; gap: 2px; margin-left: 8px; }
 .brain-subtab {
-    background: transparent; border: 1px solid transparent;
-    color: var(--text-muted); padding: 6px 14px; border-radius: 20px;
-    font-size: 0.7rem; cursor: pointer; font-family: var(--font); font-weight: 600;
+  background: transparent; border: 1px solid transparent;
+  color: var(--dim); padding: 5px 12px; border-radius: 6px;
+  font-size: 12px; cursor: pointer; font-family: 'Inter', sans-serif;
 }
-.brain-subtab:hover { color: var(--text-dim); border-color: var(--border-light); }
-.brain-subtab.active { color: var(--gold); border-color: var(--gold); background: var(--gold-bg); }
-.brain-subview { display: none; position: relative; flex: 1; min-height: 400px; }
-.brain-subview.active { display: block; }
-#brainGraphView.active { height: calc(100vh - 160px); min-height: 400px; }
-#brainGraph { min-height: 400px; width: 100%; background: var(--bg); }
-#brainInfo {
-    position: absolute; top: 10px; right: 10px; z-index: 20;
-    background: rgba(17,24,39,0.97); border: 1px solid var(--border);
-    border-radius: var(--radius); padding: 12px 16px;
-    max-width: 300px; max-height: 60vh; overflow-y: auto;
-    font-size: 0.72rem; color: var(--text-dim);
+.brain-subtab:hover { color: var(--text); border-color: var(--border); }
+.brain-subtab.active {
+  color: var(--gold); border-color: var(--gold);
+  background: rgba(201,168,76,0.08);
 }
-#brainInfo.collapsed { max-width: 36px; min-width: 36px; padding: 8px; overflow: hidden; max-height: 36px; }
-#brainInfo.collapsed #brainDetail,
-#brainInfo.collapsed #brainStats,
-#brainInfo.collapsed .brain-info-title,
-#brainInfo.collapsed #brainCloseBtn { display: none; }
-#brainCollapseBtn {
-    position: absolute; top: 8px; right: 8px;
-    background: rgba(255,255,255,0.08); border: none; color: var(--text-dim);
-    width: 24px; height: 24px; border-radius: 4px; cursor: pointer;
-    font-size: 0.7rem; display: flex; align-items: center; justify-content: center; z-index: 5;
-}
-#brainCloseBtn {
-    position: absolute; top: 8px; right: 36px;
-    background: rgba(255,255,255,0.06); border: none; color: var(--text-dim);
-    width: 22px; height: 22px; border-radius: 4px; cursor: pointer;
-    font-size: 0.7rem; display: flex; align-items: center; justify-content: center; z-index: 5;
-}
-.brain-doc-table { width: 100%; border-collapse: collapse; font-size: 0.72rem; }
-.brain-doc-table th { text-align: left; padding: 8px 10px; color: var(--text-dim); border-bottom: 1px solid var(--border); font-size: 0.65rem; text-transform: uppercase; }
-.brain-doc-table td { padding: 8px 10px; border-bottom: 1px solid rgba(148,163,184,0.04); }
-.brain-doc-table tr:hover { background: var(--blue-bg); }
+.brain-subview { display: none; position: relative; flex: 1; min-height: 400px; margin-top: 48px; }
+.brain-subview.active { display: block; min-height: 400px; height: calc(100vh - 160px); }
+#brainGraphView.active { height: calc(100vh - 160px); }
+/* Brain documents table */
+.brain-doc-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+.brain-doc-table th { text-align: left; padding: 8px 10px; color: var(--dim); border-bottom: 1px solid var(--border); font-size: 11px; text-transform: uppercase; }
+.brain-doc-table td { padding: 8px 10px; border-bottom: 1px solid rgba(148,163,184,0.05); }
+.brain-doc-table tr:hover { background: rgba(59,130,246,0.03); }
 .brain-doc-name { color: var(--text); max-width: 260px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.brain-doc-del { background: var(--coral-bg); color: var(--coral); border: none; padding: 4px 12px; border-radius: 4px; font-size: 0.68rem; cursor: pointer; }
-.brain-doc-del:hover { background: rgba(240,78,59,0.25); }
-#brainDocsView { padding: 10px 16px; overflow-y: auto; max-height: calc(100vh - 140px); }
-#brainDocsSearch { width: 100%; max-width: 300px; background: var(--bg); border: 1px solid var(--border-light); border-radius: 20px; padding: 8px 16px; color: var(--text); font-size: 0.75rem; outline: none; font-family: var(--font); margin-bottom: 16px; }
+.brain-doc-del { background: rgba(232,93,58,0.12); color: #E85D3A; border: none; padding: 3px 10px; border-radius: 4px; font-size: 11px; cursor: pointer; }
+.brain-doc-del:hover { background: rgba(232,93,58,0.25); }
+#brainDocsView { padding: 8px 16px; overflow-y: auto; max-height: calc(100vh - 140px); }
+#brainDocsSearch { width: 100%; max-width: 300px; background: rgba(20,20,40,0.9); border: 1px solid var(--border); border-radius: 8px; padding: 7px 12px; color: var(--text); font-size: 12px; outline: none; font-family: 'Inter',sans-serif; margin-bottom: 16px; }
 .brain-section { margin-bottom: 24px; }
-.brain-section h4 { font-size: 0.78rem; color: var(--text-dim); margin-bottom: 8px; font-weight: 600; }
+.brain-section h4 { font-size: 13px; color: var(--dim); margin-bottom: 8px; }
 
-/* Briefs, Flashcards, Quizzes, Audio, Cases */
-#briefsView, #flashcardsView, #quizzesView, #audioView, #casesView { background: var(--bg); padding: 0; }
-#briefsView h2, #flashcardsView h2, #quizzesView h2, #audioView h2, #casesView h2 {
-    font-family: 'Playfair Display', Georgia, serif; color: var(--gold); font-size: 1.1rem;
-}
-
+/* ── Flashcards ── */
 #flashcardCard {
-    width: 100%; max-width: 500px; min-height: 220px;
-    background: var(--surface2); border: 2px solid var(--gold);
-    border-radius: var(--radius-lg); padding: 28px;
-    text-align: center; cursor: pointer; transition: transform 0.3s;
-    display: flex; align-items: center; justify-content: center; flex-direction: column;
+    perspective: 1000px;
 }
-#flashcardCard:hover { transform: scale(1.02); }
-#flashcardFront { font-size: 1.1rem; font-weight: 600; line-height: 1.5; }
-#flashcardBack { display: none; font-size: 0.9rem; color: var(--text-dim); margin-top: 16px; line-height: 1.6; }
-#flashcardSource { display: none; font-size: 0.68rem; color: var(--text-muted); margin-top: 12px; font-style: italic; }
-
-#briefsList, #flashcardsList, #quizList, #audioList, #casesList {
-    padding: 8px 16px; display: flex; flex-direction: column; gap: 8px;
-}
-#briefContent, #quizTaker, #audioPlayer, #caseContent {
-    display: none; padding: 16px; margin: 8px 16px;
-    background: var(--surface); border: 1px solid var(--border);
-    border-radius: var(--radius); white-space: pre-wrap;
-    font-size: 0.84rem; line-height: 1.6;
-    color: var(--text);
+#flashcardCard:hover {
+    transform: scale(1.02);
 }
 
-/* ═══ RESPONSIVE ═══ */
-@media (max-width: 1024px) {
-    .topbar { padding: 6px 10px; gap: 6px; min-height: 48px; }
-    .topbar .tabs-nav { display: none; }
-    .topbar .tabs-nav.mobile-open {
-        display: flex; position: absolute; top: 48px; left: 0; right: 0;
-        background: var(--surface2); border-bottom: 1px solid var(--border);
-        padding: 6px 8px; z-index: 100; flex-wrap: wrap; gap: 2px;
-        box-shadow: 0 8px 24px rgba(0,0,0,0.4);
-    }
-    .hamburger { display: flex; }
-    .topbar .btn-sm.hide-mobile { display: none; }
-    .topbar .session-title { max-width: 100px; font-size: 0.65rem; }
-    .logo { font-size: 0.9rem; }
-    .main-panels { flex-direction: column; }
-    .panel { flex: none; height: 50%; }
-    .panel-body { display: flex; flex-direction: column; padding: 8px 10px; }
-    .entry { font-size: 0.78rem; padding: 8px 10px; }
-    .bottombar { padding: 8px 10px; min-height: 54px; }
-    .btn-record { height: 44px; font-size: 0.82rem; }
-    .btn-icon { width: 42px; height: 42px; }
+/* ── Modal Overlay ── */
+.modal-overlay {
+    display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.7); z-index: 100;
+    align-items: center; justify-content: center;
+}
+.modal-card {
+    background: var(--card); border: 1px solid var(--gold);
+    border-radius: 16px; padding: 24px; max-width: 500px; width: 90%;
+    max-height: 80vh; overflow-y: auto;
+}
+.modal-header {
+    display: flex; align-items: center; gap: 12px; margin-bottom: 16px;
+}
+.modal-header span { color: var(--gold); font-weight: 600; }
+.modal-close {
+    margin-left: auto; background: none; border: none;
+    color: var(--dim); font-size: 1.2rem; cursor: pointer;
+}
+.modal-body { max-height: 60vh; overflow-y: auto; }
+
+/* ── Responsive Tab Bar ── */
+@media (max-width: 900px) {
+    .tabs { flex-wrap: wrap; gap: 1px; }
+    .tab { font-size: 0.65rem; padding: 4px 8px; }
+}
+@media (max-width: 600px) {
+    .topbar { flex-wrap: wrap; gap: 6px; }
+    .topbar .logo { font-size: 0.9rem; }
+    .btn-sm { font-size: 0.65rem; padding: 4px 10px; }
     #flashcardCard { min-height: 180px; padding: 20px; }
     #flashcardFront { font-size: 1rem; }
-    .modal-card { width: 95vw; }
-}
-
-@media (max-width: 600px) {
-    .topbar { flex-wrap: wrap; gap: 4px; padding: 6px 8px; }
-    .topbar .btn-sm { font-size: 0.6rem; padding: 4px 8px; }
-    .topbar .engine-badge { font-size: 0.58rem; padding: 4px 8px; }
-    .logo { font-size: 0.8rem; }
-    .logo span { display: none; }
-    .session-title { max-width: 80px; }
-    .btn-record { height: 40px; font-size: 0.78rem; padding: 0 16px; }
-    .btn-icon { width: 38px; height: 38px; font-size: 1rem; }
-    .panel-header { padding: 8px 10px; font-size: 0.7rem; }
-    .entry { font-size: 0.75rem; }
-    #brainToolbar { flex-wrap: wrap; gap: 6px; padding: 6px 8px; }
-    #brainSyncBtn { font-size: 0.65rem; padding: 5px 10px; }
-    .brain-subtab { font-size: 0.65rem; padding: 4px 10px; }
 }
 </style>
 </head>
@@ -505,14 +416,10 @@ html, body { display: flex; flex-direction: column;
 
 <!-- ═══ TOP BAR ═══ -->
 <div class="topbar">
-    <button class="hamburger" id="hamburgerBtn" onclick="toggleMobileMenu()" title="Menu">☰</button>
     <div class="status-dot connected" id="statusDot"></div>
     <span class="status-text" id="statusText">Ready</span>
-    <button class="engine-badge" id="engineBadge" onclick="toggleEngine()" title="Click to switch transcription engine">
-        <span class="eng-icon">🔊</span><span class="eng-label" id="engLabel">faster-whisper</span>
-    </button>
     <div class="logo">Sasin <span>EMBA 2026</span></div>
-    <div class="tabs-nav" id="tabsNav">
+    <div class="tabs">
         <button class="tab active" id="tabCapture" onclick="switchTab('capture')">📝 Capture</button>
         <button class="tab" id="tabChat" onclick="switchTab('chat')">💬 Chat</button>
         <button class="tab" id="tabBrain" onclick="switchTab('brain')">🧠 2nd Brain</button>
@@ -524,36 +431,12 @@ html, body { display: flex; flex-direction: column;
     </div>
     <span class="session-title" id="sessionTitle" onclick="renameSession()" title="Click to rename">New Session</span>
     <span class="timer" id="timer">00:00</span>
-    <button class="btn-sm hide-mobile" onclick="loadSessions()" title="Load past session">📂 Load</button>
-    <button class="btn-sm save hide-mobile" onclick="saveCurrentSession()">💾 Save</button>
-    <button class="btn-sm hide-mobile" onclick="newSession()">✨ New</button>
-    <button class="btn-sm second-brain hide-mobile" id="btnSecondBrain" onclick="pushToSecondBrain()" title="Upload transcript to Second Brain">🧠 2nd Brain</button>
-    <button class="btn-sm hide-mobile" onclick="extractActions()" title="Extract action items">✅ Actions</button>
-    <button class="btn-sm hide-mobile" onclick="showSchedule()" title="Study schedule">📅 Schedule</button>
-</div>
-
-<!-- Engine Selector Popup -->
-<div class="engine-popup" id="enginePopup">
-    <div style="font-size:0.6rem;color:var(--dim);padding:4px 12px;">MODEL (click ⚡ badge to toggle)</div>
-    <div class="engine-option" onclick="selectModel('medium.en')" id="optMedium">
-        <span>🎯</span><span class="opt-name">medium.en</span><span class="opt-desc">best accuracy · English</span>
-    </div>
-    <div class="engine-option" onclick="selectModel('small.en')" id="optSmall">
-        <span>⭐</span><span class="opt-name">small.en</span><span class="opt-desc">good accuracy</span>
-    </div>
-    <div class="engine-option" onclick="selectModel('base.en')" id="optBase">
-        <span>⚖️</span><span class="opt-name">base.en</span><span class="opt-desc">balanced speed/quality</span>
-    </div>
-    <div class="engine-option" onclick="selectModel('tiny.en')" id="optTiny">
-        <span>⚡</span><span class="opt-name">tiny.en</span><span class="opt-desc">fastest</span>
-    </div>
-    <div style="font-size:0.6rem;color:var(--dim);padding:8px 12px 4px;border-top:1px solid var(--border);margin-top:4px;">ENGINE</div>
-    <div class="engine-option" onclick="selectEngineFull('faster_whisper')" id="optFW">
-        <span>💻</span><span class="opt-name">faster-whisper</span><span class="opt-desc">local · offline</span>
-    </div>
-    <div class="engine-option" onclick="selectEngineFull('groq')" id="optGroq">
-        <span>☁️</span><span class="opt-name">Groq API</span><span class="opt-desc">cloud · large-v3</span>
-    </div>
+    <button class="btn-sm" onclick="loadSessions()" title="Load past session">📂 Load</button>
+    <button class="btn-sm save" onclick="saveCurrentSession()">💾 Save</button>
+    <button class="btn-sm" onclick="newSession()">✨ New</button>
+    <button class="btn-sm second-brain" id="btnSecondBrain" onclick="pushToSecondBrain()" title="Upload transcript to Second Brain">🧠 2nd Brain</button>
+    <button class="btn-sm" onclick="extractActions()" title="Extract action items">✅ Actions</button>
+    <button class="btn-sm" onclick="showSchedule()" title="Study schedule">📅 Schedule</button>
 </div>
 
 <!-- ═══ CAPTURE VIEW ═══ -->
@@ -602,9 +485,8 @@ html, body { display: flex; flex-direction: column;
     </button>
     <button class="btn-sm primary" id="btnStop" onclick="stopAndSave()" style="display:none">⏹️ Stop</button>
     <button class="btn-sm" id="btnDownload" onclick="downloadTranscript()" style="display:none">📥 Download</button>
-    <button class="btn-icon blue" id="btnSlide" onclick="captureSlide()" title="Capture slide">📸</button>
-    <button class="btn-icon purple" id="btnPDF" onclick="uploadPDF()" title="Upload PDF to Second Brain">📄</button>
-    <button class="btn-icon teal" id="btnUpload" onclick="uploadAudioFile()" title="Upload audio file">📤</button>
+    <button class="btn-slide" id="btnSlide" onclick="captureSlide()" title="Capture slide">📸</button>
+    <button class="btn-slide pdf-upload" id="btnPDF" onclick="uploadPDF()" title="Upload PDF to Second Brain">📄</button>
 </div>
 
 </div><!-- /captureView -->
@@ -642,9 +524,7 @@ html, body { display: flex; flex-direction: column;
             <input type="text" placeholder="🔍 Search concepts, documents..." id="brainSearchInput" style="background:transparent;border:none;color:var(--text);font-size:13px;outline:none;width:240px;font-family:'Inter',sans-serif;" oninput="filterBrainGraph()">
         </div>
         <div id="brainInfo" style="position:absolute;top:12px;right:12px;z-index:10;background:rgba(20,20,40,0.95);border:1px solid var(--border);border-radius:10px;padding:12px 16px;max-width:300px;max-height:60vh;overflow-y:auto;font-size:12px;color:var(--dim);">
-            <button id="brainCollapseBtn" onclick="toggleBrainPanel()" title="Collapse panel">◀</button>
-            <button id="brainCloseBtn" onclick="closeBrainPanel()" title="Close panel">✕</button>
-            <div class="brain-info-title" style="font-weight:600;color:var(--gold);margin-bottom:8px;">📚 Knowledge Graph</div>
+            <div style="font-weight:600;color:var(--gold);margin-bottom:8px;">📚 Knowledge Graph</div>
             <div id="brainDetail" style="line-height:1.6;">Click a node to explore</div>
             <div id="brainStats" style="margin-top:10px;padding-top:8px;border-top:1px solid var(--border);font-size:11px;"></div>
         </div>
@@ -680,7 +560,6 @@ html, body { display: flex; flex-direction: column;
 <h2 style="color:var(--gold);font-family:'Playfair Display',serif;margin:0;">📋 Executive Briefs</h2>
 <button class="btn-sm primary" onclick="generateBrief()" style="margin-left:auto;">+ New Brief</button>
 </div>
-<p style="padding:4px 16px 0;font-size:0.75rem;color:var(--dim);margin:0;">AI-generated summaries of lecture sessions — key frameworks, concepts, and discussion questions for quick pre-class review.</p>
 <div style="padding:12px;display:flex;gap:8px;flex-wrap:wrap;">
 <input id="briefTopic" placeholder="Topic (optional, uses current session)" style="flex:1;min-width:200px;background:var(--bg);border:1px solid var(--border);color:var(--text);padding:6px 12px;border-radius:8px;font-family:Inter;font-size:0.8rem;">
 <select id="briefTemplate" style="background:var(--bg);border:1px solid var(--border);color:var(--text);padding:6px 12px;border-radius:8px;font-size:0.8rem;"><option value="">No template</option></select>
@@ -699,7 +578,6 @@ html, body { display: flex; flex-direction: column;
 <button class="btn-sm primary" onclick="reviewFlashcards()">Review Due</button>
 </div>
 </div>
-<p style="padding:4px 16px 0;font-size:0.75rem;color:var(--dim);margin:0;">Flashcards with AI-optimized scheduling (FSRS) — review key terms and concepts when you're about to forget them, not before.</p>
 <div id="flashcardReview" style="display:none;flex-direction:column;align-items:center;justify-content:center;flex:1;padding:24px;">
 <div id="flashcardCard" style="width:100%;max-width:500px;min-height:250px;background:var(--card);border:2px solid var(--gold);border-radius:16px;padding:32px;text-align:center;cursor:pointer;transition:transform 0.3s;display:flex;align-items:center;justify-content:center;flex-direction:column;">
 <div id="flashcardFront" style="font-size:1.15rem;font-weight:600;line-height:1.5;"></div>
@@ -723,7 +601,6 @@ html, body { display: flex; flex-direction: column;
 <h2 style="color:var(--gold);font-family:'Playfair Display',serif;margin:0;">📝 Quizzes</h2>
 <button class="btn-sm primary" onclick="generateQuiz()" style="margin-left:auto;">+ Generate Quiz</button>
 </div>
-<p style="padding:4px 16px 0;font-size:0.75rem;color:var(--dim);margin:0;">Self-assessment quizzes auto-generated from your lecture transcripts — test your understanding before exams.</p>
 <div style="padding:8px 16px;display:flex;gap:8px;">
 <select id="quizType" style="background:var(--bg);border:1px solid var(--border);color:var(--text);padding:6px 12px;border-radius:8px;font-size:0.8rem;">
 <option value="mcq">Multiple Choice</option>
@@ -742,7 +619,6 @@ html, body { display: flex; flex-direction: column;
 <h2 style="color:var(--gold);font-family:'Playfair Display',serif;margin:0;">🎧 Audio Overviews</h2>
 <button class="btn-sm primary" onclick="generateAudio()" style="margin-left:auto;">+ Generate Podcast</button>
 </div>
-<p style="padding:4px 16px 0;font-size:0.75rem;color:var(--dim);margin:0;">AI-generated podcast-style audio summaries — listen during your commute or while reviewing notes on the go.</p>
 <div style="padding:8px 16px;display:flex;gap:8px;">
 <select id="audioStyle" style="background:var(--bg);border:1px solid var(--border);color:var(--text);padding:6px 12px;border-radius:8px;font-size:0.8rem;">
 <option value="podcast">Podcast (2 hosts)</option><option value="summary">Summary</option><option value="lecture">Lecture Notes</option></select>
@@ -757,7 +633,6 @@ html, body { display: flex; flex-direction: column;
 <h2 style="color:var(--gold);font-family:'Playfair Display',serif;margin:0;">📊 Case Studies</h2>
 <button class="btn-sm primary" onclick="analyzeCase()" style="margin-left:auto;">+ New Analysis</button>
 </div>
-<p style="padding:4px 16px 0;font-size:0.75rem;color:var(--dim);margin:0;">Step-by-step business case analysis with framework recommendations — apply strategy tools to real companies.</p>
 <div style="padding:8px 16px;display:flex;gap:8px;flex-wrap:wrap;">
 <input id="caseCompany" placeholder="Company name" style="flex:1;min-width:150px;background:var(--bg);border:1px solid var(--border);color:var(--text);padding:6px 12px;border-radius:8px;font-size:0.8rem;">
 <input id="caseIndustry" placeholder="Industry" style="flex:1;min-width:120px;background:var(--bg);border:1px solid var(--border);color:var(--text);padding:6px 12px;border-radius:8px;font-size:0.8rem;">
@@ -979,11 +854,7 @@ function renderSavedEntry(e) {
 // ─── Recording ────────────────────────────────────
 async function toggleRecording() {
     if (isRecording) return;
-    if (!sessionId) {
-        const title = prompt('📝 Name this recording:', '');
-        if (title === null) return; // cancelled
-        await startSession(title || undefined);
-    }
+    if (!sessionId) await startSession();
     try {
         const stream = await navigator.mediaDevices.getUserMedia({
             audio: { sampleRate: 16000, channelCount: 1, echoCancellation: true }
@@ -1023,12 +894,7 @@ async function toggleRecording() {
                         triggerCoLearner(data.text.trim(), '', (Date.now() - startTime) / 1000);
                         document.getElementById('statusText').textContent = `Recording (${chunk.index + 1} chunks)`;
                     } else if (data.error) {
-                        console.warn('Chunk', chunk.index, 'error:', data.error);
-                        const errText = data.error === "audio_conversion_failed" ? "Audio conversion failed"
-                            : data.error === "timeout" ? "Transcription timed out"
-                            : "Error: " + data.error;
-                        document.getElementById("statusText").textContent = errText;
-                        document.getElementById("statusDot").className = "status-dot error";
+                        console.warn('Chunk', chunk.index, 'STT error:', data.error);
                     }
                 } catch(err) {
                     console.error('Chunk', chunk.index, 'failed:', err);
@@ -1335,59 +1201,6 @@ async function handlePDFUpload(input) {
     input.value = '';
 }
 
-// ─── Audio File Upload ─────────────────────────────
-let uploadPollInterval = null;
-function clearUploadInterval(){if(uploadPollInterval){clearInterval(uploadPollInterval);uploadPollInterval=null;}}
-function uploadAudioFile(){
-    const i=document.createElement("input");i.type="file";i.accept="audio/*,.webm,.wav,.mp3,.m4a,.mp4,.ogg,.opus,.flac,.aac";
-    i.onchange=async(e)=>{
-        const f=e.target.files[0];if(!f)return;
-        document.getElementById("uploadModal").style.display="flex";
-        document.getElementById("uploadStatus").textContent="Uploading "+f.name+"...";
-        document.getElementById("uploadProgressBar").style.width="10%";
-        document.getElementById("uploadStats").textContent="Sending "+(f.size/1048576).toFixed(1)+"MB...";
-        document.getElementById("uploadResult").style.display="none";
-        clearUploadInterval();
-        const fd=new FormData();fd.append("audio",f);
-        try{
-            const r=await fetch(API+"/upload",{method:"POST",body:fd});
-            const d=await r.json();
-            if(d.job_id){document.getElementById("uploadStatus").textContent="Transcribing...";document.getElementById("uploadProgressBar").style.width="15%";pollUploadJob(d.job_id);}
-            else{document.getElementById("uploadStatus").textContent="Upload failed";}
-        }catch(err){document.getElementById("uploadStatus").textContent="Error: "+err.message;}
-    };i.click();
-}
-async function pollUploadJob(jid){
-    clearUploadInterval();
-    uploadPollInterval=setInterval(async()=>{
-        try{
-            const r=await fetch(API+"/job/"+jid);const j=await r.json();
-            document.getElementById("uploadProgressBar").style.width=Math.max(15,j.progress||0)+"%";
-            document.getElementById("uploadStats").textContent="Chunk "+(j.chunks_done||0)+"/"+(j.chunks_total||0);
-            if(j.status==="done"){
-                clearUploadInterval();
-                document.getElementById("uploadProgressBar").style.width="100%";
-                document.getElementById("uploadStatus").textContent=j.text?"Complete! "+(j.chunks_total||0)+" chunks":"Done (no speech)";
-                if(j.text){
-                    // Close modal → flow into two-box layout like live recording
-                    document.getElementById("uploadModal").style.display="none";
-                    if(!sessionId) await startSession("Uploaded Audio");
-                    const now=new Date().toISOString();
-                    addToBox1("\uD83C\uDF99\uFE0F Uploaded Audio\n\n"+j.text, now, 0);
-                    totalWords+=j.text.split(/\s+/).filter(w=>w).length;
-                    triggerCoLearner(j.text, "Uploaded audio file", 0);
-                    try{
-                        await fetch(API+"/save",{method:"POST",headers:{"Content-Type":"application/json"},
-                            body:JSON.stringify({transcript:j.text,word_count:j.text.split(/\s+/).filter(w=>w).length,duration:j.duration||0,chunks:j.chunks_total||0,timestamp:now,tags:"upload"})});
-                    }catch(e){console.error("Save failed:",e);}
-                    toast("Transcript loaded \u2014 AI analyzing...","info");
-                }
-            }
-            else if(j.status==="error"){clearUploadInterval();document.getElementById("uploadStatus").textContent="Error: "+(j.error||"unknown");document.getElementById("uploadProgressBar").style.background="var(--coral)";}
-        }catch(err){clearUploadInterval();document.getElementById("uploadStatus").textContent="Connection lost";}
-    },2000);
-}
-
 // ─── Slide Capture ────────────────────────────────
 function captureSlide() {
     document.getElementById('slideInput').click();
@@ -1493,24 +1306,6 @@ function escapeHtml(text) {
     const div = document.createElement('div');
     div.textContent = text;
     return div.innerHTML;
-}
-
-function renderMarkdown(text) {
-    if (!text) return '';
-    let html = escapeHtml(text);
-    // Bold: **text** -> <strong>
-    html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
-    // Italic: *text* (single asterisk, not double)
-    html = html.replace(/(?<!\*)\*(?!\*)(.+?)(?<!\*)\*(?!\*)/g, '<em>$1</em>');
-    // Inline code
-    html = html.replace(/`(.+?)`/g, '<code>$1</code>');
-    // Headers: ### text
-    html = html.replace(/### (.+?)(<br>|$)/g, '<h4>$1</h4>');
-    // Bullet points with -
-    html = html.replace(/(?:^|<br>)- (.+?)(?=<br>|$)/g, '<br>• $1');
-    // Newlines
-    html = html.replace(/\n/g, '<br>');
-    return html;
 }
 
 function toast(msg, type) {
@@ -1619,17 +1414,6 @@ function switchTab(tab) {
                 initBrainGraph();
             }, 200);
         }
-        // Auto-collapse info panel on mobile
-        if (!window._brainPanelAutoDone && window.innerWidth <= 768) {
-            window._brainPanelAutoDone = true;
-            brainPanelCollapsed = true;
-            setTimeout(() => {
-                const panel = document.getElementById("brainInfo");
-                const btn = document.getElementById("brainCollapseBtn");
-                if(panel) panel.classList.add("collapsed");
-                if(btn) { btn.textContent = "▶"; btn.title = "Show details"; }
-            }, 400);
-        }
     }
     if (tab === 'briefs') loadBriefs();
     if (tab === 'flashcards') { loadFlashcardStats(); loadFlashcardsList(); }
@@ -1663,13 +1447,10 @@ async function sendChat() {
     msgs.scrollTop = msgs.scrollHeight;
     
     try {
-        // Include live transcript from DOM (not yet saved to backend)
-        const liveTranscript = [...document.querySelectorAll('#box1Body .entry-text')]
-            .map(e => e.textContent).join('\n').slice(-3000);
         const resp = await fetch(`${API}/chat`, {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({ session_id: sessionId, question: question, transcript: liveTranscript })
+            body: JSON.stringify({ session_id: sessionId, question: question })
         });
         const data = await resp.json();
         
@@ -1678,7 +1459,7 @@ async function sendChat() {
         
         // AI response
         const answer = data.answer || 'Sorry, I could not answer that.';
-        msgs.innerHTML += '<div class="chat-msg ai">' + renderMarkdown(answer) + '</div>';
+        msgs.innerHTML += '<div class="chat-msg ai">' + escapeHtml(answer) + '</div>';
     } catch(e) {
         document.getElementById(thinkId)?.remove();
         msgs.innerHTML += '<div class="chat-msg ai">Error: ' + escapeHtml(e.message) + '</div>';
@@ -1691,94 +1472,8 @@ async function sendChat() {
 }
 
 // ─── Init ────────────────────────────────────────
-// ─── Engine Selector ──────────────────────────
-let currentEngine = 'faster_whisper';
-let currentModel = 'medium.en';  // default: best accuracy
-
-async function fetchEngineStatus() {
-    try {
-        const r = await fetch(`${API}/model/status`);
-        const mod = await r.json();
-        currentModel = mod.model;
-        currentEngine = TRANSCRIBE_ENGINE || 'faster_whisper';
-        updateEngineBadge();
-    } catch(e) { /* ignore */ }
-}
-fetchEngineStatus();
-
-function updateEngineBadge() {
-    const badge = document.getElementById('engineBadge');
-    const label = document.getElementById('engineLabel');
-    const icon = document.getElementById('engineIcon');
-    if (!badge || !label) return;
-    badge.className = 'engine-badge';
-    label.textContent = currentModel;
-    icon.textContent = '🎯';
-    if (currentModel === 'tiny.en') {
-        icon.textContent = '⚡';
-    } else if (currentModel === 'base.en') {
-        icon.textContent = '⚖️';
-    } else if (currentModel === 'small.en') {
-        icon.textContent = '⭐';
-    } else if (currentModel === 'medium.en') {
-        icon.textContent = '🎯';
-    }
-    if (currentEngine === 'groq') {
-        badge.classList.add('groq');
-        label.textContent = 'Groq ☁️';
-        icon.textContent = '☁️';
-    }
-}
-
-function toggleEngine() {
-    // Cycle: medium.en → small.en → base.en → tiny.en → medium.en
-    const cycle = {'medium.en': 'small.en', 'small.en': 'base.en', 'base.en': 'tiny.en', 'tiny.en': 'medium.en'};
-    selectModel(cycle[currentModel] || 'medium.en');
-}
-
-async function selectModel(model) {
-    currentModel = model;
-    updateEngineBadge();
-    document.getElementById('enginePopup')?.classList.remove('show');
-    
-    try {
-        const resp = await fetch(`${API}/model/set?model=${model}`, { method: 'POST' });
-        const data = await resp.json();
-        showToast(`${data.message}`, 'success');
-    } catch(e) {
-        showToast(`Model: ${model} (API not available)`, 'warning');
-    }
-}
-
-async function selectEngineFull(engine) {
-    // Popup option: switch the engine entirely
-    currentEngine = engine;
-    updateEngineBadge();
-    document.getElementById('enginePopup')?.classList.remove('show');
-    
-    try {
-        await fetch(`${API}/engine/set?engine=${engine}`, { method: 'POST' });
-        showToast(`Engine: ${engine}`, 'success');
-    } catch(e) {
-        showToast(`Engine: ${engine}`, 'warning');
-    }
-}
-
-function showToast(msg, type) {
-    const toast = document.createElement('div');
-    toast.style.cssText = `position:fixed;bottom:20px;right:20px;padding:10px 20px;border-radius:8px;
-        background:${type==='success'?'#1b5e20':'#5d4037'};color:white;font-size:0.75rem;z-index:9999;
-        transition:opacity 0.3s;opacity:1;`;
-    toast.textContent = msg;
-    document.body.appendChild(toast);
-    setTimeout(() => { toast.style.opacity = '0'; setTimeout(() => toast.remove(), 300); }, 2500);
-}
-
-// Poll engine status on init
 document.addEventListener('DOMContentLoaded', () => {
     startSession();
-    checkEngineStatus();  // poll current engine
-    setInterval(checkEngineStatus, 30000);  // refresh every 30s
     // Restore stop button behavior
     document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape' && isRecording) stopAndSave();
@@ -1851,42 +1546,14 @@ function renderBrainGraph(data, W, H) {
     node.append('text').text(d => (d.title||'').length > 22 ? d.title.slice(0,22)+'…' : d.title||'')
         .attr('dx',10).attr('dy',4).attr('fill','#94a3b8').attr('font-size','10px');
 
-    // Track selected node for persistent highlight
-    let selectedNode = null;
-    
-    node.on('click', (e, d) => {
-        e.stopPropagation();
-        showBrainDetail(d, data);
-
-        // Toggle: clicking selected node again deselects
-        if (selectedNode === d.id) {
-            selectedNode = null;
-            node.style('opacity',1);
-            link.style('opacity', l => l.type==='related'?0.3:0.5);
-            return;
-        }
-
-        // Highlight this node and its connections
-        selectedNode = d.id;
+    node.on('click', (e, d) => showBrainDetail(d, data));
+    node.on('mouseenter', (e, d) => {
         const connected = new Set();
         data.links.forEach(l => { if(l.source.id===d.id||l.target.id===d.id) connected.add(l.source.id===d.id?l.target.id:l.source.id); });
         node.style('opacity', n => connected.has(n.id)||n.id===d.id ? 1 : 0.15);
         link.style('opacity', l => l.source.id===d.id||l.target.id===d.id ? 0.7 : 0.03);
     });
-
-    // Click graph background to dismiss info panel + reset highlights
-    svg.on('click', function(e) {
-      if (e.target === this || e.target.tagName === 'svg' || e.target.tagName === 'g') {
-        selectedNode = null;
-        node.style('opacity',1);
-        link.style('opacity', l => l.type==='related'?0.3:0.5);
-        brainPanelCollapsed = true;
-        const panel = document.getElementById("brainInfo");
-        const btn = document.getElementById("brainCollapseBtn");
-        if (panel) panel.classList.add("collapsed");
-        if (btn) { btn.textContent = "▶"; btn.title = "Show details"; }
-      }
-    });
+    node.on('mouseleave', () => { node.style('opacity',1); link.style('opacity', d => d.type==='related'?0.3:0.5); });
 
     sim.on('tick', () => {
         link.attr('x1',d=>d.source.x).attr('y1',d=>d.source.y).attr('x2',d=>d.target.x).attr('y2',d=>d.target.y);
@@ -2553,66 +2220,7 @@ async function deleteBrainDoc(docName) {
     });
 }
 
-// ═══ Brain Panel Toggle ═══
-let brainPanelCollapsed = false;
-function closeBrainPanel() {
-  brainPanelCollapsed = true;
-  const panel = document.getElementById("brainInfo");
-  const btn = document.getElementById("brainCollapseBtn");
-  if (panel) panel.classList.add("collapsed");
-  if (btn) { btn.textContent = "▶"; btn.title = "Expand panel"; }
-}
-function toggleBrainPanel() {
-  brainPanelCollapsed = !brainPanelCollapsed;
-  const panel = document.getElementById("brainInfo");
-  const btn = document.getElementById("brainCollapseBtn");
-  if(brainPanelCollapsed) {
-    panel.classList.add("collapsed");
-    btn.textContent = "▶";
-    btn.title = "Expand panel";
-  } else {
-    panel.classList.remove("collapsed");
-    btn.textContent = "◀";
-    btn.title = "Collapse panel";
-  }
-}
-
-// ─── Mobile Menu Toggle ───────────────────────────
-function toggleMobileMenu() {
-    const nav = document.getElementById('tabsNav');
-    const btn = document.getElementById('hamburgerBtn');
-    if (nav) {
-        nav.classList.toggle('mobile-open');
-        btn.textContent = nav.classList.contains('mobile-open') ? '✕' : '☰';
-    }
-}
-// Close mobile menu when a tab is clicked
-document.addEventListener('click', function(e) {
-    if (e.target.classList.contains('tab')) {
-        const nav = document.getElementById('tabsNav');
-        const btn = document.getElementById('hamburgerBtn');
-        if (nav && nav.classList.contains('mobile-open')) {
-            nav.classList.remove('mobile-open');
-            if (btn) btn.textContent = '☰';
-        }
-    }
-});
-
 </script>
-
-<!-- UPLOAD MODAL -->
-<div id="uploadModal" class="modal-overlay" style="display:none;">
-    <div class="modal-card" style="max-width:420px;">
-        <div class="modal-header"><span>&#128228; Upload Audio</span><button class="modal-close" onclick="clearUploadInterval();document.getElementById('uploadModal').style.display='none'">&#10005;</button></div>
-        <div class="modal-body" style="text-align:center;padding:24px;">
-            <div id="uploadStatus" style="font-size:0.85rem;color:var(--text-dim);margin-bottom:16px;">Ready</div>
-            <div style="background:var(--border);border-radius:10px;height:8px;overflow:hidden;margin-bottom:12px;"><div id="uploadProgressBar" style="height:100%;background:var(--gold);width:0%;transition:width 0.5s;"></div></div>
-            <div id="uploadStats" style="font-size:0.7rem;color:var(--text-muted);">Chunk 0/0</div>
-            <div id="uploadResult" style="display:none;margin-top:16px;text-align:left;max-height:200px;overflow-y:auto;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:12px;font-size:0.78rem;line-height:1.5;white-space:pre-wrap;"></div>
-        </div>
-    </div>
-</div>
-
 <!-- ═══ LOAD MODAL ═══ -->
 <div class="modal-overlay" id="loadModal" style="display:none" onclick="if(event.target===this)closeLoadModal()">
   <div class="modal-card">
@@ -2631,28 +2239,6 @@ document.addEventListener('click', function(e) {
   </div>
 </div>
 
-<script id="calendarData" type="application/json">{"synced_at": "2026-06-03T10:54:57.938463+00:00", "total": 24, "events": [{"id": "7tar233s6fug3spk5gsst3k8hh", "summary": "Sasin Next Gen Bootcamp \u2013 Designing Your SASIN Life", "start": "2026-06-05T18:00:00+07:00", "end": "2026-06-05T21:30:00+07:00", "is_all_day": false, "location": "", "description": "<p><strong>Sasin Next Gen Bootcamp at Sasin</strong></p><p><strong>Session:</strong> Designing Your SASIN Life<br><strong>Date:</strong> Friday, June 5, 2026<br><strong>Venue:</strong> Sasin Hall, 9th Floor</p><h3>Session Description</h3><p>Based on Stanford\u2019s popular <em>Designing Your Life</em> ap", "tags": ["CLASS", "WORKSHOP"], "days_until": 2, "synced_at": "2026-06-03T10:54:57.938463+00:00"}, {"id": "7et89su0o0vnoi1302s6t9hfrs", "summary": "Sasin Next Gen Bootcamp \u2013 Preparing for Quantitative Thinking in MBA/EMBA", "start": "2026-06-06T13:30:00+07:00", "end": "2026-06-06T16:30:00+07:00", "is_all_day": false, "location": "", "description": "<p><strong>Sasin Next Gen Bootcamp at Sasin</strong></p><p><strong>Session:</strong> Preparing for Quantitative Thinking in MBA/EMBA<br><strong>Date:</strong> Saturday, June 6, 2026<br><strong>Time:</strong> 1:30 PM \u2013 4:30 PM<br><strong>Venue:</strong> Sasin Hall, 9th Floor</p><h3>Session Descriptio", "tags": ["CLASS", "WORKSHOP"], "days_until": 2, "synced_at": "2026-06-03T10:54:57.938463+00:00"}, {"id": "3lkcd7p96n78nh2rnoej6cooip", "summary": "Module 1/2026-2027", "start": "2026-06-08", "end": "2026-07-12", "is_all_day": true, "location": "", "description": "", "tags": ["CLASS"], "days_until": 999, "synced_at": "2026-06-03T10:54:57.938463+00:00"}, {"id": "6je9vamn93qihcpqocvmbekdn2", "summary": "Due Date: 9 June 2026: submission to Student Experience", "start": "2026-06-09", "end": "2026-06-10", "is_all_day": true, "location": "", "description": "<a href=\"https://sasinware.sasin.edu/pluginfile.php/78266/mod_resource/content/1/2026%20MGMT-S-0031%20Business%20Strategy%20EMBA.pdf\">https://sasinware.sasin.edu/pluginfile.php/78266/mod_resource/content/1/2026%20MGMT-S-0031%20Business%20Strategy%20EMBA.pdf</a>", "tags": ["DEADLINE", "CLASS"], "days_until": 999, "synced_at": "2026-06-03T10:54:57.938463+00:00"}, {"id": "j0aodb9l91j46sm8k8f0lns49k", "summary": "MGMT-S-0031: Management and Business Strategy", "start": "2026-06-12T18:00:00+07:00", "end": "2026-06-12T21:30:00+07:00", "is_all_day": false, "location": "", "description": "<div><h2>MGMT-S-0031: Management and Business Strategy</h2></div>\n<div> Module 1, 2026</div>\n<div><i>This course is to develop the capacity of students to think strategically about business and deal with various strategic decisions in a range of organizational settings.</i></div>\n<div><b>Faculty:</b", "tags": ["CLASS"], "days_until": 9, "synced_at": "2026-06-03T10:54:57.938463+00:00"}, {"id": "4806s9k81rtlg7r897mr7gjq9s", "summary": "DECS-S-0034: Statistical Models and Managerial Analysis", "start": "2026-06-13T09:00:00+07:00", "end": "2026-06-13T12:30:00+07:00", "is_all_day": false, "location": "", "description": "<div><h2>DECS-S-0034: Statistical Models and Managerial Analysis</h2></div>\n<div> Module 1, 2026</div>\n<div><i>The goal of this course is to enable participants to be more knowledgeable with respect to the underlying statistical foundations, especially those related to linear regressions.</i></div>\n", "tags": ["CLASS"], "days_until": 9, "synced_at": "2026-06-03T10:54:57.938463+00:00"}, {"id": "50soi97qog5foosp2svbo0dkts", "summary": "MGMT-S-0031: Management and Business Strategy", "start": "2026-06-13T13:30:00+07:00", "end": "2026-06-13T17:00:00+07:00", "is_all_day": false, "location": "", "description": "<div><h2>MGMT-S-0031: Management and Business Strategy</h2></div>\n<div> Module 1, 2026</div>\n<div><i>This course is to develop the capacity of students to think strategically about business and deal with various strategic decisions in a range of organizational settings.</i></div>\n<div><b>Faculty:</b", "tags": ["CLASS"], "days_until": 9, "synced_at": "2026-06-03T10:54:57.938463+00:00"}, {"id": "h2uv8csmjtjkfg2m8ffbdmr87s", "summary": "DECS-S-0034: Statistical Models and Managerial Analysis", "start": "2026-06-19T18:00:00+07:00", "end": "2026-06-19T21:30:00+07:00", "is_all_day": false, "location": "", "description": "<div><h2>DECS-S-0034: Statistical Models and Managerial Analysis</h2></div>\n<div> Module 1, 2026</div>\n<div><i>The goal of this course is to enable participants to be more knowledgeable with respect to the underlying statistical foundations, especially those related to linear regressions.</i></div>\n", "tags": ["CLASS"], "days_until": 16, "synced_at": "2026-06-03T10:54:57.938463+00:00"}, {"id": "57nrus13599ojdcfi74d5es1c4", "summary": "MGMT-S-0031: Management and Business Strategy", "start": "2026-06-20T09:00:00+07:00", "end": "2026-06-20T12:30:00+07:00", "is_all_day": false, "location": "", "description": "<div><h2>MGMT-S-0031: Management and Business Strategy</h2></div>\n<div> Module 1, 2026</div>\n<div><i>This course is to develop the capacity of students to think strategically about business and deal with various strategic decisions in a range of organizational settings.</i></div>\n<div><b>Faculty:</b", "tags": ["CLASS"], "days_until": 16, "synced_at": "2026-06-03T10:54:57.938463+00:00"}, {"id": "qf3pqp5mspq31fcu5363n4egl4", "summary": "DECS-S-0034: Statistical Models and Managerial Analysis", "start": "2026-06-20T13:30:00+07:00", "end": "2026-06-20T17:00:00+07:00", "is_all_day": false, "location": "", "description": "<div><h2>DECS-S-0034: Statistical Models and Managerial Analysis</h2></div>\n<div> Module 1, 2026</div>\n<div><i>The goal of this course is to enable participants to be more knowledgeable with respect to the underlying statistical foundations, especially those related to linear regressions.</i></div>\n", "tags": ["CLASS"], "days_until": 16, "synced_at": "2026-06-03T10:54:57.938463+00:00"}, {"id": "s4olc4d1s6op5odh5vpirpmo18", "summary": "MGMT-S-0031: Management and Business Strategy", "start": "2026-06-26T18:00:00+07:00", "end": "2026-06-26T21:30:00+07:00", "is_all_day": false, "location": "", "description": "<div><h2>MGMT-S-0031: Management and Business Strategy</h2></div>\n<div> Module 1, 2026</div>\n<div><i>This course is to develop the capacity of students to think strategically about business and deal with various strategic decisions in a range of organizational settings.</i></div>\n<div><b>Faculty:</b", "tags": ["CLASS"], "days_until": 23, "synced_at": "2026-06-03T10:54:57.938463+00:00"}, {"id": "qp3sp7l3gpis6cuvonna1l0te0", "summary": "DECS-S-0034: Statistical Models and Managerial Analysis", "start": "2026-06-27T09:00:00+07:00", "end": "2026-06-27T12:30:00+07:00", "is_all_day": false, "location": "", "description": "<div><h2>DECS-S-0034: Statistical Models and Managerial Analysis</h2></div>\n<div> Module 1, 2026</div>\n<div><i>The goal of this course is to enable participants to be more knowledgeable with respect to the underlying statistical foundations, especially those related to linear regressions.</i></div>\n", "tags": ["CLASS"], "days_until": 23, "synced_at": "2026-06-03T10:54:57.938463+00:00"}, {"id": "6caa60j59i4jb53enn7pseee0g", "summary": "MGMT-S-0031: Management and Business Strategy", "start": "2026-06-27T13:30:00+07:00", "end": "2026-06-27T17:00:00+07:00", "is_all_day": false, "location": "", "description": "<div><h2>MGMT-S-0031: Management and Business Strategy</h2></div>\n<div> Module 1, 2026</div>\n<div><i>This course is to develop the capacity of students to think strategically about business and deal with various strategic decisions in a range of organizational settings.</i></div>\n<div><b>Faculty:</b", "tags": ["CLASS"], "days_until": 23, "synced_at": "2026-06-03T10:54:57.938463+00:00"}, {"id": "6ofvjjbq4h4l87aup2vd6q4m14", "summary": "DECS-S-0034: Statistical Models and Managerial Analysis", "start": "2026-07-03T18:00:00+07:00", "end": "2026-07-03T21:30:00+07:00", "is_all_day": false, "location": "", "description": "<div><h2>DECS-S-0034: Statistical Models and Managerial Analysis</h2></div>\n<div> Module 1, 2026</div>\n<div><i>The goal of this course is to enable participants to be more knowledgeable with respect to the underlying statistical foundations, especially those related to linear regressions.</i></div>\n", "tags": ["CLASS"], "days_until": 30, "synced_at": "2026-06-03T10:54:57.938463+00:00"}, {"id": "qs4k21nfotd65itmgj6aebtipk", "summary": "MGMT-S-0031: Management and Business Strategy", "start": "2026-07-04T09:00:00+07:00", "end": "2026-07-04T12:30:00+07:00", "is_all_day": false, "location": "", "description": "<div><h2>MGMT-S-0031: Management and Business Strategy</h2></div>\n<div> Module 1, 2026</div>\n<div><i>This course is to develop the capacity of students to think strategically about business and deal with various strategic decisions in a range of organizational settings.</i></div>\n<div><b>Faculty:</b", "tags": ["CLASS"], "days_until": 30, "synced_at": "2026-06-03T10:54:57.938463+00:00"}, {"id": "927ujhnltkmltmjlcklu6ka0uo", "summary": "DECS-S-0034: Statistical Models and Managerial Analysis", "start": "2026-07-04T13:30:00+07:00", "end": "2026-07-04T17:00:00+07:00", "is_all_day": false, "location": "", "description": "<div><h2>DECS-S-0034: Statistical Models and Managerial Analysis</h2></div>\n<div> Module 1, 2026</div>\n<div><i>The goal of this course is to enable participants to be more knowledgeable with respect to the underlying statistical foundations, especially those related to linear regressions.</i></div>\n", "tags": ["CLASS"], "days_until": 30, "synced_at": "2026-06-03T10:54:57.938463+00:00"}, {"id": "lp7j80jvl5a9ib67ou6iieve24", "summary": "MGMT-S-0031: Management and Business Strategy", "start": "2026-07-10T18:00:00+07:00", "end": "2026-07-10T21:00:00+07:00", "is_all_day": false, "location": "", "description": "<div><h2>MGMT-S-0031: Management and Business Strategy</h2></div>\n<div> Module 1, 2026</div>\n<div><i>This course is to develop the capacity of students to think strategically about business and deal with various strategic decisions in a range of organizational settings.</i></div>\n<div><b>Faculty:</b", "tags": ["CLASS"], "days_until": 37, "synced_at": "2026-06-03T10:54:57.938463+00:00"}, {"id": "p2pr9h6f6fke3ka39cp8mb3cl0", "summary": "DECS-S-0034: Statistical Models and Managerial Analysis", "start": "2026-07-11T09:00:00+07:00", "end": "2026-07-11T12:00:00+07:00", "is_all_day": false, "location": "", "description": "<div><h2>DECS-S-0034: Statistical Models and Managerial Analysis</h2></div>\n<div> Module 1, 2026</div>\n<div><i>The goal of this course is to enable participants to be more knowledgeable with respect to the underlying statistical foundations, especially those related to linear regressions.</i></div>\n", "tags": ["EXAM", "CLASS"], "days_until": 37, "synced_at": "2026-06-03T10:54:57.938463+00:00"}, {"id": "5cgh9jfhj2g5fg5kv1855oe37o", "summary": "Module 2/2026-2027", "start": "2026-07-13", "end": "2026-08-16", "is_all_day": true, "location": "", "description": "", "tags": ["CLASS"], "days_until": 999, "synced_at": "2026-06-03T10:54:57.938463+00:00"}, {"id": "675puvi2sdb39vsbqsfnb2dd8r", "summary": "Break", "start": "2026-08-16", "end": "2026-08-24", "is_all_day": true, "location": "", "description": "", "tags": ["OTHER"], "days_until": 999, "synced_at": "2026-06-03T10:54:57.938463+00:00"}, {"id": "4toqadkfuei49f9ugcl2d5s3vs", "summary": "Module 3/2026-2027", "start": "2026-08-24", "end": "2026-09-27", "is_all_day": true, "location": "", "description": "", "tags": ["CLASS"], "days_until": 999, "synced_at": "2026-06-03T10:54:57.938463+00:00"}, {"id": "2bmls0dk8lg9p59qo5ft24a1cs", "summary": "Module 4/2026-2027", "start": "2026-09-28", "end": "2026-11-01", "is_all_day": true, "location": "", "description": "", "tags": ["CLASS"], "days_until": 999, "synced_at": "2026-06-03T10:54:57.938463+00:00"}, {"id": "4jr3khgkq1de9s7g2vk4km5j2e", "summary": "Break", "start": "2026-11-01", "end": "2026-11-09", "is_all_day": true, "location": "", "description": "", "tags": ["OTHER"], "days_until": 999, "synced_at": "2026-06-03T10:54:57.938463+00:00"}, {"id": "4rc7btsdmc7k6msi3f99ofcdqp", "summary": "Module 5/2026-2027", "start": "2026-11-09", "end": "2026-12-13", "is_all_day": true, "location": "", "description": "", "tags": ["CLASS"], "days_until": 999, "synced_at": "2026-06-03T10:54:57.938463+00:00"}]}
-// ─── Mobile Menu Toggle ───────────────────────────
-function toggleMobileMenu() {
-    const nav = document.getElementById('tabsNav');
-    const btn = document.getElementById('hamburgerBtn');
-    if (nav) {
-        nav.classList.toggle('mobile-open');
-        btn.textContent = nav.classList.contains('mobile-open') ? '✕' : '☰';
-    }
-}
-// Close mobile menu when a tab is clicked
-document.addEventListener('click', function(e) {
-    if (e.target.classList.contains('tab')) {
-        const nav = document.getElementById('tabsNav');
-        const btn = document.getElementById('hamburgerBtn');
-        if (nav && nav.classList.contains('mobile-open')) {
-            nav.classList.remove('mobile-open');
-            if (btn) btn.textContent = '☰';
-        }
-    }
-});
-
-</script>
+<script id="calendarData" type="application/json">{"synced_at": "2026-06-03T10:54:57.938463+00:00", "total": 24, "events": [{"id": "7tar233s6fug3spk5gsst3k8hh", "summary": "Sasin Next Gen Bootcamp \u2013 Designing Your SASIN Life", "start": "2026-06-05T18:00:00+07:00", "end": "2026-06-05T21:30:00+07:00", "is_all_day": false, "location": "", "description": "<p><strong>Sasin Next Gen Bootcamp at Sasin</strong></p><p><strong>Session:</strong> Designing Your SASIN Life<br><strong>Date:</strong> Friday, June 5, 2026<br><strong>Venue:</strong> Sasin Hall, 9th Floor</p><h3>Session Description</h3><p>Based on Stanford\u2019s popular <em>Designing Your Life</em> ap", "tags": ["CLASS", "WORKSHOP"], "days_until": 2, "synced_at": "2026-06-03T10:54:57.938463+00:00"}, {"id": "7et89su0o0vnoi1302s6t9hfrs", "summary": "Sasin Next Gen Bootcamp \u2013 Preparing for Quantitative Thinking in MBA/EMBA", "start": "2026-06-06T13:30:00+07:00", "end": "2026-06-06T16:30:00+07:00", "is_all_day": false, "location": "", "description": "<p><strong>Sasin Next Gen Bootcamp at Sasin</strong></p><p><strong>Session:</strong> Preparing for Quantitative Thinking in MBA/EMBA<br><strong>Date:</strong> Saturday, June 6, 2026<br><strong>Time:</strong> 1:30 PM \u2013 4:30 PM<br><strong>Venue:</strong> Sasin Hall, 9th Floor</p><h3>Session Descriptio", "tags": ["CLASS", "WORKSHOP"], "days_until": 2, "synced_at": "2026-06-03T10:54:57.938463+00:00"}, {"id": "3lkcd7p96n78nh2rnoej6cooip", "summary": "Module 1/2026-2027", "start": "2026-06-08", "end": "2026-07-12", "is_all_day": true, "location": "", "description": "", "tags": ["CLASS"], "days_until": 999, "synced_at": "2026-06-03T10:54:57.938463+00:00"}, {"id": "6je9vamn93qihcpqocvmbekdn2", "summary": "Due Date: 9 June 2026: submission to Student Experience", "start": "2026-06-09", "end": "2026-06-10", "is_all_day": true, "location": "", "description": "<a href=\"https://sasinware.sasin.edu/pluginfile.php/78266/mod_resource/content/1/2026%20MGMT-S-0031%20Business%20Strategy%20EMBA.pdf\">https://sasinware.sasin.edu/pluginfile.php/78266/mod_resource/content/1/2026%20MGMT-S-0031%20Business%20Strategy%20EMBA.pdf</a>", "tags": ["DEADLINE", "CLASS"], "days_until": 999, "synced_at": "2026-06-03T10:54:57.938463+00:00"}, {"id": "j0aodb9l91j46sm8k8f0lns49k", "summary": "MGMT-S-0031: Management and Business Strategy", "start": "2026-06-12T18:00:00+07:00", "end": "2026-06-12T21:30:00+07:00", "is_all_day": false, "location": "", "description": "<div><h2>MGMT-S-0031: Management and Business Strategy</h2></div>\n<div> Module 1, 2026</div>\n<div><i>This course is to develop the capacity of students to think strategically about business and deal with various strategic decisions in a range of organizational settings.</i></div>\n<div><b>Faculty:</b", "tags": ["CLASS"], "days_until": 9, "synced_at": "2026-06-03T10:54:57.938463+00:00"}, {"id": "4806s9k81rtlg7r897mr7gjq9s", "summary": "DECS-S-0034: Statistical Models and Managerial Analysis", "start": "2026-06-13T09:00:00+07:00", "end": "2026-06-13T12:30:00+07:00", "is_all_day": false, "location": "", "description": "<div><h2>DECS-S-0034: Statistical Models and Managerial Analysis</h2></div>\n<div> Module 1, 2026</div>\n<div><i>The goal of this course is to enable participants to be more knowledgeable with respect to the underlying statistical foundations, especially those related to linear regressions.</i></div>\n", "tags": ["CLASS"], "days_until": 9, "synced_at": "2026-06-03T10:54:57.938463+00:00"}, {"id": "50soi97qog5foosp2svbo0dkts", "summary": "MGMT-S-0031: Management and Business Strategy", "start": "2026-06-13T13:30:00+07:00", "end": "2026-06-13T17:00:00+07:00", "is_all_day": false, "location": "", "description": "<div><h2>MGMT-S-0031: Management and Business Strategy</h2></div>\n<div> Module 1, 2026</div>\n<div><i>This course is to develop the capacity of students to think strategically about business and deal with various strategic decisions in a range of organizational settings.</i></div>\n<div><b>Faculty:</b", "tags": ["CLASS"], "days_until": 9, "synced_at": "2026-06-03T10:54:57.938463+00:00"}, {"id": "h2uv8csmjtjkfg2m8ffbdmr87s", "summary": "DECS-S-0034: Statistical Models and Managerial Analysis", "start": "2026-06-19T18:00:00+07:00", "end": "2026-06-19T21:30:00+07:00", "is_all_day": false, "location": "", "description": "<div><h2>DECS-S-0034: Statistical Models and Managerial Analysis</h2></div>\n<div> Module 1, 2026</div>\n<div><i>The goal of this course is to enable participants to be more knowledgeable with respect to the underlying statistical foundations, especially those related to linear regressions.</i></div>\n", "tags": ["CLASS"], "days_until": 16, "synced_at": "2026-06-03T10:54:57.938463+00:00"}, {"id": "57nrus13599ojdcfi74d5es1c4", "summary": "MGMT-S-0031: Management and Business Strategy", "start": "2026-06-20T09:00:00+07:00", "end": "2026-06-20T12:30:00+07:00", "is_all_day": false, "location": "", "description": "<div><h2>MGMT-S-0031: Management and Business Strategy</h2></div>\n<div> Module 1, 2026</div>\n<div><i>This course is to develop the capacity of students to think strategically about business and deal with various strategic decisions in a range of organizational settings.</i></div>\n<div><b>Faculty:</b", "tags": ["CLASS"], "days_until": 16, "synced_at": "2026-06-03T10:54:57.938463+00:00"}, {"id": "qf3pqp5mspq31fcu5363n4egl4", "summary": "DECS-S-0034: Statistical Models and Managerial Analysis", "start": "2026-06-20T13:30:00+07:00", "end": "2026-06-20T17:00:00+07:00", "is_all_day": false, "location": "", "description": "<div><h2>DECS-S-0034: Statistical Models and Managerial Analysis</h2></div>\n<div> Module 1, 2026</div>\n<div><i>The goal of this course is to enable participants to be more knowledgeable with respect to the underlying statistical foundations, especially those related to linear regressions.</i></div>\n", "tags": ["CLASS"], "days_until": 16, "synced_at": "2026-06-03T10:54:57.938463+00:00"}, {"id": "s4olc4d1s6op5odh5vpirpmo18", "summary": "MGMT-S-0031: Management and Business Strategy", "start": "2026-06-26T18:00:00+07:00", "end": "2026-06-26T21:30:00+07:00", "is_all_day": false, "location": "", "description": "<div><h2>MGMT-S-0031: Management and Business Strategy</h2></div>\n<div> Module 1, 2026</div>\n<div><i>This course is to develop the capacity of students to think strategically about business and deal with various strategic decisions in a range of organizational settings.</i></div>\n<div><b>Faculty:</b", "tags": ["CLASS"], "days_until": 23, "synced_at": "2026-06-03T10:54:57.938463+00:00"}, {"id": "qp3sp7l3gpis6cuvonna1l0te0", "summary": "DECS-S-0034: Statistical Models and Managerial Analysis", "start": "2026-06-27T09:00:00+07:00", "end": "2026-06-27T12:30:00+07:00", "is_all_day": false, "location": "", "description": "<div><h2>DECS-S-0034: Statistical Models and Managerial Analysis</h2></div>\n<div> Module 1, 2026</div>\n<div><i>The goal of this course is to enable participants to be more knowledgeable with respect to the underlying statistical foundations, especially those related to linear regressions.</i></div>\n", "tags": ["CLASS"], "days_until": 23, "synced_at": "2026-06-03T10:54:57.938463+00:00"}, {"id": "6caa60j59i4jb53enn7pseee0g", "summary": "MGMT-S-0031: Management and Business Strategy", "start": "2026-06-27T13:30:00+07:00", "end": "2026-06-27T17:00:00+07:00", "is_all_day": false, "location": "", "description": "<div><h2>MGMT-S-0031: Management and Business Strategy</h2></div>\n<div> Module 1, 2026</div>\n<div><i>This course is to develop the capacity of students to think strategically about business and deal with various strategic decisions in a range of organizational settings.</i></div>\n<div><b>Faculty:</b", "tags": ["CLASS"], "days_until": 23, "synced_at": "2026-06-03T10:54:57.938463+00:00"}, {"id": "6ofvjjbq4h4l87aup2vd6q4m14", "summary": "DECS-S-0034: Statistical Models and Managerial Analysis", "start": "2026-07-03T18:00:00+07:00", "end": "2026-07-03T21:30:00+07:00", "is_all_day": false, "location": "", "description": "<div><h2>DECS-S-0034: Statistical Models and Managerial Analysis</h2></div>\n<div> Module 1, 2026</div>\n<div><i>The goal of this course is to enable participants to be more knowledgeable with respect to the underlying statistical foundations, especially those related to linear regressions.</i></div>\n", "tags": ["CLASS"], "days_until": 30, "synced_at": "2026-06-03T10:54:57.938463+00:00"}, {"id": "qs4k21nfotd65itmgj6aebtipk", "summary": "MGMT-S-0031: Management and Business Strategy", "start": "2026-07-04T09:00:00+07:00", "end": "2026-07-04T12:30:00+07:00", "is_all_day": false, "location": "", "description": "<div><h2>MGMT-S-0031: Management and Business Strategy</h2></div>\n<div> Module 1, 2026</div>\n<div><i>This course is to develop the capacity of students to think strategically about business and deal with various strategic decisions in a range of organizational settings.</i></div>\n<div><b>Faculty:</b", "tags": ["CLASS"], "days_until": 30, "synced_at": "2026-06-03T10:54:57.938463+00:00"}, {"id": "927ujhnltkmltmjlcklu6ka0uo", "summary": "DECS-S-0034: Statistical Models and Managerial Analysis", "start": "2026-07-04T13:30:00+07:00", "end": "2026-07-04T17:00:00+07:00", "is_all_day": false, "location": "", "description": "<div><h2>DECS-S-0034: Statistical Models and Managerial Analysis</h2></div>\n<div> Module 1, 2026</div>\n<div><i>The goal of this course is to enable participants to be more knowledgeable with respect to the underlying statistical foundations, especially those related to linear regressions.</i></div>\n", "tags": ["CLASS"], "days_until": 30, "synced_at": "2026-06-03T10:54:57.938463+00:00"}, {"id": "lp7j80jvl5a9ib67ou6iieve24", "summary": "MGMT-S-0031: Management and Business Strategy", "start": "2026-07-10T18:00:00+07:00", "end": "2026-07-10T21:00:00+07:00", "is_all_day": false, "location": "", "description": "<div><h2>MGMT-S-0031: Management and Business Strategy</h2></div>\n<div> Module 1, 2026</div>\n<div><i>This course is to develop the capacity of students to think strategically about business and deal with various strategic decisions in a range of organizational settings.</i></div>\n<div><b>Faculty:</b", "tags": ["CLASS"], "days_until": 37, "synced_at": "2026-06-03T10:54:57.938463+00:00"}, {"id": "p2pr9h6f6fke3ka39cp8mb3cl0", "summary": "DECS-S-0034: Statistical Models and Managerial Analysis", "start": "2026-07-11T09:00:00+07:00", "end": "2026-07-11T12:00:00+07:00", "is_all_day": false, "location": "", "description": "<div><h2>DECS-S-0034: Statistical Models and Managerial Analysis</h2></div>\n<div> Module 1, 2026</div>\n<div><i>The goal of this course is to enable participants to be more knowledgeable with respect to the underlying statistical foundations, especially those related to linear regressions.</i></div>\n", "tags": ["EXAM", "CLASS"], "days_until": 37, "synced_at": "2026-06-03T10:54:57.938463+00:00"}, {"id": "5cgh9jfhj2g5fg5kv1855oe37o", "summary": "Module 2/2026-2027", "start": "2026-07-13", "end": "2026-08-16", "is_all_day": true, "location": "", "description": "", "tags": ["CLASS"], "days_until": 999, "synced_at": "2026-06-03T10:54:57.938463+00:00"}, {"id": "675puvi2sdb39vsbqsfnb2dd8r", "summary": "Break", "start": "2026-08-16", "end": "2026-08-24", "is_all_day": true, "location": "", "description": "", "tags": ["OTHER"], "days_until": 999, "synced_at": "2026-06-03T10:54:57.938463+00:00"}, {"id": "4toqadkfuei49f9ugcl2d5s3vs", "summary": "Module 3/2026-2027", "start": "2026-08-24", "end": "2026-09-27", "is_all_day": true, "location": "", "description": "", "tags": ["CLASS"], "days_until": 999, "synced_at": "2026-06-03T10:54:57.938463+00:00"}, {"id": "2bmls0dk8lg9p59qo5ft24a1cs", "summary": "Module 4/2026-2027", "start": "2026-09-28", "end": "2026-11-01", "is_all_day": true, "location": "", "description": "", "tags": ["CLASS"], "days_until": 999, "synced_at": "2026-06-03T10:54:57.938463+00:00"}, {"id": "4jr3khgkq1de9s7g2vk4km5j2e", "summary": "Break", "start": "2026-11-01", "end": "2026-11-09", "is_all_day": true, "location": "", "description": "", "tags": ["OTHER"], "days_until": 999, "synced_at": "2026-06-03T10:54:57.938463+00:00"}, {"id": "4rc7btsdmc7k6msi3f99ofcdqp", "summary": "Module 5/2026-2027", "start": "2026-11-09", "end": "2026-12-13", "is_all_day": true, "location": "", "description": "", "tags": ["CLASS"], "days_until": 999, "synced_at": "2026-06-03T10:54:57.938463+00:00"}]}</script>
 </body>
 </html>

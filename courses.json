@@ -1,0 +1,127 @@
+{
+  "MGMT-S-0031": {
+    "code": "MGMT-S-0031",
+    "title": "Management & Business Strategy",
+    "instructor": "Ragil Ratnam",
+    "module": "Module 1",
+    "textbook": "Crafting & Executing Strategy 24th Ed.",
+    "knowledge_url": "/courses/MGMT-S-0031/knowledge/",
+    "materials_url": "/courses/MGMT-S-0031/materials/",
+    "syllabus_url": "/courses/MGMT-S-0031/materials/syllabus.pdf",
+    "deadlines": [
+      {
+        "date": "2026-06-09",
+        "label": "Pre-work Submission (A6 index card)",
+        "weight": "5%",
+        "type": "submission"
+      },
+      {
+        "date": "2026-06-12",
+        "label": "Lecture 1: Introduction to Strategy",
+        "weight": "",
+        "type": "lecture"
+      },
+      {
+        "date": "2026-06-13",
+        "label": "Lecture 2: Strategic Diagnosis 1 - External",
+        "weight": "",
+        "type": "lecture"
+      },
+      {
+        "date": "2026-06-20",
+        "label": "Class Test 1 + Lecture 3",
+        "weight": "10%",
+        "type": "exam"
+      },
+      {
+        "date": "2026-06-26",
+        "label": "Lecture 4: Guest Speaker - K.Vichate (Thai Air Asia)",
+        "weight": "",
+        "type": "lecture"
+      },
+      {
+        "date": "2026-06-27",
+        "label": "Class Test 2 + Lecture 5",
+        "weight": "10%",
+        "type": "exam"
+      },
+      {
+        "date": "2026-07-04",
+        "label": "Lecture 6: Ethics & Strategy Execution",
+        "weight": "",
+        "type": "lecture"
+      },
+      {
+        "date": "2026-07-10",
+        "label": "Final Group Presentations",
+        "weight": "20%",
+        "type": "presentation"
+      }
+    ],
+    "assessments": {
+      "pre_work": {
+        "weight": 5,
+        "due": "2026-06-09"
+      },
+      "participation": {
+        "weight": 10,
+        "due": "ongoing"
+      },
+      "quizzes": {
+        "weight": 5,
+        "due": "ongoing"
+      },
+      "individual_assignment": {
+        "weight": 30,
+        "due": "TBD"
+      },
+      "group_assignment": {
+        "weight": 20,
+        "due": "2026-07-10"
+      },
+      "reflection": {
+        "weight": 10,
+        "due": "TBD"
+      },
+      "tests": {
+        "weight": 20,
+        "due": "2026-06-20, 2026-06-27"
+      }
+    }
+  },
+  "DECS-S-0034": {
+    "code": "DECS-S-0034",
+    "title": "Statistical Models & Management Analysis",
+    "instructor": "TBD",
+    "module": "Module 1",
+    "textbook": "TBD",
+    "knowledge_url": "/courses/DECS-S-0034/knowledge/",
+    "materials_url": "/courses/DECS-S-0034/materials/",
+    "deadlines": [
+      {
+        "date": "2026-06-08",
+        "label": "Module 1 Begins",
+        "weight": "",
+        "type": "lecture"
+      },
+      {
+        "date": "2026-07-10",
+        "label": "Final Exam",
+        "weight": "",
+        "type": "exam"
+      },
+      {
+        "date": "2026-07-11",
+        "label": "Module 1 Ends",
+        "weight": "",
+        "type": "lecture"
+      }
+    ],
+    "assessments": {
+      "exam": {
+        "weight": 100,
+        "due": "2026-07-10"
+      }
+    }
+  }
+}
