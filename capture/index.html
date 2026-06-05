@@ -1039,7 +1039,7 @@ async function toggleRecording() {
         
         mediaRecorder.ondataavailable = (e) => {
             if (!isRecording) return;
-            if (e.data.size < 100) return; // lowered from 1000 — quiet audio makes small chunks
+            if (e.data.size < 1) return;  // accept all non-empty chunks
             chunkQueue.push({ blob: e.data, index: chunkIndex++ });
             processQueue();
         };

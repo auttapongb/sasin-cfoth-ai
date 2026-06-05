@@ -2337,14 +2337,22 @@ async def startup():
 
     init_db()
     missing = []
+    # Pre-load faster-whisper model so first chunk doesn't timeout
+    print(f"  Loading faster-whisper model: {_current_fw_model}...")
+    t0 = time.time()
+    try:
+        _load_faster_whisper()
+        print(f"  ✅ faster-whisper loaded ({time.time() - t0:.1f}s)")
+    except Exception as e:
+        print(f"  ⚠️  faster-whisper pre-load failed: {e}")
+
     if not GROQ_API_KEY: missing.append("GROQ_API_KEY")
     if not DEEPGRAM_API_KEY: missing.append("DEEPGRAM_API_KEY")
     if not GEMINI_API_KEY: missing.append("GEMINI_API_KEY")
     if missing:
         print(f"  WARNING: Missing API keys: {chr(44).join(missing)} - some features disabled")
-    print(f"Capture v4 ready — Groq STT + Gemini Vision + AI Co-Learner ({COLEARNER_MODEL})")
+    print(f"Capture v4 ready — Local {_current_fw_model} + Gemini Vision + AI Co-Learner ({COLEARNER_MODEL})")
     print(f"DB: {DB_PATH} ({DB_PATH.stat().st_size} bytes)")
-
 
 
 # ═══════════════════════════════════════════════════════════════
