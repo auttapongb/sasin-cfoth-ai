@@ -82,10 +82,10 @@ COLEARNER_MODEL = os.environ.get("COLEARNER_MODEL", "deepseek-chat")
 COLEARNER_URL = os.environ.get("COLEARNER_URL", "https://api.deepseek.com/v1/chat/completions")
 
 TRANSCRIBE_TIMEOUT = 25
-COLEARNER_TIMEOUT = 15
+COLEARNER_TIMEOUT = 30
 AUDIO_ENHANCE_ENABLED = os.environ.get("AUDIO_ENHANCE", "true").lower() == "true"
 TRANSCRIBE_ENGINE = os.environ.get("TRANSCRIBE_ENGINE", "faster_whisper")  # faster_whisper | groq | auto
-FASTER_WHISPER_MODEL = os.environ.get("FASTER_WHISPER_MODEL", "tiny.en")  # default: fastest
+FASTER_WHISPER_MODEL = os.environ.get("FASTER_WHISPER_MODEL", "base.en")  # base.en: 2x slower than tiny but much better accuracy
 _current_fw_model = FASTER_WHISPER_MODEL  # runtime-switchable
 _last_engine_used = "groq"
 _last_colearner_time = 0.0
@@ -639,8 +639,8 @@ def _load_faster_whisper():
         _faster_whisper_model = WhisperModel(
             _current_fw_model,
             device="cpu",
-            compute_type="int8",
-            cpu_threads=4,
+            compute_type="auto",  # auto picks best for CPU (int8 often slow on AMD EPYC)
+            cpu_threads=6,
             num_workers=2,
         )
         _faster_whisper_model._model_name = _current_fw_model  # track which model is loaded
@@ -654,7 +654,7 @@ async def _faster_whisper_transcribe(wav_path: str) -> str:
 
     def _run():
         model = _load_faster_whisper()
-        segments, _ = model.transcribe(wav_path, beam_size=5, language="en")
+        segments, _ = model.transcribe(wav_path, beam_size=1, language="en")
         return " ".join(seg.text.strip() for seg in segments)
 
     try:
@@ -663,9 +663,7 @@ async def _faster_whisper_transcribe(wav_path: str) -> str:
             timeout=TRANSCRIBE_TIMEOUT,
         )
         return text.strip()
-    except asyncio.TimeoutError:
-        logger.warning("faster-whisper timed out")
-        return ""
+
     except Exception as e:
         logger.warning(f"faster-whisper failed: {e}")
         return ""
@@ -677,7 +675,7 @@ def _sync_whisper_transcribe(wav_path: str) -> str:
     already in a background thread, avoiding event-loop conflicts)."""
     try:
         model = _load_faster_whisper()
-        segments, _ = model.transcribe(wav_path, beam_size=5, language="en")
+        segments, _ = model.transcribe(wav_path, beam_size=1, language="en")
         text = " ".join(seg.text.strip() for seg in segments)
         return text.strip()
     except Exception as e:
@@ -1064,6 +1062,10 @@ async def co_learner(req: CoLearnerRequest):
 
     if not transcript and not slide:
         return {"insight": "", "reason": "no input"}
+
+    # Truncate long transcripts to avoid API timeouts
+    if transcript and len(transcript) > 2000:
+        transcript = transcript[:2000] + "..."
 
     user_message = ""
     if slide:
