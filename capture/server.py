@@ -31,6 +31,7 @@ import subprocess
 import hashlib
 import shutil
 import wave
+import edge_tts
 import numpy as np
 from datetime import datetime, timezone
 from pathlib import Path
@@ -82,10 +83,10 @@ COLEARNER_MODEL = os.environ.get("COLEARNER_MODEL", "deepseek-chat")
 COLEARNER_URL = os.environ.get("COLEARNER_URL", "https://api.deepseek.com/v1/chat/completions")
 
 TRANSCRIBE_TIMEOUT = 25
-COLEARNER_TIMEOUT = 30
+COLEARNER_TIMEOUT = 15
 AUDIO_ENHANCE_ENABLED = os.environ.get("AUDIO_ENHANCE", "true").lower() == "true"
 TRANSCRIBE_ENGINE = os.environ.get("TRANSCRIBE_ENGINE", "faster_whisper")  # faster_whisper | groq | auto
-FASTER_WHISPER_MODEL = os.environ.get("FASTER_WHISPER_MODEL", "medium.en")  # best English accuracy
+FASTER_WHISPER_MODEL = os.environ.get("FASTER_WHISPER_MODEL", "tiny.en")  # default: fastest
 _current_fw_model = FASTER_WHISPER_MODEL  # runtime-switchable
 _last_engine_used = "groq"
 _last_colearner_time = 0.0
@@ -452,6 +453,32 @@ async def engine_status():
     }
 
 
+# ── TTS (Text-to-Speech) ──
+
+class TTSRequest(BaseModel):
+    text: str
+    voice: str = "en-US-AriaNeural"
+
+TTS_DIR = Path("/root/tts_cache")
+TTS_DIR.mkdir(exist_ok=True)
+
+@app.post("/tts")
+async def text_to_speech(req: TTSRequest):
+    """Convert text to speech using Microsoft Edge TTS (free, no API key)."""
+    text_hash = hashlib.md5(req.text.encode()).hexdigest()[:12]
+    cache_path = TTS_DIR / f"tts_{text_hash}_{req.voice}.mp3"
+    if cache_path.exists():
+        return FileResponse(cache_path, media_type="audio/mpeg",
+                           headers={"X-TTS-Cached": "true"})
+    try:
+        communicate = edge_tts.Communicate(req.text, req.voice)
+        await communicate.save(str(cache_path))
+        return FileResponse(cache_path, media_type="audio/mpeg")
+    except Exception as e:
+        logger.error(f"TTS error: {e}")
+        return JSONResponse({"error": str(e)[:200]}, status_code=500)
+
+
 @app.post("/engine/set")
 async def engine_set(engine: str = Query(...)):
     """Update TRANSCRIBE_ENGINE env var (runtime only, not persisted)."""
@@ -469,7 +496,7 @@ async def model_status():
     return {
         "model": _current_fw_model,
         "default": FASTER_WHISPER_MODEL,
-        "available": ["medium.en", "small.en", "base.en", "tiny.en"],
+        "available": ["tiny.en", "base.en", "small.en"],
     }
 
 
@@ -478,8 +505,8 @@ async def model_set(model: str = Query(...)):
     """Switch faster-whisper model at runtime (tiny.en ↔ base.en)."""
     global _current_fw_model, _faster_whisper_model
     model = model.lower()
-    if model not in ("medium.en", "small.en", "base.en", "tiny.en"):
-        raise HTTPException(400, f"Invalid model: {model}. Use medium.en, small.en, base.en, or tiny.en")
+    if model not in ("tiny.en", "base.en", "small.en"):
+        raise HTTPException(400, f"Invalid model: {model}. Use tiny.en, base.en, or small.en")
     _current_fw_model = model
     _faster_whisper_model = None  # force reload on next use
     return {"model": _current_fw_model, "message": f"Switched to {model} (reloads on next transcription)"}
@@ -639,8 +666,8 @@ def _load_faster_whisper():
         _faster_whisper_model = WhisperModel(
             _current_fw_model,
             device="cpu",
-            compute_type="auto",  # auto picks best for CPU (int8 often slow on AMD EPYC)
-            cpu_threads=6,
+            compute_type="int8",
+            cpu_threads=4,
             num_workers=2,
         )
         _faster_whisper_model._model_name = _current_fw_model  # track which model is loaded
@@ -654,7 +681,7 @@ async def _faster_whisper_transcribe(wav_path: str) -> str:
 
     def _run():
         model = _load_faster_whisper()
-        segments, _ = model.transcribe(wav_path, beam_size=1, language="en")
+        segments, _ = model.transcribe(wav_path, beam_size=5, language="en")
         return " ".join(seg.text.strip() for seg in segments)
 
     try:
@@ -663,23 +690,11 @@ async def _faster_whisper_transcribe(wav_path: str) -> str:
             timeout=TRANSCRIBE_TIMEOUT,
         )
         return text.strip()
-
+    except asyncio.TimeoutError:
+        logger.warning("faster-whisper timed out")
+        return ""
     except Exception as e:
         logger.warning(f"faster-whisper failed: {e}")
-        return ""
-
-
-def _sync_whisper_transcribe(wav_path: str) -> str:
-    """Synchronous whisper transcription for background threads.
-    Uses faster-whisper directly (no async wrapper needed since we're
-    already in a background thread, avoiding event-loop conflicts)."""
-    try:
-        model = _load_faster_whisper()
-        segments, _ = model.transcribe(wav_path, beam_size=1, language="en")
-        text = " ".join(seg.text.strip() for seg in segments)
-        return text.strip()
-    except Exception as e:
-        logger.warning(f"_sync_whisper_transcribe failed: {e}")
         return ""
 
 
@@ -1062,10 +1077,6 @@ async def co_learner(req: CoLearnerRequest):
 
     if not transcript and not slide:
         return {"insight": "", "reason": "no input"}
-
-    # Truncate long transcripts to avoid API timeouts
-    if transcript and len(transcript) > 2000:
-        transcript = transcript[:2000] + "..."
 
     user_message = ""
     if slide:
@@ -2337,22 +2348,14 @@ async def startup():
 
     init_db()
     missing = []
-    # Pre-load faster-whisper model so first chunk doesn't timeout
-    print(f"  Loading faster-whisper model: {_current_fw_model}...")
-    t0 = time.time()
-    try:
-        _load_faster_whisper()
-        print(f"  ✅ faster-whisper loaded ({time.time() - t0:.1f}s)")
-    except Exception as e:
-        print(f"  ⚠️  faster-whisper pre-load failed: {e}")
-
     if not GROQ_API_KEY: missing.append("GROQ_API_KEY")
     if not DEEPGRAM_API_KEY: missing.append("DEEPGRAM_API_KEY")
     if not GEMINI_API_KEY: missing.append("GEMINI_API_KEY")
     if missing:
         print(f"  WARNING: Missing API keys: {chr(44).join(missing)} - some features disabled")
-    print(f"Capture v4 ready — Local {_current_fw_model} + Gemini Vision + AI Co-Learner ({COLEARNER_MODEL})")
+    print(f"Capture v4 ready — Groq STT + Gemini Vision + AI Co-Learner ({COLEARNER_MODEL})")
     print(f"DB: {DB_PATH} ({DB_PATH.stat().st_size} bytes)")
+
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -2504,130 +2507,6 @@ async def shutdown():
         _http_client = None
 
 
-# ═══ ASYNC FILE UPLOAD + TRANSCRIPTION ═══
-import threading
-import time as _time
-import hashlib as _hashlib
-
-_upload_jobs = {}
-_upload_lock = threading.Lock()
-CHUNK_DURATION = 1800  # 30 minutes per chunk
-
-def _split_and_transcribe(job_id, src_path, suffix):
-    """Background: split audio into 30-min chunks, transcribe each."""
-    try:
-        result = subprocess.run(
-            ["ffprobe", "-v", "error", "-show_entries", "format=duration",
-             "-of", "default=noprint_wrappers=1:nokey=1", src_path],
-            capture_output=True, timeout=15
-        )
-        duration = float(result.stdout.decode().strip()) if result.returncode == 0 else 0
-        if duration <= 0:
-            with _upload_lock:
-                _upload_jobs[job_id] = {"status": "error", "error": "Could not determine audio duration", "text": "", "progress": 0, "chunks_total": 0, "chunks_done": 0}
-            return
-
-        total_chunks = max(1, int(duration / CHUNK_DURATION) + (1 if duration % CHUNK_DURATION > 1 else 0))
-        with _upload_lock:
-            _upload_jobs[job_id] = {"status": "processing", "progress": 0, "text": "", "error": None, "chunks_total": total_chunks, "chunks_done": 0}
-
-        all_texts = []
-        for i in range(total_chunks):
-            start = i * CHUNK_DURATION
-            chunk_wav = tempfile.NamedTemporaryFile(suffix=".wav", delete=False).name
-            subprocess.run(
-                ["ffmpeg", "-y", "-ss", str(start), "-t", str(CHUNK_DURATION),
-                 "-i", src_path, "-ar", "16000", "-ac", "1", "-f", "wav", chunk_wav],
-                capture_output=True, timeout=120
-            )
-
-            if os.path.exists(chunk_wav) and os.path.getsize(chunk_wav) > 100:
-                wav_path = chunk_wav
-                if AUDIO_ENHANCE_ENABLED:
-                    try:
-                        enhanced = _enhance_audio(wav_path)
-                        if enhanced != wav_path:
-                            wav_path = enhanced
-                    except Exception:
-                        pass
-
-                # Transcribe synchronously (we're already in a background thread)
-                text = _sync_whisper_transcribe(wav_path)
-
-                if text and text.strip():
-                    all_texts.append(text.strip())
-
-            for f in [chunk_wav]:
-                try:
-                    os.remove(f)
-                except Exception:
-                    pass
-
-            with _upload_lock:
-                _upload_jobs[job_id]["chunks_done"] = i + 1
-                _upload_jobs[job_id]["progress"] = int(((i + 1) / total_chunks) * 100)
-                _upload_jobs[job_id]["text"] = "\n\n".join(all_texts)
-
-        with _upload_lock:
-            _upload_jobs[job_id]["status"] = "done"
-            _upload_jobs[job_id]["text"] = "\n\n".join(all_texts)
-            _upload_jobs[job_id]["progress"] = 100
-
-    except Exception as e:
-        logger.error("Upload job %s failed: %s", job_id, str(e))
-        with _upload_lock:
-            _upload_jobs[job_id] = {"status": "error", "error": str(e), "text": "", "progress": 0, "chunks_total": 0, "chunks_done": 0}
-    finally:
-        try:
-            os.remove(src_path)
-        except Exception:
-            pass
-
-
-@app.post("/upload")
-async def upload_audio(audio: UploadFile = File(...)):
-    """Upload a pre-recorded audio file for background transcription."""
-    suffix = Path(audio.filename).suffix if audio.filename else ".webm"
-    if suffix not in (".webm", ".wav", ".mp3", ".m4a", ".mp4", ".ogg", ".opus", ".flac", ".aac"):
-        suffix = ".webm"
-
-    with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as tmp:
-        content = await audio.read()
-        tmp.write(content)
-        src_path = tmp.name
-
-    job_id = _hashlib.md5((src_path + str(_time.time())).encode()).hexdigest()[:12]
-    with _upload_lock:
-        _upload_jobs[job_id] = {"status": "queued", "progress": 0, "text": "", "error": None, "chunks_total": 0, "chunks_done": 0}
-
-    thread = threading.Thread(target=_split_and_transcribe, args=(job_id, src_path, suffix), daemon=True)
-    thread.start()
-
-    return {"job_id": job_id, "status": "queued", "message": "Processing. Poll /job/%s for status." % job_id}
-
-
-@app.get("/job/{job_id}")
-async def get_job_status(job_id: str):
-    """Poll for upload/transcription job status."""
-    with _upload_lock:
-        job = _upload_jobs.get(job_id)
-    if not job:
-        raise HTTPException(404, "Job not found")
-    return job
-
-
-@app.get("/jobs")
-async def list_jobs():
-    """List all known upload jobs."""
-    with _upload_lock:
-        return {"jobs": [{"job_id": k, "status": v["status"], "progress": v["progress"]} for k, v in _upload_jobs.items()]}
-
-
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 8896))
-    workers = int(os.environ.get("WORKERS", "1"))
-    # Workers > 1 needs import string; PM2 handles multi-process better
-    uvicorn.run("__main__:app" if workers > 1 else app,
-                host="0.0.0.0", port=port,
-                workers=workers if workers > 1 else None,
-                reload=False)
+    uvicorn.run(app, host="0.0.0.0", port=port, reload=False)
