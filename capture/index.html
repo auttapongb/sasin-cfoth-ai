@@ -28,47 +28,6 @@ document.addEventListener('click', function(e) {
     }
 });
 
-
-// --- Audio File Upload ---
-let uploadPollInterval = null;
-function clearUploadInterval(){if(uploadPollInterval){clearInterval(uploadPollInterval);uploadPollInterval=null;}}
-function uploadAudioFile(){
-    const i=document.createElement("input");i.type="file";i.accept="audio/*,.webm,.wav,.mp3,.m4a,.mp4,.ogg,.opus,.flac,.aac";
-    i.onchange=async(e)=>{
-        const f=e.target.files[0];if(!f)return;
-        document.getElementById("uploadModal").style.display="flex";
-        document.getElementById("uploadStatus").textContent="Uploading "+f.name+"...";
-        document.getElementById("uploadProgressBar").style.width="10%";
-        document.getElementById("uploadStats").textContent="Sending "+(f.size/1048576).toFixed(1)+"MB...";
-        document.getElementById("uploadResult").style.display="none";
-        document.getElementById("uploadCopyBtn").style.display="none";
-        clearUploadInterval();
-        const fd=new FormData();fd.append("audio",f);
-        try{
-            const r=await fetch(API+"/upload",{method:"POST",body:fd});
-            const d=await r.json();
-            if(d.job_id){document.getElementById("uploadStatus").textContent="Transcribing...";document.getElementById("uploadProgressBar").style.width="15%";pollUploadJob(d.job_id);}
-            else{document.getElementById("uploadStatus").textContent="Upload failed";}
-        }catch(err){document.getElementById("uploadStatus").textContent="Error: "+err.message;}
-    };i.click();
-}
-async function pollUploadJob(jid){
-    clearUploadInterval();
-    uploadPollInterval=setInterval(async()=>{
-        try{
-            const r=await fetch(API+"/job/"+jid);const j=await r.json();
-            document.getElementById("uploadProgressBar").style.width=Math.max(15,j.progress||0)+"%";
-            document.getElementById("uploadStats").textContent="Chunk "+(j.chunks_done||0)+"/"+(j.chunks_total||0);
-            if(j.status==="done"){clearUploadInterval();document.getElementById("uploadProgressBar").style.width="100%";document.getElementById("uploadStatus").textContent=j.text?"Complete! "+(j.chunks_total||0)+" chunks":"Done (no speech)";if(j.text){document.getElementById("uploadResult").textContent=j.text;document.getElementById("uploadResult").style.display="block";document.getElementById("uploadCopyBtn").style.display="inline-flex";}}
-            else if(j.status==="error"){clearUploadInterval();document.getElementById("uploadStatus").textContent="Error: "+(j.error||"unknown");document.getElementById("uploadProgressBar").style.background="var(--coral)";}
-        }catch(err){clearUploadInterval();document.getElementById("uploadStatus").textContent="Connection lost";}
-    },2000);
-}
-async function copyUploadResult(){
-    const t=document.getElementById("uploadResult").textContent;
-    if(t){try{await navigator.clipboard.writeText(t);toast("Transcript copied!","info");}catch(e){toast("Copy failed","error");}}
-}
-
 </script>
 <style>
 :root {
@@ -324,6 +283,8 @@ html, body { display: flex; flex-direction: column;
 .btn-icon.blue:hover { background: var(--blue-bg); }
 .btn-icon.purple { border-color: var(--purple); color: var(--purple); }
 .btn-icon.purple:hover { background: var(--purple-bg); }
+.btn-icon.teal { border-color: var(--teal); color: var(--teal); }
+.btn-icon.teal:hover { background: var(--teal-bg); }
 
 /* Chat */
 .chat-view { display: none; flex-direction: column; height: 100%; background: var(--bg); }
@@ -636,9 +597,8 @@ html, body { display: flex; flex-direction: column;
     <button class="btn-sm primary" id="btnStop" onclick="stopAndSave()" style="display:none">⏹️ Stop</button>
     <button class="btn-sm" id="btnDownload" onclick="downloadTranscript()" style="display:none">📥 Download</button>
     <button class="btn-icon blue" id="btnSlide" onclick="captureSlide()" title="Capture slide">📸</button>
-    <button class="btn-icon" id="btnUpload" onclick="uploadAudioFile()" title="Upload audio file" style="border-color:var(--teal);color:var(--teal);">📤</button>
-    <button class="btn-icon" id="btnUpload" onclick="uploadAudioFile()" title="Upload pre-recorded audio" style="border-color:var(--teal);color:var(--teal);">&#128228;</button>
     <button class="btn-icon purple" id="btnPDF" onclick="uploadPDF()" title="Upload PDF to Second Brain">📄</button>
+    <button class="btn-icon teal" id="btnUpload" onclick="uploadAudioFile()" title="Upload audio file">📤</button>
 </div>
 
 </div><!-- /captureView -->
@@ -814,21 +774,6 @@ html, body { display: flex; flex-direction: column;
 <div id="actionContent"></div>
 <button class="btn-sm" onclick="document.getElementById('actionModal').style.display='none'" style="margin-top:16px;">Close</button>
 </div></div>
-
-
-<!-- UPLOAD MODAL -->
-<div id="uploadModal" class="modal-overlay" style="display:none;">
-    <div class="modal-card" style="max-width:420px;">
-        <div class="modal-header"><span>&#128228; Upload Audio</span><button class="modal-close" onclick="clearUploadInterval();document.getElementById('uploadModal').style.display='none'">&#10005;</button></div>
-        <div class="modal-body" style="text-align:center;padding:24px;">
-            <div id="uploadStatus" style="font-size:0.85rem;color:var(--text-dim);margin-bottom:16px;">Ready</div>
-            <div style="background:var(--border);border-radius:10px;height:8px;overflow:hidden;margin-bottom:12px;"><div id="uploadProgressBar" style="height:100%;background:var(--gold);width:0%;transition:width 0.5s;"></div></div>
-            <div id="uploadStats" style="font-size:0.7rem;color:var(--text-muted);">Chunk 0/0</div>
-            <div id="uploadResult" style="display:none;margin-top:16px;text-align:left;max-height:200px;overflow-y:auto;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:12px;font-size:0.78rem;line-height:1.5;white-space:pre-wrap;"></div>
-            <button class="btn-sm save" id="uploadCopyBtn" onclick="copyUploadResult()" style="display:none;margin-top:12px;">&#128203; Copy Transcript</button>
-        </div>
-    </div>
-</div>
 
 
 <!-- ═══ SCRIPTS ═══ -->
@@ -1382,6 +1327,59 @@ async function handlePDFUpload(input) {
     btn.textContent = '📄';
     document.getElementById('statusText').textContent = isRecording ? 'Recording' : 'Ready';
     input.value = '';
+}
+
+// ─── Audio File Upload ─────────────────────────────
+let uploadPollInterval = null;
+function clearUploadInterval(){if(uploadPollInterval){clearInterval(uploadPollInterval);uploadPollInterval=null;}}
+function uploadAudioFile(){
+    const i=document.createElement("input");i.type="file";i.accept="audio/*,.webm,.wav,.mp3,.m4a,.mp4,.ogg,.opus,.flac,.aac";
+    i.onchange=async(e)=>{
+        const f=e.target.files[0];if(!f)return;
+        document.getElementById("uploadModal").style.display="flex";
+        document.getElementById("uploadStatus").textContent="Uploading "+f.name+"...";
+        document.getElementById("uploadProgressBar").style.width="10%";
+        document.getElementById("uploadStats").textContent="Sending "+(f.size/1048576).toFixed(1)+"MB...";
+        document.getElementById("uploadResult").style.display="none";
+        clearUploadInterval();
+        const fd=new FormData();fd.append("audio",f);
+        try{
+            const r=await fetch(API+"/upload",{method:"POST",body:fd});
+            const d=await r.json();
+            if(d.job_id){document.getElementById("uploadStatus").textContent="Transcribing...";document.getElementById("uploadProgressBar").style.width="15%";pollUploadJob(d.job_id);}
+            else{document.getElementById("uploadStatus").textContent="Upload failed";}
+        }catch(err){document.getElementById("uploadStatus").textContent="Error: "+err.message;}
+    };i.click();
+}
+async function pollUploadJob(jid){
+    clearUploadInterval();
+    uploadPollInterval=setInterval(async()=>{
+        try{
+            const r=await fetch(API+"/job/"+jid);const j=await r.json();
+            document.getElementById("uploadProgressBar").style.width=Math.max(15,j.progress||0)+"%";
+            document.getElementById("uploadStats").textContent="Chunk "+(j.chunks_done||0)+"/"+(j.chunks_total||0);
+            if(j.status==="done"){
+                clearUploadInterval();
+                document.getElementById("uploadProgressBar").style.width="100%";
+                document.getElementById("uploadStatus").textContent=j.text?"Complete! "+(j.chunks_total||0)+" chunks":"Done (no speech)";
+                if(j.text){
+                    // Close modal → flow into two-box layout like live recording
+                    document.getElementById("uploadModal").style.display="none";
+                    if(!sessionId) await startSession("Uploaded Audio");
+                    const now=new Date().toISOString();
+                    addToBox1("\uD83C\uDF99\uFE0F Uploaded Audio\n\n"+j.text, now, 0);
+                    totalWords+=j.text.split(/\s+/).filter(w=>w).length;
+                    triggerCoLearner(j.text, "Uploaded audio file", 0);
+                    try{
+                        await fetch(API+"/save",{method:"POST",headers:{"Content-Type":"application/json"},
+                            body:JSON.stringify({transcript:j.text,word_count:j.text.split(/\s+/).filter(w=>w).length,duration:j.duration||0,chunks:j.chunks_total||0,timestamp:now,tags:"upload"})});
+                    }catch(e){console.error("Save failed:",e);}
+                    toast("Transcript loaded \u2014 AI analyzing...","info");
+                }
+            }
+            else if(j.status==="error"){clearUploadInterval();document.getElementById("uploadStatus").textContent="Error: "+(j.error||"unknown");document.getElementById("uploadProgressBar").style.background="var(--coral)";}
+        }catch(err){clearUploadInterval();document.getElementById("uploadStatus").textContent="Connection lost";}
+    },2000);
 }
 
 // ─── Slide Capture ────────────────────────────────
@@ -2604,48 +2602,21 @@ document.addEventListener('click', function(e) {
     }
 });
 
-
-// --- Audio File Upload ---
-let uploadPollInterval = null;
-function clearUploadInterval(){if(uploadPollInterval){clearInterval(uploadPollInterval);uploadPollInterval=null;}}
-function uploadAudioFile(){
-    const i=document.createElement("input");i.type="file";i.accept="audio/*,.webm,.wav,.mp3,.m4a,.mp4,.ogg,.opus,.flac,.aac";
-    i.onchange=async(e)=>{
-        const f=e.target.files[0];if(!f)return;
-        document.getElementById("uploadModal").style.display="flex";
-        document.getElementById("uploadStatus").textContent="Uploading "+f.name+"...";
-        document.getElementById("uploadProgressBar").style.width="10%";
-        document.getElementById("uploadStats").textContent="Sending "+(f.size/1048576).toFixed(1)+"MB...";
-        document.getElementById("uploadResult").style.display="none";
-        document.getElementById("uploadCopyBtn").style.display="none";
-        clearUploadInterval();
-        const fd=new FormData();fd.append("audio",f);
-        try{
-            const r=await fetch(API+"/upload",{method:"POST",body:fd});
-            const d=await r.json();
-            if(d.job_id){document.getElementById("uploadStatus").textContent="Transcribing...";document.getElementById("uploadProgressBar").style.width="15%";pollUploadJob(d.job_id);}
-            else{document.getElementById("uploadStatus").textContent="Upload failed";}
-        }catch(err){document.getElementById("uploadStatus").textContent="Error: "+err.message;}
-    };i.click();
-}
-async function pollUploadJob(jid){
-    clearUploadInterval();
-    uploadPollInterval=setInterval(async()=>{
-        try{
-            const r=await fetch(API+"/job/"+jid);const j=await r.json();
-            document.getElementById("uploadProgressBar").style.width=Math.max(15,j.progress||0)+"%";
-            document.getElementById("uploadStats").textContent="Chunk "+(j.chunks_done||0)+"/"+(j.chunks_total||0);
-            if(j.status==="done"){clearUploadInterval();document.getElementById("uploadProgressBar").style.width="100%";document.getElementById("uploadStatus").textContent=j.text?"Complete! "+(j.chunks_total||0)+" chunks":"Done (no speech)";if(j.text){document.getElementById("uploadResult").textContent=j.text;document.getElementById("uploadResult").style.display="block";document.getElementById("uploadCopyBtn").style.display="inline-flex";}}
-            else if(j.status==="error"){clearUploadInterval();document.getElementById("uploadStatus").textContent="Error: "+(j.error||"unknown");document.getElementById("uploadProgressBar").style.background="var(--coral)";}
-        }catch(err){clearUploadInterval();document.getElementById("uploadStatus").textContent="Connection lost";}
-    },2000);
-}
-async function copyUploadResult(){
-    const t=document.getElementById("uploadResult").textContent;
-    if(t){try{await navigator.clipboard.writeText(t);toast("Transcript copied!","info");}catch(e){toast("Copy failed","error");}}
-}
-
 </script>
+
+<!-- UPLOAD MODAL -->
+<div id="uploadModal" class="modal-overlay" style="display:none;">
+    <div class="modal-card" style="max-width:420px;">
+        <div class="modal-header"><span>&#128228; Upload Audio</span><button class="modal-close" onclick="clearUploadInterval();document.getElementById('uploadModal').style.display='none'">&#10005;</button></div>
+        <div class="modal-body" style="text-align:center;padding:24px;">
+            <div id="uploadStatus" style="font-size:0.85rem;color:var(--text-dim);margin-bottom:16px;">Ready</div>
+            <div style="background:var(--border);border-radius:10px;height:8px;overflow:hidden;margin-bottom:12px;"><div id="uploadProgressBar" style="height:100%;background:var(--gold);width:0%;transition:width 0.5s;"></div></div>
+            <div id="uploadStats" style="font-size:0.7rem;color:var(--text-muted);">Chunk 0/0</div>
+            <div id="uploadResult" style="display:none;margin-top:16px;text-align:left;max-height:200px;overflow-y:auto;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:12px;font-size:0.78rem;line-height:1.5;white-space:pre-wrap;"></div>
+        </div>
+    </div>
+</div>
+
 <!-- ═══ LOAD MODAL ═══ -->
 <div class="modal-overlay" id="loadModal" style="display:none" onclick="if(event.target===this)closeLoadModal()">
   <div class="modal-card">
@@ -2685,47 +2656,6 @@ document.addEventListener('click', function(e) {
         }
     }
 });
-
-
-// --- Audio File Upload ---
-let uploadPollInterval = null;
-function clearUploadInterval(){if(uploadPollInterval){clearInterval(uploadPollInterval);uploadPollInterval=null;}}
-function uploadAudioFile(){
-    const i=document.createElement("input");i.type="file";i.accept="audio/*,.webm,.wav,.mp3,.m4a,.mp4,.ogg,.opus,.flac,.aac";
-    i.onchange=async(e)=>{
-        const f=e.target.files[0];if(!f)return;
-        document.getElementById("uploadModal").style.display="flex";
-        document.getElementById("uploadStatus").textContent="Uploading "+f.name+"...";
-        document.getElementById("uploadProgressBar").style.width="10%";
-        document.getElementById("uploadStats").textContent="Sending "+(f.size/1048576).toFixed(1)+"MB...";
-        document.getElementById("uploadResult").style.display="none";
-        document.getElementById("uploadCopyBtn").style.display="none";
-        clearUploadInterval();
-        const fd=new FormData();fd.append("audio",f);
-        try{
-            const r=await fetch(API+"/upload",{method:"POST",body:fd});
-            const d=await r.json();
-            if(d.job_id){document.getElementById("uploadStatus").textContent="Transcribing...";document.getElementById("uploadProgressBar").style.width="15%";pollUploadJob(d.job_id);}
-            else{document.getElementById("uploadStatus").textContent="Upload failed";}
-        }catch(err){document.getElementById("uploadStatus").textContent="Error: "+err.message;}
-    };i.click();
-}
-async function pollUploadJob(jid){
-    clearUploadInterval();
-    uploadPollInterval=setInterval(async()=>{
-        try{
-            const r=await fetch(API+"/job/"+jid);const j=await r.json();
-            document.getElementById("uploadProgressBar").style.width=Math.max(15,j.progress||0)+"%";
-            document.getElementById("uploadStats").textContent="Chunk "+(j.chunks_done||0)+"/"+(j.chunks_total||0);
-            if(j.status==="done"){clearUploadInterval();document.getElementById("uploadProgressBar").style.width="100%";document.getElementById("uploadStatus").textContent=j.text?"Complete! "+(j.chunks_total||0)+" chunks":"Done (no speech)";if(j.text){document.getElementById("uploadResult").textContent=j.text;document.getElementById("uploadResult").style.display="block";document.getElementById("uploadCopyBtn").style.display="inline-flex";}}
-            else if(j.status==="error"){clearUploadInterval();document.getElementById("uploadStatus").textContent="Error: "+(j.error||"unknown");document.getElementById("uploadProgressBar").style.background="var(--coral)";}
-        }catch(err){clearUploadInterval();document.getElementById("uploadStatus").textContent="Connection lost";}
-    },2000);
-}
-async function copyUploadResult(){
-    const t=document.getElementById("uploadResult").textContent;
-    if(t){try{await navigator.clipboard.writeText(t);toast("Transcript copied!","info");}catch(e){toast("Copy failed","error");}}
-}
 
 </script>
 </body>
