@@ -534,25 +534,22 @@ html, body { display: flex; flex-direction: column;
 
 <!-- Engine Selector Popup -->
 <div class="engine-popup" id="enginePopup">
-    <div style="font-size:0.6rem;color:var(--dim);padding:4px 12px;">MODEL (click ⚡ badge to toggle)</div>
-    <div class="engine-option" onclick="selectModel('medium.en')" id="optMedium">
-        <span>🎯</span><span class="opt-name">medium.en</span><span class="opt-desc">best accuracy · English</span>
-    </div>
+    <div style="font-size:0.6rem;color:var(--dim);padding:4px 12px;">LOCAL MODELS</div>
     <div class="engine-option" onclick="selectModel('small.en')" id="optSmall">
-        <span>⭐</span><span class="opt-name">small.en</span><span class="opt-desc">good accuracy</span>
+        <span>💻</span><span class="opt-name">small.local</span><span class="opt-desc">good · offline · 2x speed</span>
+    </div>
+    <div class="engine-option" onclick="selectModel('medium.en')" id="optMedium">
+        <span>💻</span><span class="opt-name">medium.local</span><span class="opt-desc">best · offline · 10x speed</span>
     </div>
     <div class="engine-option" onclick="selectModel('base.en')" id="optBase">
-        <span>⚖️</span><span class="opt-name">base.en</span><span class="opt-desc">balanced speed/quality</span>
+        <span>💻</span><span class="opt-name">base.local</span><span class="opt-desc">fast · offline</span>
     </div>
     <div class="engine-option" onclick="selectModel('tiny.en')" id="optTiny">
-        <span>⚡</span><span class="opt-name">tiny.en</span><span class="opt-desc">fastest</span>
+        <span>💻</span><span class="opt-name">tiny.local</span><span class="opt-desc">fastest · offline</span>
     </div>
-    <div style="font-size:0.6rem;color:var(--dim);padding:8px 12px 4px;border-top:1px solid var(--border);margin-top:4px;">ENGINE</div>
-    <div class="engine-option" onclick="selectEngineFull('faster_whisper')" id="optFW">
-        <span>💻</span><span class="opt-name">faster-whisper</span><span class="opt-desc">local · offline</span>
-    </div>
+    <div style="font-size:0.6rem;color:var(--dim);padding:8px 12px 4px;border-top:1px solid var(--border);margin-top:4px;">CLOUD ENGINE</div>
     <div class="engine-option" onclick="selectEngineFull('groq')" id="optGroq">
-        <span>☁️</span><span class="opt-name">Groq API</span><span class="opt-desc">cloud · large-v3</span>
+        <span>☁️</span><span class="opt-name">groq.online</span><span class="opt-desc">instant · large-v3 · best quality</span>
     </div>
 </div>
 
@@ -626,51 +623,8 @@ html, body { display: flex; flex-direction: column;
 
 <!-- ═══ SECOND BRAIN VIEW ═══ -->
 <div id="brainView" class="tab-view" style="display:none;position:relative;flex:1;min-height:0;">
-    <!-- Toolbar -->
-    <div id="brainToolbar">
-        <button id="brainSyncBtn" onclick="triggerBrainSync()">🔄 Sync Now</button>
-        <div class="brain-subtabs">
-            <button class="brain-subtab active" onclick="switchBrainSubView('graph')">🧠 Graph</button>
-            <button class="brain-subtab" onclick="switchBrainSubView('docs')">📚 Documents</button>
-        </div>
-        <span id="brainSyncStatus"></span>
-    </div>
-
-    <!-- Graph sub-view -->
-    <div id="brainGraphView" class="brain-subview active" style="margin-top:48px;position:relative;">
-        <div id="brainSearch" style="position:absolute;top:12px;left:12px;z-index:10;background:rgba(20,20,40,0.95);border:1px solid var(--border);border-radius:10px;padding:8px 14px;">
-            <input type="text" placeholder="🔍 Search concepts, documents..." id="brainSearchInput" style="background:transparent;border:none;color:var(--text);font-size:13px;outline:none;width:240px;font-family:'Inter',sans-serif;" oninput="filterBrainGraph()">
-        </div>
-        <div id="brainInfo" style="position:absolute;top:12px;right:12px;z-index:10;background:rgba(20,20,40,0.95);border:1px solid var(--border);border-radius:10px;padding:12px 16px;max-width:300px;max-height:60vh;overflow-y:auto;font-size:12px;color:var(--dim);">
-            <button id="brainCollapseBtn" onclick="toggleBrainPanel()" title="Collapse panel">◀</button>
-            <button id="brainCloseBtn" onclick="closeBrainPanel()" title="Close panel">✕</button>
-            <div class="brain-info-title" style="font-weight:600;color:var(--gold);margin-bottom:8px;">📚 Knowledge Graph</div>
-            <div id="brainDetail" style="line-height:1.6;">Click a node to explore</div>
-            <div id="brainStats" style="margin-top:10px;padding-top:8px;border-top:1px solid var(--border);font-size:11px;"></div>
-        </div>
-        <svg id="brainGraph" style="width:100%;min-height:500px;background:#0D1117;"></svg>
-    </div>
-
-    <!-- Documents sub-view -->
-    <div id="brainDocsView" class="brain-subview" style="display:none;">
-        <input type="text" placeholder="🔍 Filter documents..." id="brainDocsSearch" oninput="filterBrainDocs()">
-        <div class="brain-section">
-            <h4>📁 In Google Drive <span id="brainDriveCount">(0)</span></h4>
-            <table class="brain-doc-table"><thead><tr><th>File</th><th>Folder</th><th>Modified</th><th></th></tr></thead><tbody id="brainDriveBody"></tbody></table>
-            <div id="brainDriveEmpty" style="text-align:center;padding:20px;color:var(--dim);display:none;">No Drive files synced yet. Drop files and Sync.</div>
-        </div>
-        <div class="brain-section">
-            <h4>🧠 In 2nd Brain <span id="brainBrainCount">(0)</span></h4>
-            <table class="brain-doc-table"><thead><tr><th>Document</th><th>Frameworks</th><th>Size</th><th></th></tr></thead><tbody id="brainBrainBody"></tbody></table>
-            <div id="brainBrainEmpty" style="text-align:center;padding:20px;color:var(--dim);display:none;">No documents processed yet.</div>
-        </div>
-    </div>
-
-    
+    <iframe src="https://brain.cfoth.ai/" style="width:100%;height:100%;border:none;min-height:70vh;" title="Second Brain"></iframe>
 </div>
-
-<input type="file" id="slideInput" accept="image/*" capture="environment" style="display:none" onchange="handleSlideCapture(this)">
-<input type="file" id="pdfInput" accept=".pdf" multiple style="display:none" onchange="handlePDFUpload(this)">
 
 <!-- ═══ v5 NEW VIEWS ═══ -->
 
@@ -1697,10 +1651,14 @@ let currentModel = 'medium.en';  // default: best accuracy
 
 async function fetchEngineStatus() {
     try {
-        const r = await fetch(`${API}/model/status`);
-        const mod = await r.json();
+        const [mr, er] = await Promise.all([
+            fetch(`${API}/model/status`),
+            fetch(`${API}/engine/status`)
+        ]);
+        const mod = await mr.json();
+        const eng = await er.json();
         currentModel = mod.model;
-        currentEngine = TRANSCRIBE_ENGINE || 'faster_whisper';
+        currentEngine = eng.engine || 'faster_whisper';
         updateEngineBadge();
     } catch(e) { /* ignore */ }
 }
@@ -1712,32 +1670,37 @@ function updateEngineBadge() {
     const icon = document.getElementById('engineIcon');
     if (!badge || !label) return;
     badge.className = 'engine-badge';
-    label.textContent = currentModel;
-    icon.textContent = '🎯';
-    if (currentModel === 'tiny.en') {
-        icon.textContent = '⚡';
-    } else if (currentModel === 'base.en') {
-        icon.textContent = '⚖️';
-    } else if (currentModel === 'small.en') {
-        icon.textContent = '⭐';
-    } else if (currentModel === 'medium.en') {
-        icon.textContent = '🎯';
-    }
+    
     if (currentEngine === 'groq') {
         badge.classList.add('groq');
-        label.textContent = 'Groq ☁️';
+        label.textContent = 'groq.online';
         icon.textContent = '☁️';
+    } else {
+        const short = currentModel.replace('.en','.local');
+        label.textContent = short;
+        icon.textContent = '💻';
+        if (currentModel === 'tiny.en') icon.textContent = '⚡';
+    }
+    
+    // Mark active option in popup
+    document.querySelectorAll('.engine-option').forEach(opt => opt.classList.remove('active'));
+    if (currentEngine === 'groq') {
+        document.getElementById('optGroq')?.classList.add('active');
+    } else {
+        const optId = { 'medium.en': 'optMedium', 'small.en': 'optSmall', 'base.en': 'optBase', 'tiny.en': 'optTiny' }[currentModel];
+        if (optId) document.getElementById(optId)?.classList.add('active');
     }
 }
 
 function toggleEngine() {
-    // Cycle: medium.en → small.en → base.en → tiny.en → medium.en
-    const cycle = {'medium.en': 'small.en', 'small.en': 'base.en', 'base.en': 'tiny.en', 'tiny.en': 'medium.en'};
-    selectModel(cycle[currentModel] || 'medium.en');
+    // Show the engine popup — don't cycle models
+    const popup = document.getElementById('enginePopup');
+    if (popup) popup.classList.toggle('show');
 }
 
 async function selectModel(model) {
     currentModel = model;
+    currentEngine = 'faster_whisper';  // local models use faster_whisper
     updateEngineBadge();
     document.getElementById('enginePopup')?.classList.remove('show');
     

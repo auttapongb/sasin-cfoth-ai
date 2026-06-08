@@ -42,7 +42,7 @@ load_dotenv(Path(__file__).parent / ".env")
 
 from fastapi import FastAPI, UploadFile, File, Form, HTTPException, Query, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse, JSONResponse, HTMLResponse, Response
+from fastapi.responses import FileResponse, JSONResponse, HTMLResponse, Response, RedirectResponse
 from pydantic import BaseModel, field_validator
 import uvicorn
 import httpx
@@ -2395,7 +2395,7 @@ async def serve_second_brain():
         html = html.replace("fetch('/concept/", "fetch('/second-brain/concept/")
         html = html.replace('fetch("/concept/', 'fetch("/second-brain/concept/')
         return HTMLResponse(html)
-    return HTMLResponse("<h1>Second Brain</h1><p>Graph not built yet. Run build_graph.py</p>", status_code=503)
+    return RedirectResponse("https://brain.cfoth.ai/", status_code=302)
 
 
 @app.get("/second-brain/graph")
