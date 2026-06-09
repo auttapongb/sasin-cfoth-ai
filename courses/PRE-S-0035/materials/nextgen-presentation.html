@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NextGen — Strategic Response Presentation</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700;800&family=Inter:wght@300;400;500;600;700;800&display=swap');
+  
+  :root {
+    --bg: #0A1628;
+    --gold: #C8A45C;
+    --white: #FFFFFF;
+    --muted: rgba(255,255,255,0.65);
+    --coral: #E8734A;
+    --slide-bg: #0F1F38;
+    --card-border: rgba(255,255,255,0.08);
+  }
+  
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  
+  body {
+    font-family: 'Inter', -apple-system, sans-serif;
+    background: var(--bg);
+    color: var(--white);
+    overflow: hidden;
+    height: 100vh;
+    width: 100vw;
+  }
+  
+  /* ═══ SLIDE CONTAINER ═══ */
+  .slides-container {
+    width: 100%;
+    height: 100%;
+    position: relative;
+  }
+  
+  .slide {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 60px 80px;
+    opacity: 0;
+    transform: translateY(30px);
+    transition: opacity 0.5s ease, transform 0.5s ease;
+    pointer-events: none;
+    overflow-y: auto;
+  }
+  
+  .slide.active {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+  }
+  
+  /* ═══ SLIDE THEMES ═══ */
+  .slide-cover { background: radial-gradient(ellipse at 20% 50%, #1a2a4a 0%, var(--bg) 70%); }
+  .slide-dark { background: var(--slide-bg); }
+  .slide-alert { background: linear-gradient(135deg, #1a0f0f 0%, #2a1010 50%, var(--bg) 100%); }
+  .slide-gold { background: linear-gradient(135deg, #1a1a10 0%, #2a2010 50%, var(--bg) 100%); }
+  
+  /* ═══ TYPOGRAPHY ═══ */
+  .slide-title {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(2rem, 5vw, 4rem);
+    font-weight: 700;
+    line-height: 1.15;
+    text-align: center;
+    margin-bottom: 24px;
+  }
+  
+  .slide-subtitle {
+    font-size: clamp(1rem, 2.5vw, 1.5rem);
+    color: var(--muted);
+    text-align: center;
+    max-width: 700px;
+    font-weight: 300;
+  }
+  
+  .gold { color: var(--gold); }
+  .coral { color: var(--coral); }
+  .thai { font-family: 'Playfair Display', serif; }
+  
+  /* ═══ CARDS ═══ */
+  .card-row {
+    display: flex;
+    gap: 24px;
+    width: 100%;
+    max-width: 1000px;
+    margin-top: 30px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  
+  .card {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid var(--card-border);
+    border-radius: 16px;
+    padding: 30px;
+    flex: 1;
+    min-width: 260px;
+    max-width: 320px;
+    transition: transform 0.3s, border-color 0.3s, box-shadow 0.3s;
+  }
+  
+  .card:hover {
+    transform: translateY(-4px);
+    border-color: rgba(255,255,255,0.15);
+    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+  }
+  
+  .card-icon { font-size: 2.5rem; margin-bottom: 16px; }
+  .card-title { font-size: 1.2rem; font-weight: 600; margin-bottom: 8px; }
+  .card-text { font-size: 0.9rem; color: var(--muted); line-height: 1.6; }
+  
+  /* ═══ VS COMPARISON ═══ */
+  .vs-container {
+    display: flex;
+    gap: 40px;
+    align-items: stretch;
+    width: 100%;
+    max-width: 1000px;
+    margin-top: 30px;
+  }
+  
+  .vs-column {
+    flex: 1;
+    border-radius: 20px;
+    padding: 40px;
+  }
+  
+  .vs-column.ai {
+    background: rgba(148,163,184,0.08);
+    border: 1px solid rgba(148,163,184,0.2);
+  }
+  
+  .vs-column.human {
+    background: rgba(200,164,92,0.08);
+    border: 1px solid rgba(200,164,92,0.3);
+  }
+  
+  .vs-label {
+    text-transform: uppercase;
+    letter-spacing: 3px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    margin-bottom: 20px;
+  }
+  
+  .vs-column.ai .vs-label { color: #94A3B8; }
+  .vs-column.human .vs-label { color: var(--gold); }
+  
+  .vs-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 0;
+    font-size: 0.95rem;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+  }
+  
+  .vs-item:last-child { border: none; }
+  
+  .check { color: var(--gold); font-weight: 700; }
+  .cross { color: var(--coral); font-weight: 700; }
+  
+  /* ═══ METRIC BARS ═══ */
+  .metric-row {
+    display: flex;
+    gap: 30px;
+    width: 100%;
+    max-width: 900px;
+    margin-top: 20px;
+  }
+  
+  .metric {
+    flex: 1;
+    text-align: center;
+  }
+  
+  .metric-value {
+    font-size: 3rem;
+    font-weight: 800;
+    font-family: 'Playfair Display', serif;
+  }
+  
+  .metric-label {
+    font-size: 0.9rem;
+    color: var(--muted);
+    margin-top: 4px;
+  }
+  
+  /* ═══ WORKFLOW ═══ */
+  .wf-line {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    width: 100%;
+    max-width: 900px;
+    margin-top: 30px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  
+  .wf-node {
+    background: rgba(255,255,255,0.04);
+    border-radius: 14px;
+    padding: 20px 24px;
+    text-align: center;
+    min-width: 140px;
+    position: relative;
+  }
+  
+  .wf-node.ai-n { border: 1px solid rgba(148,163,184,0.3); }
+  .wf-node.human-n { border: 2px solid var(--gold); background: rgba(200,164,92,0.06); }
+  
+  .wf-node .step { font-size: 2rem; margin-bottom: 6px; }
+  .wf-node .label { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 2px; font-weight: 600; }
+  .wf-node.ai-n .label { color: #94A3B8; }
+  .wf-node.human-n .label { color: var(--gold); }
+  .wf-node .desc { font-size: 0.8rem; color: var(--muted); margin-top: 6px; }
+  
+  .wf-arrow { font-size: 1.5rem; color: rgba(255,255,255,0.2); flex-shrink: 0; }
+  
+  /* ═══ QUOTE ═══ */
+  .big-quote {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(1.5rem, 3vw, 2rem);
+    text-align: center;
+    max-width: 800px;
+    line-height: 1.5;
+    font-style: italic;
+  }
+  
+  .quote-attrib {
+    margin-top: 20px;
+    font-size: 1rem;
+    color: var(--gold);
+    font-style: normal;
+    font-family: 'Inter', sans-serif;
+  }
+  
+  /* ═══ NAVIGATION ═══ */
+  .nav {
+    position: fixed;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 10px;
+    z-index: 100;
+  }
+  
+  .nav-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.2);
+    border: none;
+    cursor: pointer;
+    transition: all 0.3s;
+  }
+  
+  .nav-dot.active { background: var(--gold); width: 30px; border-radius: 10px; }
+  
+  .nav-btn {
+    position: fixed;
+    top: 50%;
+    transform: translateY(-50%);
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.1);
+    color: white;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 1.2rem;
+    z-index: 100;
+    transition: all 0.3s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .nav-btn:hover { background: rgba(255,255,255,0.12); border-color: var(--gold); }
+  .nav-btn.prev { left: 30px; }
+  .nav-btn.next { right: 30px; }
+  
+  .timer {
+    position: fixed;
+    top: 20px;
+    right: 30px;
+    font-size: 0.85rem;
+    color: var(--muted);
+    z-index: 100;
+    background: rgba(0,0,0,0.4);
+    padding: 8px 16px;
+    border-radius: 20px;
+  }
+  
+  .slide-counter {
+    position: fixed;
+    top: 20px;
+    left: 30px;
+    font-size: 0.85rem;
+    color: var(--muted);
+    z-index: 100;
+  }
+  
+  /* ═══ RESPONSIVE ═══ */
+  @media (max-width: 768px) {
+    .slide { padding: 30px 20px; }
+    .vs-container { flex-direction: column; }
+    .card-row { flex-direction: column; align-items: center; }
+    .card { max-width: 100%; }
+    .nav-btn { width: 40px; height: 40px; font-size: 1rem; }
+    .nav-btn.prev { left: 10px; }
+    .nav-btn.next { right: 10px; }
+    .wf-line { flex-direction: column; }
+    .wf-arrow { transform: rotate(90deg); }
+  }
+  
+  /* Animations */
+  @keyframes pulse {
+    0%, 100% { opacity: 0.6; }
+    50% { opacity: 1; }
+  }
+  
+  .pulse { animation: pulse 2s ease-in-out infinite; }
+  
+  @keyframes float {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-10px); }
+  }
+  
+  .float { animation: float 4s ease-in-out infinite; }
+</style>
+</head>
+<body>
+
+<div class="slides-container" id="slidesContainer">
+
+<!-- ═══ SLIDE 0: COVER ═══ -->
+<div class="slide slide-cover active" data-index="0">
+  <img src="/courses/PRE-S-0035/materials/nextgen-logo-white.png" alt="NextGen" style="height:40px;margin-bottom:20px;">
+  <div class="slide-title">ไม่ใช่แค่เที่ยว<br><span style="font-weight:400;font-size:0.55em;">Not Just Travel</span></div>
+  <div style="margin-top:15px;"><img src="/courses/PRE-S-0035/materials/team-9-logo.jpeg" alt="เบอร์ 9" style="height:100px;filter:drop-shadow(0 2px 10px rgba(0,0,0,0.3));"></div>
+  <div class="slide-subtitle">Your personal escape, curated.<br><br>A Strategic Response to the CEO<br>NextGen Experiences · Campaign 2026</div>
+  <div style="margin-top:30px;font-size:0.85rem;color:var(--muted);">
+    Marketing & Brand Strategy Team · 5 minutes
+  </div>
+</div>
+
+<!-- ═══ SLIDE 1: THE CEO'S CHALLENGE ═══ -->
+<div class="slide slide-dark" data-index="1">
+  <div class="slide-title" style="font-size:clamp(1.5rem,3vw,2.5rem);">The CEO Asked:</div>
+  <div class="big-quote" style="margin-top:20px;">
+    "This AI made a viral video in 10 minutes for free.<br>
+    <span style="color:var(--coral);">Why do we still need staff?</span>"
+  </div>
+  <div style="margin-top:30px;font-size:1rem;color:var(--muted);text-align:center;max-width:600px;">
+    It's a fair question. The AI saved time and money. But here's what it cost.
+  </div>
+</div>
+
+<!-- ═══ SLIDE 2: WHAT THE AI MADE ═══ -->
+<div class="slide slide-dark" data-index="2">
+  <div class="slide-title" style="font-size:clamp(1.5rem,3vw,2.5rem);">What the AI Video Achieves</div>
+  <div class="card-row">
+    <div class="card">
+      <div class="card-icon">👁️</div>
+      <div class="card-title">Mass Visibility</div>
+      <div class="card-text">Cute cartoon seals get views. Lots of them. From everyone.</div>
+    </div>
+    <div class="card">
+      <div class="card-icon">⚡</div>
+      <div class="card-title">Zero Production Cost</div>
+      <div class="card-text">10 minutes. No agency. No location scouting. Impressive efficiency.</div>
+    </div>
+    <div class="card">
+      <div class="card-icon">🦭</div>
+      <div class="card-title">Zero Cultural Connection</div>
+      <div class="card-text">A seal on ice. In Thailand. Where there are no seals. Or icebergs.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ SLIDE 3: WHO IT ATTRACTS ═══ -->
+<div class="slide slide-alert" data-index="3">
+  <div class="slide-title" style="font-size:clamp(1.5rem,3vw,2.5rem);">Who Clicks on a Cartoon Seal?</div>
+  <div class="metric-row" style="margin-top:40px;">
+    <div class="metric">
+      <div class="metric-value coral">200K</div>
+      <div class="metric-label">Views from seal lovers</div>
+    </div>
+    <div class="metric">
+      <div class="metric-value" style="font-size:3rem;">→</div>
+      <div class="metric-label">&nbsp;</div>
+    </div>
+    <div class="metric">
+      <div class="metric-value coral">0</div>
+      <div class="metric-label">Qualified bookings</div>
+    </div>
+  </div>
+  <div style="margin-top:40px;text-align:center;max-width:600px;color:var(--muted);font-size:1.1rem;">
+    The seal video attracts <span class="coral">exactly the customers NextGen was built to avoid</span> — 
+    mass audiences looking for free entertainment, not premium curated travel.
+  </div>
+</div>
+
+<!-- ═══ SLIDE 4: OUR CAMPAIGN ═══ -->
+<div class="slide slide-dark" data-index="4">
+  <div class="slide-title" style="font-size:clamp(1.5rem,3vw,2.5rem);">
+    <span class="thai">ไม่ใช่แค่เที่ยว</span><br>
+    <span style="font-size:0.7em;">It's Not Just Travel</span>
+  </div>
+  <div class="slide-subtitle" style="margin-top:10px;color:var(--gold);">
+    We don't sell trips. We curate time well spent.
+  </div>
+  <div class="card-row" style="margin-top:30px;">
+    <div class="card">
+      <div class="card-icon">🎯</div>
+      <div class="card-title">Attract + Repel</div>
+      <div class="card-text">Every asset signals premium curation. Budget travelers self-select out before contacting us.</div>
+    </div>
+    <div class="card">
+      <div class="card-icon">🇹🇭</div>
+      <div class="card-title">Cultural Depth</div>
+      <div class="card-text">Real places. Real people. Real flavors. Not a cartoon seal on a fake iceberg.</div>
+    </div>
+    <div class="card">
+      <div class="card-icon">📱</div>
+      <div class="card-title">Platform-Native</div>
+      <div class="card-text">Micro-documentaries on Reels. "Un-Googleable" spots on TikTok. The Select List in email.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ SLIDE 5: THE SORTING MECHANISM ═══ -->
+<div class="slide slide-gold" data-index="5">
+  <div class="slide-title" style="font-size:clamp(1.3rem,2.5vw,2rem);">NextGen Is a Sorting Business</div>
+  <div style="max-width:700px;text-align:center;font-size:1.1rem;line-height:1.8;margin-top:20px;">
+    The product isn't travel. The product is <span class="gold">strategic filtration</span>.
+  </div>
+  <div class="vs-container" style="margin-top:30px;">
+    <div class="vs-column ai">
+      <div class="vs-label">🤖 AI Seal Video</div>
+      <div class="vs-item"><span class="cross">✗</span> Attracts everyone</div>
+      <div class="vs-item"><span class="cross">✗</span> No cultural signal</div>
+      <div class="vs-item"><span class="cross">✗</span> Zero lead qualification</div>
+      <div class="vs-item"><span class="cross">✗</span> Damages premium positioning</div>
+      <div class="vs-item"><span class="cross">✗</span> High volume, zero conversion</div>
+    </div>
+    <div class="vs-column human">
+      <div class="vs-label">🧠 Our Campaign</div>
+      <div class="vs-item"><span class="check">✓</span> Attracts only qualified leads</div>
+      <div class="vs-item"><span class="check">✓</span> Deep Thai cultural credibility</div>
+      <div class="vs-item"><span class="check">✓</span> Repels budget shoppers upfront</div>
+      <div class="vs-item"><span class="check">✓</span> Reinforces premium curation</div>
+      <div class="vs-item"><span class="check">✓</span> Lower volume, higher conversion</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ SLIDE 6: AI WORKFLOW ═══ -->
+<div class="slide slide-dark" data-index="6">
+  <div class="slide-title" style="font-size:clamp(1.3rem,2.5vw,2rem);">How We Used AI</div>
+  <div class="slide-subtitle">(And Where Humans Took Over)</div>
+  <div class="wf-line">
+    <div class="wf-node ai-n">
+      <div class="step">🤖</div>
+      <div class="label">AI: Research</div>
+      <div class="desc">10,000+ reviews<br>in 12 minutes</div>
+    </div>
+    <div class="wf-arrow">▸</div>
+    <div class="wf-node ai-n">
+      <div class="step">🤖</div>
+      <div class="label">AI: Draft</div>
+      <div class="desc">47 concepts<br>generated</div>
+    </div>
+    <div class="wf-arrow">▸</div>
+    <div class="wf-node human-n">
+      <div class="step">🧠</div>
+      <div class="label">HUMAN: Judge</div>
+      <div class="desc">44 killed<br>3 kept</div>
+    </div>
+    <div class="wf-arrow">▸</div>
+    <div class="wf-node human-n">
+      <div class="step">❤️</div>
+      <div class="label">HUMAN: Voice</div>
+      <div class="desc">Every word<br>rewritten</div>
+    </div>
+  </div>
+  <div style="margin-top:40px;text-align:center;max-width:600px;font-size:1.1rem;color:var(--gold);">
+    AI handled volume. Humans handled judgment.
+  </div>
+</div>
+
+<!-- ═══ SLIDE 7: THE BIG ANSWER ═══ -->
+<div class="slide slide-dark" data-index="7">
+  <div class="slide-title" style="font-size:clamp(1.3rem,2.5vw,2rem);">Why We Still Need Staff</div>
+  <div style="max-width:700px;font-size:1.05rem;line-height:1.9;text-align:center;margin-top:20px;">
+    <p>The AI can generate <span class="gold">47 campaign ideas</span> in minutes.</p>
+    <p style="margin-top:12px;">We know <span class="coral">which 44 to kill</span> —<br>
+    because we understand the brand, the culture,<br>and the customer in ways no algorithm can.</p>
+    <p style="margin-top:20px;font-size:1.2rem;color:var(--gold);">
+      You don't pay us to make content.<br>
+      <strong>You pay us to make decisions.</strong>
+    </p>
+  </div>
+</div>
+
+<!-- ═══ SLIDE 8: CLOSING ═══ -->
+<div class="slide slide-cover" data-index="8">
+  <div class="slide-title">The Seal Stays in the Ocean.<br>NextGen Is for the Right Guests.</div>
+  <div class="slide-subtitle" style="margin-top:20px;">
+    Let's build the campaign that attracts the right guests —<br>
+    and lets the wrong ones keep scrolling.
+  </div>
+  <div style="margin-top:40px;padding:16px 32px;border:2px solid var(--gold);border-radius:30px;color:var(--gold);font-weight:600;">
+    "ไม่ใช่แค่เที่ยว | Not Just Travel" · NextGen Campaign 2026
+  </div>
+  <div style="margin-top:30px;font-size:0.9rem;color:var(--muted);">
+    📄 <a href="/courses/PRE-S-0035/materials/nextgen-campaign-artifact.html" style="color:var(--gold);text-decoration:underline;">View Full Campaign Strategy</a>
+  </div>
+</div>
+
+</div>
+
+<!-- ═══ NAVIGATION ═══ -->
+<button class="nav-btn prev" onclick="prevSlide()" aria-label="Previous">◀</button>
+<button class="nav-btn next" onclick="nextSlide()" aria-label="Next">▶</button>
+
+<div class="nav" id="navDots"></div>
+
+<div class="timer" id="timer">05:00</div>
+<div class="slide-counter" id="counter">1 / 9</div>
+
+<script>
+// ═══ SLIDE NAVIGATION ═══
+let currentSlide = 0;
+const totalSlides = 9;
+const slides = document.querySelectorAll('.slide');
+
+function showSlide(index) {
+  slides.forEach(s => s.classList.remove('active'));
+  slides[index].classList.add('active');
+  currentSlide = index;
+  updateNav();
+}
+
+function nextSlide() {
+  if (currentSlide < totalSlides - 1) showSlide(currentSlide + 1);
+}
+
+function prevSlide() {
+  if (currentSlide > 0) showSlide(currentSlide - 1);
+}
+
+// ═══ NAV DOTS ═══
+const navContainer = document.getElementById('navDots');
+for (let i = 0; i < totalSlides; i++) {
+  const dot = document.createElement('button');
+  dot.className = 'nav-dot';
+  dot.onclick = () => showSlide(i);
+  navContainer.appendChild(dot);
+}
+
+function updateNav() {
+  document.querySelectorAll('.nav-dot').forEach((d, i) => {
+    d.classList.toggle('active', i === currentSlide);
+  });
+  document.getElementById('counter').textContent = `${currentSlide + 1} / ${totalSlides}`;
+}
+
+// ═══ PRESENTATION TIMER ═══
+let seconds = 300; // 5 minutes
+const timerEl = document.getElementById('timer');
+
+function updateTimer() {
+  const min = Math.floor(seconds / 60);
+  const sec = seconds % 60;
+  timerEl.textContent = `${String(min).padStart(2,'0')}:${String(sec).padStart(2,'0')}`;
+  if (seconds <= 60) timerEl.style.color = '#E8734A';
+  if (seconds <= 30) timerEl.classList.add('pulse');
+  if (seconds > 0) {
+    seconds--;
+    setTimeout(updateTimer, 1000);
+  } else {
+    timerEl.textContent = "TIME'S UP";
+    timerEl.style.color = '#E8734A';
+  }
+}
+
+// ═══ KEYBOARD NAVIGATION ═══
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'ArrowRight' || e.key === 'ArrowDown' || e.key === ' ') {
+    e.preventDefault();
+    nextSlide();
+  }
+  if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+    e.preventDefault();
+    prevSlide();
+  }
+  if (e.key === 'Home') { e.preventDefault(); showSlide(0); }
+  if (e.key === 'End') { e.preventDefault(); showSlide(totalSlides - 1); }
+  // Toggle timer with 't'
+  if (e.key === 't') {
+    e.preventDefault();
+    timerEl.style.display = timerEl.style.display === 'none' ? '' : 'none';
+  }
+});
+
+// ═══ INIT ═══
+updateNav();
+updateTimer();
+</script>
+
+</body>
+</html>
