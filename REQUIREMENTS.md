@@ -31,26 +31,33 @@
 ### Data Fields (from EMAIL_DATA)
 ```json
 {
-  "unread_total": 19,
+  "unread_total": 5,
   "emails": [
     {
-      "category": "sasin|finance|security|newsletter|personal|other",
+      "cat": "PAY|EVENT|sasin|security|newsletter|personal|Resource|2nd Brain|...",
+      "label": "Display label text",
       "subject": "Email subject line",
-      "analysis": "AI-generated analysis + action recommendation"
+      "summary": "AI-generated summary of the email",
+      "action": "Recommended action for the user",
+      "from": "sender@domain.com",
+      "date": "Jun 9"
     }
   ]
 }
 ```
+**CRITICAL**: Field names are `cat` (not `category`), `label`, `subject`, `summary` (not `analysis`), `action`.
+Categories include: `PAY`, `EVENT`, `sasin`, `security`, `newsletter`, `personal`, `Resource`, `2nd Brain`, and others.
 
 ### Categories & Colors
 | Category | Label | CSS Class | Color |
 |----------|-------|-----------|-------|
+| `PAY` / `finance` | PAY | `.il-PAY` / `.il-finance` | Yellow (#facc15) |
 | `sasin` | SASIN | `.il-sasin` | Green (#4ade80) |
-| `finance` | PAY | `.il-finance` | Yellow (#facc15) |
 | `security` | SEC | `.il-security` | Red (#f87171) |
+| `EVENT` | EVENT | `.il-EVENT` | Purple (#a78bfa) |
 | `newsletter` | NEWS | `.il-newsletter` | Gray (#94a3b8) |
 | `personal` | PERS | `.il-personal` | Blue (#60a5fa) |
-| other | INFO | `.il-other` | Dim gray (#94a3b8) |
+| other | (from data label) | `.il-other` | Dim gray (#94a3b8) |
 
 ### Layout Rules
 - Max 8 emails shown
