@@ -190,6 +190,32 @@ async def courses_api():
             dl["days_left"] = (dl_date - today).days
     return {"courses": courses, "total": len(courses)}
 
+
+@app.api_route("/emba2026/{path:path}", methods=["GET"])
+async def serve_emba2026(path: str, request: Request):
+    """Serve EMBA 2026 roster static files."""
+    base_dir = BASE / "emba2026"
+    clean_path = path.rstrip("/")
+    file_path = base_dir / clean_path
+    if file_path.is_file():
+        content_type = "text/html"
+        if path.endswith(".png"): content_type = "image/png"
+        elif path.endswith(".jpg") or path.endswith(".jpeg"): content_type = "image/jpeg"
+        elif path.endswith(".svg"): content_type = "image/svg+xml"
+        return Response(content=file_path.read_bytes(), media_type=content_type)
+    index_path = file_path / "index.html"
+    if index_path.exists():
+        return HTMLResponse(index_path.read_text())
+    raise HTTPException(404, f"EMBA2026 resource not found: {path}")
+
+@app.get("/emba2026", response_class=HTMLResponse)
+@app.get("/emba2026/", response_class=HTMLResponse)
+async def serve_emba2026_index():
+    index = BASE / "emba2026" / "index.html"
+    if index.exists():
+        return HTMLResponse(index.read_text())
+    raise HTTPException(404, "EMBA2026 page not found")
+
 @app.api_route("/courses/{path:path}", methods=["GET"])
 async def serve_course(path: str, request: Request):
     """Serve static course content (knowledge pages, materials)."""
@@ -226,6 +252,26 @@ async def serve_course(path: str, request: Request):
             content_type = "application/pdf"
         elif path.endswith(".md"):
             content_type = "text/markdown"
+        elif path.endswith(".png"):
+            content_type = "image/png"
+        elif path.endswith((".jpg", ".jpeg")):
+            content_type = "image/jpeg"
+        elif path.endswith(".svg"):
+            content_type = "image/svg+xml"
+        elif path.endswith(".gif"):
+            content_type = "image/gif"
+        elif path.endswith(".webp"):
+            content_type = "image/webp"
+        elif path.endswith(".css"):
+            content_type = "text/css"
+        elif path.endswith(".js"):
+            content_type = "application/javascript"
+        elif path.endswith(".json"):
+            content_type = "application/json"
+        elif path.endswith(".mp4"):
+            content_type = "video/mp4"
+        elif path.endswith(".webm"):
+            content_type = "video/webm"
         return Response(content=file_path.read_bytes(), media_type=content_type)
     # Try index.html in knowledge dir
     index_path = file_path / "index.html"
@@ -246,6 +292,35 @@ async def serve_static(filename: str):
     raise HTTPException(404, f"Page not found: {filename}.html")
 
 # ─── HEALTH ─────────────────────────────────────────────
+
+@app.post("/emba2026/save-profile")
+async def save_profile_image(request: Request):
+    """Download and permanently save LINE profile image."""
+    try:
+        data = await request.json()
+        image_url = data.get("image_url")
+        user_id = data.get("user_id", "unknown")
+        if not image_url:
+            return {"error": "No image_url provided"}
+        
+        import aiohttp
+        async with aiohttp.ClientSession() as session:
+            async with session.get(image_url, timeout=aiohttp.ClientTimeout(total=10)) as resp:
+                if resp.status == 200:
+                    img_data = await resp.read()
+                    # Save to emba2026/images/
+                    img_dir = BASE / "emba2026" / "images"
+                    img_dir.mkdir(exist_ok=True)
+                    ext = ".jpg"
+                    if ".png" in image_url.lower(): ext = ".png"
+                    filename = f"profile_{user_id}{ext}"
+                    filepath = img_dir / filename
+                    filepath.write_bytes(img_data)
+                    return {"saved": True, "url": f"/emba2026/images/{filename}"}
+        return {"saved": False, "error": f"Failed to fetch image: {resp.status}"}
+    except Exception as e:
+        return {"saved": False, "error": str(e)}
+
 @app.get("/health")
 async def health():
     return {"status": "ok", "hub": True}

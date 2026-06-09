@@ -498,6 +498,7 @@ async function initAuth() {
         provider: 'line'
       };
       localStorage.setItem('sasin_emba2026_user', JSON.stringify(currentUser));
+      saveProfileImage(currentUser.id, currentUser.picture);
       syncLinePicture(profile);
     }
   } catch(e) { console.log('LINE LIFF init:', e.message); }
@@ -528,6 +529,7 @@ function doLineLogin() {
     liff.getProfile().then(profile => {
       currentUser = {id: profile.userId, name: profile.displayName, picture: profile.pictureUrl, provider: 'line'};
       localStorage.setItem('sasin_emba2026_user', JSON.stringify(currentUser));
+      saveProfileImage(currentUser.id, currentUser.picture);
       syncLinePicture(profile);
       updateLoginUI();
       unlockApp();
@@ -563,6 +565,7 @@ function doGoogleLogin() {
           provider: 'google'
         };
         localStorage.setItem('sasin_emba2026_user', JSON.stringify(currentUser));
+        saveProfileImage(currentUser.id, currentUser.picture);
         updateLoginUI();
         unlockApp();
       } catch(err) {
@@ -596,6 +599,7 @@ function doFacebookLogin() {
           provider: 'facebook'
         };
         localStorage.setItem('sasin_emba2026_user', JSON.stringify(currentUser));
+        saveProfileImage(currentUser.id, currentUser.picture);
         updateLoginUI();
         unlockApp();
       });
@@ -629,6 +633,7 @@ function syncLinePicture(profile) {
   const match = people.find(p => profile.displayName && (p.name === profile.displayName || profile.displayName.includes(p.name) || p.name.includes(profile.displayName)));
   if (match && profile.pictureUrl) {
     match.linePicture = profile.pictureUrl;
+    saveProfileImage(profile.userId, profile.pictureUrl);
     const idx = people.findIndex(p => p.name === match.name);
     if (idx >= 0) people[idx] = match;
     saveToStorage();
