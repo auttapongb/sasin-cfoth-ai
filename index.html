@@ -214,10 +214,11 @@ body {
 .ia{font-size:10px;color:var(--dim);margin-top:1px}
 .il{font-size:10px;padding:1px 5px;border-radius:4px;font-weight:600;white-space:nowrap}
 .il-sasin{background:rgba(34,197,94,.12);color:#4ade80}
-.il-finance{background:rgba(250,204,21,.12);color:#facc15}
+.il-finance,.il-PAY{background:rgba(250,204,21,.12);color:#facc15}
 .il-security{background:rgba(239,68,68,.12);color:#f87171}
 .il-newsletter{background:rgba(148,163,184,.12);color:#94a3b8}
 .il-personal{background:rgba(59,130,246,.12);color:#60a5fa}
+.il-EVENT{background:rgba(139,92,246,.12);color:#a78bfa}
 .il-other{background:rgba(148,163,184,.08);color:#94a3b8}
 
 </style>
@@ -533,11 +534,12 @@ async function showHome() {
 
 var _ed=EMAIL_DATA||{},_uc=_ed.unread_total||0,ib="";
 if(_ed.emails&&_ed.emails.length){ib=_ed.emails.slice(0,8).map(function(e){
-  var cat=e.category||"",lbl="";
-  if(cat==="sasin")lbl="SASIN";else if(cat==="finance")lbl="PAY";else if(cat==="security")lbl="SEC";else if(cat==="newsletter")lbl="NEWS";else if(cat==="personal")lbl="PERS";else lbl="INFO";
+  var cat=e.cat||"",lbl=e.label||cat;
+  if(cat==="sasin")lbl="SASIN";else if(cat==="finance"||cat==="PAY")lbl="PAY";else if(cat==="security")lbl="SEC";else if(cat==="newsletter")lbl="NEWS";else if(cat==="personal")lbl="PERS";else if(cat==="EVENT")lbl="EVENT";
   var s=(e.subject||"").replace(/&/g,"&amp;").replace(/</g,"&lt;");
-  var a=e.analysis||"";
-  return"<div class=ir><span class=\"il il-"+cat+"\">"+lbl+"</span> <div style=flex:1;min-width:0><div style=font-weight:600;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis>"+s+"</div><div class=ia>"+a+"</div></div></div>";
+  var sm=(e.summary||"").replace(/</g,"&lt;");
+  var ac=(e.action||"").replace(/</g,"&lt;");
+  return"<div class=ir><span class=\"il il-"+cat+"\">"+lbl+"</span> <div style=flex:1;min-width:0><div style=font-weight:600;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis>"+s+"</div><div class=ia>"+sm+"</div>"+(ac?"<div class=ia style=font-size:10px;margin-top:2px>→ "+ac+"</div>":"")+"</div></div>";
 }).join("")}else{ib="<p style=color:var(--dim);font-size:13px>No new mail</p>"}
 var inboxBox="<div class=\"dash-card ib\" style=\"border-left:3px solid #4285f4\"><h3 style=\"color:#60a5fa\">Inbox ("+_uc+" unread)</h3><div class=\"ib-body\" style=\"margin-top:6px\">"+ib+"</div></div>";
 
