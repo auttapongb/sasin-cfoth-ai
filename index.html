@@ -138,6 +138,35 @@ body {
 }
 .badge-exam { background: rgba(239,68,68,0.15); color: var(--red); }
 
+/* ═══ INBOX (injected by cron) ═══ */
+.dash-card.ib { cursor: default; border-left: 3px solid #4285f4; }
+.dash-card.ib:hover { transform: none; border-color: var(--border); }
+.ib-body { max-height: 200px; overflow-y: auto; margin-top: 6px; }
+.ir { display: flex; gap: 8px; align-items: flex-start;
+  padding: 5px 8px; border-radius: 6px; margin-bottom: 2px;
+  transition: background 0.15s; }
+.ir:hover { background: rgba(255,255,255,0.03); }
+.il { display: inline-block; padding: 1px 7px; border-radius: 4px;
+  font-size: 9px; font-weight: 700; text-transform: uppercase;
+  min-width: 44px; text-align: center; white-space: nowrap;
+  flex-shrink: 0; margin-top: 2px; }
+.il-sasin { background: rgba(59,130,246,0.15); color: #60a5fa; }
+.il-security { background: rgba(239,68,68,0.15); color: #f87171; }
+.il-finance { background: rgba(34,197,94,0.15); color: #4ade80; }
+.il-other { background: rgba(100,116,139,0.15); color: #94a3b8; }
+.ia { font-size: 11px; color: var(--dim); margin-top: 2px; }
+
+/* ═══ DEADLINES BOX ═══ */
+.db-body { max-height: 200px; overflow-y: auto; margin-top: 6px; }
+.db-item { display: flex; align-items: center; gap: 8px;
+  padding: 4px 0; font-size: 13px; }
+
+/* ═══ CALENDAR ON DASHBOARD ═══ */
+.cal-card { cursor: default; padding: 16px; max-height: none; }
+.cal-card:hover { transform: none; border-color: var(--border); }
+.cal-card iframe { display: block; border: 0; width: 100%;
+  min-width: 300px; height: 500px; border-radius: 8px; }
+
 /* ═══ COURSE MODULE CARD ═══ */
 .course-card {
   background: var(--card); border: 1px solid var(--border);
@@ -573,7 +602,7 @@ async function showHome() {
       const dateStr = d.toLocaleDateString('en-GB', {day:'numeric',month:'short'});
       const urgency = e.days_until <= 1 ? '🔴' : e.days_until <= 3 ? '🟠' : '🟢';
       const examBadge = e.type === 'exam' ? ' <span style="font-size:10px;color:#f87171;font-weight:700">EXAM</span>' : '';
-      return '<div style="display:flex;align-items:center;gap:8px;padding:4px 0;font-size:13px">' +
+      return '<div class="db-item">' +
         '<span>' + urgency + '</span>' +
         '<span style="flex:1">' + e.label + examBadge + '</span>' +
         '<span style="color:var(--dim);font-size:11px;white-space:nowrap">' + dateStr + ' · ' + e.days_until + 'd</span>' +
@@ -584,13 +613,13 @@ async function showHome() {
   }
 
   document.getElementById('content').innerHTML = `
-    <div class="dash-card deadline-alert" style="margin-bottom:16px;border-left:3px solid #d97706;cursor:pointer" onclick="window.open('/courses/MGMT-S-0031/','_blank')">
+    <div class="dash-card deadline-alert db-body" style="margin-bottom:16px;border-left:3px solid #d97706;cursor:pointer" onclick="window.open('/courses/MGMT-S-0031/','_blank')">
       <h3 style="color:#f59e0b">⚠️ Upcoming Deadlines</h3>
-      <div style="margin-top:6px">${deadlineHtml}</div>
+      <div class="db-body" style="margin-top:6px">${deadlineHtml}</div>
     </div>
-    <div class="dash-card" style="cursor:default;padding:16px">
+    <div class="dash-card cal-card" style="cursor:default;padding:16px">
       <iframe src="https://calendar.google.com/calendar/embed?src=auttapong.budhsombatwarakul%40sasin.edu&ctz=Asia%2FBangkok&mode=MONTH&showTitle=0&showNav=1&showDate=1&showPrint=0&showTabs=0&showCalendars=0&showTz=1"
-        style="display:block;border:0;width:100%;min-width:300px;height:550px;border-radius:8px"
+        style="display:block;border:0;width:100%;min-width:300px;height:500px;border-radius:8px"
         frameborder="0" scrolling="no">
       </iframe>
     </div>
