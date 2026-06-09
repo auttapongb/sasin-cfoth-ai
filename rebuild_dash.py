@@ -27,16 +27,11 @@ if not os.path.exists(DATA):
 with open(DATA) as f:
     email_data = json.load(f)
 
-# ── 3. Transform data for inboxBox (it uses cat/label/summary/action) ──
+# ── 3. Transform data for inboxBox (pass through AI fields directly) ──
 transformed = {"unread_total": email_data.get("unread_total", 0), "emails": []}
 for e in email_data.get("emails", []):
-    cat = e.get("category", "other")
-    # Map labels
-    label_map = {
-        "sasin": "SASIN", "security": "SEC", "finance": "PAY",
-        "newsletter": "NEWS", "personal": "PERS"
-    }
-    lbl = label_map.get(cat, cat.upper())
+    cat = e.get("cat", e.get("category", "other"))
+    lbl = e.get("label", cat.upper())
     transformed["emails"].append({
         "cat": cat,
         "label": lbl,
