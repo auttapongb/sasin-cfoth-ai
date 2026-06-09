@@ -1,25 +1,25 @@
-=== DEADLINE WARNINGS - 2026-06-05 ===
+=== DEADLINE WARNINGS - 2026-06-07 ===
 
 Total upcoming deadlines: 11
 
-[SOON] 3d left - [DECS-S-0034] Module 1 Begins (2026-06-08)
+[URGENT] **TOMORROW!** [DECS-S-0034] Module 1 Begins
 
-[SOON] 4d left - [MGMT-S-0031] Pre-work Submission (A6 index card) (2026-06-09)
+[URGENT] 2d left - [MGMT-S-0031] Pre-work Submission (A6 index card) (2026-06-09)
 
-[UPCOMING] 7d left - [MGMT-S-0031] Lecture 1: Introduction to Strategy (2026-06-12)
+[SOON] 5d left - [MGMT-S-0031] Lecture 1: Introduction to Strategy (2026-06-12)
 
-[UPCOMING] 8d left - [MGMT-S-0031] Lecture 2: Strategic Diagnosis 1 - External (2026-06-13)
+[UPCOMING] 6d left - [MGMT-S-0031] Lecture 2: Strategic Diagnosis 1 - External (2026-06-13)
 
-[UPCOMING] 15d left - [MGMT-S-0031] Class Test 1 + Lecture 3 (2026-06-20)
+[UPCOMING] 13d left - [MGMT-S-0031] Class Test 1 + Lecture 3 (2026-06-20)
 
-[UPCOMING] 21d left - [MGMT-S-0031] Lecture 4: Guest Speaker - K.Vichate (Thai Air Asia) (2026-06-26)
+[UPCOMING] 19d left - [MGMT-S-0031] Lecture 4: Guest Speaker - K.Vichate (Thai Air Asia) (2026-06-26)
 
-[UPCOMING] 22d left - [MGMT-S-0031] Class Test 2 + Lecture 5 (2026-06-27)
+[UPCOMING] 20d left - [MGMT-S-0031] Class Test 2 + Lecture 5 (2026-06-27)
 
-[UPCOMING] 29d left - [MGMT-S-0031] Lecture 6: Ethics & Strategy Execution (2026-07-04)
+[UPCOMING] 27d left - [MGMT-S-0031] Lecture 6: Ethics & Strategy Execution (2026-07-04)
 
-[UPCOMING] 35d left - [MGMT-S-0031] Final Group Presentations (2026-07-10)
+[UPCOMING] 33d left - [MGMT-S-0031] Final Group Presentations (2026-07-10)
 
-[UPCOMING] 35d left - [DECS-S-0034] Final Exam (2026-07-10)
+[UPCOMING] 33d left - [DECS-S-0034] Final Exam (2026-07-10)
 
-[UPCOMING] 36d left - [DECS-S-0034] Module 1 Ends (2026-07-11)
+[UPCOMING] 34d left - [DECS-S-0034] Module 1 Ends (2026-07-11)

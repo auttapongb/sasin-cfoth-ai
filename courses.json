@@ -123,5 +123,39 @@
         "due": "2026-07-10"
       }
     }
+  },
+  "PRE-S-0035": {
+    "code": "PRE-S-0035",
+    "title": "Designing Your SASIN Life",
+    "instructor": "Permsit Lamprasitipon, Ph.D. (SASIN MBA 2008)",
+    "module": "Next Gen Bootcamp",
+    "textbook": "Designing Your Life (Bill Burnett & Dave Evans, 2016)",
+    "knowledge_url": "/courses/PRE-S-0035/knowledge/",
+    "materials_url": "/courses/PRE-S-0035/materials/",
+    "deadlines": [
+      {
+        "date": "2026-06-05",
+        "label": "Workshop Session (Today)",
+        "weight": "",
+        "type": "workshop"
+      }
+    ],
+    "assessments": {
+      "workshop_participation": {
+        "weight": 0,
+        "due": "2026-06-05"
+      }
+    }
+  },
+  "PRE-S-0036": {
+    "title": "Preparing for Quantitative Thinking in MBA/EMBA",
+    "instructor": "Asst. Prof. Chonawee Supatgiat, Ph.D.",
+    "module": "Pre-Course Bootcamp",
+    "deadlines": [
+      {
+        "date": "2026-06-06",
+        "label": "Session — Sasin Hall 9th Floor, 1:30–4:30 PM"
+      }
+    ]
   }
 }
